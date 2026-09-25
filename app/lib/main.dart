@@ -59,6 +59,15 @@ class _StartGateState extends State<StartGate> {
 
   @override
   Widget build(BuildContext context) {
+    // Escucha el estado global: al terminar el arranque, o al entrar o salir
+    // de una cuenta, esta pantalla cambia sola.
+    return ListenableBuilder(
+      listenable: AppState.instance,
+      builder: (context, _) => _gate(context),
+    );
+  }
+
+  Widget _gate(BuildContext context) {
     final state = AppState.instance;
     if (!Config.isConfigured) {
       return _Splash(child: Text(tr('not_configured'), textAlign: TextAlign.center));
