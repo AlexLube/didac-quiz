@@ -15,3 +15,4 @@ for m in re.finditer(r'<node [^>]*>', xml):
         break
 else:
     print("no encontrado:", target)
+    sys.exit(1)

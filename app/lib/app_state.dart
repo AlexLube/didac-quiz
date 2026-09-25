@@ -24,7 +24,15 @@ class AppState extends ChangeNotifier {
   bool get isGuest => user == null || user!.isAnonymous || profile == null;
   bool get needsOnboarding => user != null && !user!.isAnonymous && profile == null;
 
-  Future<void> init() async {
+  Future<void>? _initFuture;
+
+  /// Arranque único aunque se llame varias veces.
+  Future<void> init() => _initFuture ??= _init().catchError((Object e) {
+        _initFuture = null; // permite reintentar
+        throw e;
+      });
+
+  Future<void> _init() async {
     _log('inicio');
     final prefs = await SharedPreferences.getInstance();
     final platformLang = PlatformDispatcher.instance.locale.languageCode;

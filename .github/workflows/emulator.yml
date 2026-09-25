@@ -65,7 +65,7 @@ jobs:
             sleep 5
             adb exec-out screencap -p > ci-logs/screen2.png
             adb exec-out uiautomator dump /dev/tty > ci-logs/ui.xml || true
-            python3 tool/tap_text.py ci-logs/ui.xml "Jugar" || true
+            python3 tool/tap_text.py ci-logs/ui.xml "Jugar" || python3 tool/tap_text.py ci-logs/ui.xml "Play" || true
             sleep 8
             adb exec-out screencap -p > ci-logs/screen3.png
             adb logcat -d | grep -E "didacquiz|FATAL|E flutter" > ci-logs/after-play.txt || true
