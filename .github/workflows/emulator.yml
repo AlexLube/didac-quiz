@@ -1,0 +1,77 @@
+name: Prueba en emulador Android
+
+on:
+  push:
+    branches: [main]
+    paths: ["app/**", "tool/patch_android.py", ".github/workflows/emulator.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  emulator:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Compilar APK (igual que la publicada)
+        working-directory: app
+        run: |
+          mkdir -p ../ci-logs
+          flutter create --platforms=android --org com.didacquiz --project-name didac_quiz . > /dev/null
+          rm -f test/widget_test.dart
+          python ../tool/patch_android.py .
+          cp android/app/src/main/AndroidManifest.xml ../ci-logs/AndroidManifest.xml
+          cp android/app/build.gradle.kts ../ci-logs/build.gradle.kts 2>/dev/null || true
+          flutter pub get > /dev/null
+          flutter build apk --release \
+            --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_URL }} \
+            --dart-define=SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }} 2>&1 | tail -5
+
+      - name: Activar KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Arrancar la app en el emulador
+        id: run
+        continue-on-error: true
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          arch: x86_64
+          target: google_apis
+          disable-animations: true
+          script: |
+            adb logcat -c
+            adb install -r app/build/app/outputs/flutter-apk/app-release.apk
+            adb shell monkey -p com.didacquiz.app -c android.intent.category.LAUNCHER 1
+            sleep 40
+            adb shell pidof com.didacquiz.app > ci-logs/pid.txt || echo "PROCESO MUERTO" > ci-logs/pid.txt
+            adb exec-out screencap -p > ci-logs/screen1.png
+            adb logcat -d > ci-logs/logcat-full.txt
+            adb logcat -d -s flutter AndroidRuntime DEBUG ActivityManager:I Ads:* > ci-logs/logcat.txt || true
+            sleep 20
+            adb exec-out screencap -p > ci-logs/screen2.png
+
+      - name: Publicar resultado
+        if: always()
+        run: |
+          echo "commit: ${{ github.sha }} outcome: ${{ steps.run.outcome }}" > ci-logs/SUMMARY.txt
+          grep -E "FATAL|AndroidRuntime|E flutter|Exception|MobileAds|didacquiz" ci-logs/logcat-full.txt | head -200 > ci-logs/errors.txt || true
+          tmp=$(mktemp -d); cp -r ci-logs/. "$tmp"/; cd "$tmp"
+          git init -q && git checkout -q -b ci-emulator
+          git -c user.name=ci -c user.email=ci@users.noreply.github.com add -A
+          git -c user.name=ci -c user.email=ci@users.noreply.github.com commit -qm "emulator ${{ github.sha }}"
+          git push -qf "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" ci-emulator
