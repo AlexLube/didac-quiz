@@ -52,6 +52,7 @@ class _StartGateState extends State<StartGate> {
     try {
       if (!AppState.instance.ready) await AppState.instance.init();
     } catch (e) {
+      debugPrint('[didacquiz] error al arrancar: $e');
       if (mounted) setState(() => _error = e);
     }
   }

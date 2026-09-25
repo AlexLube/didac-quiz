@@ -21,7 +21,7 @@ class Ads {
           maxAdContentRating: MaxAdContentRating.t,
         ));
       }
-      await MobileAds.instance.initialize();
+      await MobileAds.instance.initialize().timeout(const Duration(seconds: 20));
       _ready = true;
     } catch (_) {
       _ready = false;

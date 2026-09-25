@@ -25,22 +25,29 @@ class AppState extends ChangeNotifier {
   bool get needsOnboarding => user != null && !user!.isAnonymous && profile == null;
 
   Future<void> init() async {
+    _log('inicio');
     final prefs = await SharedPreferences.getInstance();
     final platformLang = PlatformDispatcher.instance.locale.languageCode;
     Strings.lang = prefs.getString('lang') ?? (platformLang == 'es' ? 'es' : 'en');
 
     await Supabase.initialize(url: Config.supabaseUrl, publishableKey: Config.supabaseAnonKey);
+    _log('supabase listo');
     _authSub = Supabase.instance.client.auth.onAuthStateChange.listen((event) {
       if (event.event == AuthChangeEvent.signedIn) {
         refreshProfile();
       }
     });
-    await ensureSession();
+    await ensureSession().timeout(const Duration(seconds: 20));
+    _log('sesión lista (invitado: ${user?.isAnonymous})');
     await refreshProfile();
-    await Ads.init(minor: profile?.isMinor ?? false);
+    _log('perfil: ${profile?.alias ?? '-'}');
     ready = true;
     notifyListeners();
+    // Los anuncios se preparan en segundo plano: nunca bloquean el arranque.
+    unawaited(Ads.init(minor: profile?.isMinor ?? false).then((_) => _log('anuncios listos')));
   }
+
+  static void _log(String m) => debugPrint('[didacquiz] $m');
 
   /// Sin sesión, se entra como invitado (usuario anónimo de Supabase).
   Future<void> ensureSession() async {
@@ -51,8 +58,11 @@ class AppState extends ChangeNotifier {
 
   Future<void> refreshProfile() async {
     try {
-      profile = user == null ? null : await api.myProfile();
-    } catch (_) {
+      profile = user == null
+          ? null
+          : await api.myProfile().timeout(const Duration(seconds: 15));
+    } catch (e) {
+      _log('perfil no disponible: $e');
       // sin conexión: se conserva el perfil anterior
     }
     notifyListeners();

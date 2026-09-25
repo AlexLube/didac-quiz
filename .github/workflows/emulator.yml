@@ -69,7 +69,7 @@ jobs:
         if: always()
         run: |
           echo "commit: ${{ github.sha }} outcome: ${{ steps.run.outcome }}" > ci-logs/SUMMARY.txt
-          grep -E "FATAL|AndroidRuntime|E flutter|Exception|MobileAds|didacquiz" ci-logs/logcat-full.txt | head -200 > ci-logs/errors.txt || true
+          grep -E "FATAL|E AndroidRuntime|flutter|didacquiz" ci-logs/logcat-full.txt | head -200 > ci-logs/errors.txt || true
           tmp=$(mktemp -d); cp -r ci-logs/. "$tmp"/; cd "$tmp"
           git init -q && git checkout -q -b ci-emulator
           git -c user.name=ci -c user.email=ci@users.noreply.github.com add -A
