@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:ui' show PlatformDispatcher;
 
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -30,7 +29,7 @@ class AppState extends ChangeNotifier {
     final platformLang = PlatformDispatcher.instance.locale.languageCode;
     Strings.lang = prefs.getString('lang') ?? (platformLang == 'es' ? 'es' : 'en');
 
-    await Supabase.initialize(url: Config.supabaseUrl, anonKey: Config.supabaseAnonKey);
+    await Supabase.initialize(url: Config.supabaseUrl, publishableKey: Config.supabaseAnonKey);
     _authSub = Supabase.instance.client.auth.onAuthStateChange.listen((event) {
       if (event.event == AuthChangeEvent.signedIn) {
         refreshProfile();

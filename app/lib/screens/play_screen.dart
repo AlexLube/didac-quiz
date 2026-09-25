@@ -320,10 +320,9 @@ class _PlayScreenState extends State<PlayScreen> {
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           buildDefaultDragHandles: !locked,
-          onReorder: (oldIndex, newIndex) {
+          onReorderItem: (oldIndex, newIndex) {
             if (locked) return;
             setState(() {
-              if (newIndex > oldIndex) newIndex -= 1;
               final item = _order.removeAt(oldIndex);
               _order.insert(newIndex, item);
             });
