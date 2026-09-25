@@ -27,8 +27,7 @@ jobs:
           set -o pipefail
           mkdir -p ../ci-logs
           { python -m didacquiz_pipeline fetch &&
-            python -m didacquiz_pipeline build &&
-            python -m didacquiz_pipeline schedule --days 365 --start 2027-01-01; } 2>&1 | tee ../ci-logs/pipeline.log
+            python -m didacquiz_pipeline build; } 2>&1 | tee ../ci-logs/pipeline.log
           python - <<'PY' >> ../ci-logs/pipeline.log
           import json, random
           qs = json.load(open("out/questions.json"))
@@ -42,6 +41,7 @@ jobs:
           from collections import Counter
           print(Counter(e for r in rej for e in r["errors"]).most_common(10))
           PY
+          python -m didacquiz_pipeline schedule --days 365 --start 2027-01-01 2>&1 | tee -a ../ci-logs/pipeline.log
       - name: Publicar resultado
         if: always()
         run: |

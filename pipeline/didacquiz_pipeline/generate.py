@@ -28,13 +28,26 @@ def _xid(*parts: object) -> str:
     return hashlib.sha1("|".join(map(str, parts)).encode()).hexdigest()[:16]
 
 
+# Umbrales de popularidad (nº de Wikipedias). Se recalculan por percentiles al
+# crear el Generator, para que haya suficientes preguntas fáciles y medias.
+_TIER_CUTS = [80, 45]
+
+
 def film_tier(film: Film) -> int:
-    """0 = muy conocida, 1 = conocida, 2 = poco conocida (según nº de Wikipedias)."""
-    if film.popularity >= 80:
+    """0 = muy conocida, 1 = conocida, 2 = poco conocida."""
+    if film.popularity >= _TIER_CUTS[0]:
         return 0
-    if film.popularity >= 45:
+    if film.popularity >= _TIER_CUTS[1]:
         return 1
     return 2
+
+
+def set_tier_cuts(films: list[Film], top: float = 0.12, known: float = 0.40) -> None:
+    """El 12 % más popular es 'muy conocida'; hasta el 40 %, 'conocida'."""
+    pops = sorted((f.popularity for f in films), reverse=True)
+    if len(pops) >= 20:
+        _TIER_CUTS[0] = pops[int(len(pops) * top)]
+        _TIER_CUTS[1] = pops[int(len(pops) * known)]
 
 
 def _difficulty(base: int, film: Film) -> int:
@@ -65,6 +78,7 @@ class Generator:
     def __init__(self, films: list[Film], seed: int = 2026):
         self.films = films
         self.rng = random.Random(seed)
+        set_tier_cuts(films)
         self.by_director: dict[str, list[Film]] = defaultdict(list)
         self.directors: dict[str, Person] = {}
         for f in films:
