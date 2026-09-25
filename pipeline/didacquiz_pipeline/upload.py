@@ -13,7 +13,11 @@ class Supabase:
     def __init__(self, url: str | None = None, key: str | None = None):
         self.url = (url or os.environ["SUPABASE_URL"]).rstrip("/")
         key = key or os.environ["SUPABASE_SERVICE_ROLE_KEY"]
-        self.h = {"apikey": key, "Authorization": f"Bearer {key}", "Content-Type": "application/json"}
+        self.h = {"apikey": key, "Content-Type": "application/json"}
+        # Las claves antiguas (JWT, "eyJ...") también van en Authorization; las nuevas
+        # (sb_secret_...) solo en "apikey".
+        if key.startswith("eyJ"):
+            self.h["Authorization"] = f"Bearer {key}"
 
     def _post(self, table: str, rows: list[dict], on_conflict: str, returning: bool) -> list[dict]:
         prefer = "resolution=merge-duplicates," + ("return=representation" if returning else "return=minimal")
