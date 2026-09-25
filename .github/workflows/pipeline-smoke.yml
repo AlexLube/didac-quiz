@@ -1,0 +1,53 @@
+name: Prueba real con Wikidata
+
+on:
+  push:
+    branches: [main]
+    paths: ["pipeline/**", ".github/workflows/pipeline-smoke.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -q -r pipeline/requirements.txt
+      - name: Descargar, generar y planificar (sin subir nada)
+        id: run
+        continue-on-error: true
+        working-directory: pipeline
+        run: |
+          set -o pipefail
+          mkdir -p ../ci-logs
+          { python -m didacquiz_pipeline fetch &&
+            python -m didacquiz_pipeline build &&
+            python -m didacquiz_pipeline schedule --days 365 --start 2027-01-01; } 2>&1 | tee ../ci-logs/pipeline.log
+          python - <<'PY' >> ../ci-logs/pipeline.log
+          import json, random
+          qs = json.load(open("out/questions.json"))
+          rej = json.load(open("out/rejected.json"))
+          random.seed(1)
+          print("\n== Muestra de preguntas ==")
+          for q in random.sample(qs, 25):
+              opts = " | ".join(o["es"] for o in q["options"])
+              print(f'[{q["format"]} d{q["difficulty"]}] {q["prompt"]["es"]}\n   {opts}\n   -> {q["answer"]}')
+          print("\n== Motivos de descarte ==")
+          from collections import Counter
+          print(Counter(e for r in rej for e in r["errors"]).most_common(10))
+          PY
+      - name: Publicar resultado
+        if: always()
+        run: |
+          echo "outcome: ${{ steps.run.outcome }} commit: ${{ github.sha }}" > ci-logs/SUMMARY.txt
+          tmp=$(mktemp -d); cp -r ci-logs/. "$tmp"/; cd "$tmp"
+          git init -q && git checkout -q -b ci-pipeline
+          git -c user.name=ci -c user.email=ci@users.noreply.github.com add -A
+          git -c user.name=ci -c user.email=ci@users.noreply.github.com commit -qm "pipeline ${{ github.sha }}"
+          git push -qf "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" ci-pipeline
