@@ -162,3 +162,25 @@ def test_ambiguous_titles_mention_director():
     q = g.q_decade(films[0])
     assert films[0].directors[0].name in q["prompt"]["es"]
     assert g.q_true_false_year(films[1])["prompt"]["en"].count(films[1].directors[0].name) == 1
+
+
+def test_sparql_retries_and_splits(monkeypatch):
+    from didacquiz_pipeline import wikidata
+    monkeypatch.setattr(wikidata.time, "sleep", lambda *_: None)
+
+    class Resp:
+        def __init__(self, text, code=200):
+            self.text, self.status_code = text, code
+
+    calls = {"n": 0}
+
+    def fake_get(url, params, headers, timeout):
+        calls["n"] += 1
+        q = params["query"]
+        if "wd:BAD" in q:
+            return Resp('{"results": {"bindings": [ {"x": "cortado')
+        return Resp('{"results": {"bindings": [{"ok": {"value": "1\\u0001"}}]}}')
+
+    monkeypatch.setattr(wikidata.requests, "get", fake_get)
+    rows = wikidata._sparql_chunked("VALUES {{ {values} }}", ["Q1", "BAD", "Q2", "Q3"])
+    assert len(rows) == 2  # los bloques sanos se recuperan, BAD se omite

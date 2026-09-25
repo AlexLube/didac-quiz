@@ -45,21 +45,38 @@ class Film:
         return Film(**d)
 
 
-def _sparql(query: str, retries: int = 4) -> list[dict]:
+def _sparql(query: str, retries: int = 5) -> list[dict]:
+    """Consulta con reintentos. Wikidata a veces corta la respuesta (JSON incompleto)."""
+    last_error: Exception | None = None
     for attempt in range(retries):
-        r = requests.get(
-            ENDPOINT,
-            params={"query": query, "format": "json"},
-            headers={"User-Agent": USER_AGENT, "Accept": "application/sparql-results+json"},
-            timeout=120,
-        )
-        if r.status_code == 200:
-            return r.json()["results"]["bindings"]
-        if r.status_code in (429, 500, 502, 503, 504):
-            time.sleep(10 * (attempt + 1))
-            continue
-        r.raise_for_status()
-    raise RuntimeError("Wikidata no respondió tras varios intentos")
+        try:
+            r = requests.get(
+                ENDPOINT,
+                params={"query": query, "format": "json"},
+                headers={"User-Agent": USER_AGENT, "Accept": "application/sparql-results+json"},
+                timeout=120,
+            )
+            if r.status_code == 200:
+                return json.loads(r.text, strict=False)["results"]["bindings"]
+            if r.status_code not in (429, 500, 502, 503, 504):
+                r.raise_for_status()
+            last_error = RuntimeError(f"HTTP {r.status_code}")
+        except (ValueError, requests.RequestException) as e:  # JSON cortado o red
+            last_error = e
+        time.sleep(10 * (attempt + 1))
+    raise RuntimeError(f"Wikidata no respondió tras varios intentos: {last_error}")
+
+
+def _sparql_chunked(template: str, ids: list[str]) -> list[dict]:
+    """Si un bloque falla, lo divide en dos; si un solo elemento falla, lo omite."""
+    try:
+        return _sparql(template.format(values=" ".join(f"wd:{q}" for q in ids)), retries=3)
+    except RuntimeError:
+        if len(ids) == 1:
+            print(f"  aviso: se omite {ids[0]} (Wikidata no respondió)")
+            return []
+        mid = len(ids) // 2
+        return _sparql_chunked(template, ids[:mid]) + _sparql_chunked(template, ids[mid:])
 
 
 def _val(b: dict, k: str) -> str | None:
@@ -141,9 +158,9 @@ def fetch_films(min_links: int = 20, cast_per_film: int = 4, verbose: bool = Tru
             print(f"  {y0}-{y1}: {len(films)} películas acumuladas")
 
     ids = list(films)
-    for i in range(0, len(ids), 150):
-        chunk = ids[i : i + 150]
-        rows = _sparql(CAST_QUERY.format(values=" ".join(f"wd:{q}" for q in chunk)))
+    for i in range(0, len(ids), 100):
+        chunk = ids[i : i + 100]
+        rows = _sparql_chunked(CAST_QUERY, chunk)
         per_film: dict[str, dict[str, Person]] = {}
         for b in rows:
             fq, aq = _qid(_val(b, "film")), _qid(_val(b, "actor"))
