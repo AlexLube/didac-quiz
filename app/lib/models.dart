@@ -182,3 +182,20 @@ class City {
   final String name;
   City(this.id, this.name);
 }
+
+class League {
+  final int id;
+  final String name;
+  final String inviteCode;
+  final bool isOwner;
+  final String? ownerAlias;
+  final int members;
+
+  League.fromJson(Map<String, dynamic> j)
+      : id = asInt(j['id']),
+        name = j['name'] as String,
+        inviteCode = j['invite_code'] as String,
+        isOwner = j['is_owner'] == true,
+        ownerAlias = j['owner_alias'] as String?,
+        members = asInt(j['members']);
+}

@@ -29,6 +29,8 @@ class Api {
     'joker_already_used', 'location_change_too_soon', 'too_many_reports', 'profile_exists',
     'account_not_permanent', 'no_challenge_today', 'wrong_position', 'not_served',
     'streak_restore_unavailable', 'profile_required', 'challenge_still_open', 'question_not_seen',
+    'invalid_league_name', 'league_not_found', 'league_full', 'too_many_leagues', 'not_a_member',
+    'not_league_owner',
   ];
 
   Future<dynamic> _rpc(String fn, [Map<String, dynamic>? params]) async {
@@ -68,6 +70,26 @@ class Api {
 
   Future<Leaderboard> leaderboard(String scope, String period) async => Leaderboard.fromJson(
       asMap(await _rpc('get_leaderboard', {'p_scope': scope, 'p_period': period})));
+
+  // --- Ligas privadas -----------------------------------------------------
+  Future<List<League>> myLeagues() async =>
+      asMapList(await _rpc('my_leagues')).map(League.fromJson).toList();
+
+  Future<League> createLeague(String name) async =>
+      League.fromJson(asMap(await _rpc('create_league', {'p_name': name})));
+
+  Future<League> joinLeague(String code) async =>
+      League.fromJson(asMap(await _rpc('join_league', {'p_code': code})));
+
+  Future<void> leaveLeague(int id) => _rpc('leave_league', {'p_league': id});
+
+  Future<void> deleteLeague(int id) => _rpc('delete_league', {'p_league': id});
+
+  Future<void> removeLeagueMember(int id, String alias) =>
+      _rpc('remove_league_member', {'p_league': id, 'p_alias': alias});
+
+  Future<Leaderboard> leagueLeaderboard(int id, String period) async => Leaderboard.fromJson(
+      asMap(await _rpc('league_leaderboard', {'p_league': id, 'p_period': period})));
 
   // --- Perfil ------------------------------------------------------------
   Future<Profile?> myProfile() async {

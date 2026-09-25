@@ -350,3 +350,55 @@ def test_maintenance_functions(db):
     db.execute("update questions set times_shown = 300, times_correct = 290 where external_id = 't9'")
     assert db.execute("select recalibrate_questions(200)").fetchone()[0] >= 1
     assert db.execute("select difficulty from questions where external_id = 't9'").fetchone()[0] == 1
+
+
+def test_private_leagues(db):
+    day = "2027-04-05"
+    make_challenge(db, day, make_questions(db, start=1000))
+    ana, ben, cris, guest = Player(db), Player(db), Player(db), Player(db, anonymous=True)
+    ana.register("ana_liga")
+    ben.register("ben_liga", city=3)
+    cris.register("cris_liga", city=4, country="FR")
+
+    with pytest.raises(psycopg.errors.RaiseException, match="profile_required"):
+        guest.call("select create_league('Invitados')")
+    with pytest.raises(psycopg.errors.RaiseException, match="invalid_league_name"):
+        ana.call("select create_league('xx')")
+
+    league = ana.call("select create_league('Cinéfilos del barrio')")
+    code = league["invite_code"]
+    assert len(code) == 6 and league["is_owner"] is True and league["members"] == 1
+
+    joined = ben.call("select join_league(%s)", (code.lower(),))  # admite minúsculas
+    assert joined["id"] == league["id"] and joined["members"] == 2 and joined["is_owner"] is False
+    cris.call("select join_league(%s)", (code,))
+    with pytest.raises(psycopg.errors.RaiseException, match="league_not_found"):
+        cris.call("select join_league('ZZZZZZ')")
+
+    ana.play(day, PERFECT)
+    ben.play(day, [0, 2, 2, 2, 2, [2, 0, 3, 1], 2, 2, 2, 2])   # 17 puntos
+    # cris no juega hoy: aparece al final con 0
+
+    board = ben.call("select league_leaderboard(%s, 'day', %s)", (league["id"], day), today=day)
+    assert [r["alias"] for r in board["top"]] == ["ana_liga", "ben_liga", "cris_liga"]
+    assert board["top"][2]["points"] == 0 and board["me"]["alias"] == "ben_liga"
+    assert board["label"]["name"] == "Cinéfilos del barrio"
+    # Los rankings generales no cambian por estar en una liga
+    assert ben.call("select get_leaderboard('world', 'day', %s)", (day,), today=day)["total_players"] >= 2
+
+    outsider = Player(db)
+    outsider.register("miron")
+    with pytest.raises(psycopg.errors.RaiseException, match="not_a_member"):
+        outsider.call("select league_leaderboard(%s, 'day')", (league["id"],))
+
+    with pytest.raises(psycopg.errors.RaiseException, match="not_league_owner"):
+        ben.call("select remove_league_member(%s, 'cris_liga')", (league["id"],))
+    ana.call("select remove_league_member(%s, 'cris_liga')", (league["id"],))
+    assert cris.call("select my_leagues()") == []
+
+    # Si el creador borra su cuenta, la liga pasa a ben
+    ana.call("select delete_my_account()")
+    mine = ben.call("select my_leagues()")
+    assert mine[0]["is_owner"] is True and mine[0]["members"] == 1
+    ben.call("select leave_league(%s)", (league["id"],))
+    assert db.execute("select count(*) from leagues where id = %s", (league["id"],)).fetchone()[0] == 0

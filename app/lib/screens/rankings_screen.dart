@@ -7,6 +7,7 @@ import '../share_text.dart';
 import '../strings.dart';
 import '../theme.dart';
 import '../widgets/common.dart';
+import 'leagues_screen.dart';
 
 class RankingsScreen extends StatefulWidget {
   const RankingsScreen({super.key});
@@ -30,6 +31,7 @@ class _RankingsScreenState extends State<RankingsScreen> {
 
   Future<void> _load() async {
     final state = AppState.instance;
+    if (_scope == 'leagues') return;
     if (_scope != 'world' && state.profile == null) {
       setState(() {
         _board = null;
@@ -72,10 +74,12 @@ class _RankingsScreenState extends State<RankingsScreen> {
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
           child: SegmentedButton<String>(
+            showSelectedIcon: false,
             segments: [
-              ButtonSegment(value: 'world', label: Text(tr('world')), icon: const Icon(Icons.public_rounded)),
-              ButtonSegment(value: 'country', label: Text(tr('country')), icon: const Icon(Icons.flag_rounded)),
-              ButtonSegment(value: 'city', label: Text(tr('local')), icon: const Icon(Icons.location_on_rounded)),
+              ButtonSegment(value: 'world', label: Text(tr('world'))),
+              ButtonSegment(value: 'country', label: Text(tr('country'))),
+              ButtonSegment(value: 'city', label: Text(tr('local'))),
+              ButtonSegment(value: 'leagues', label: Text(tr('leagues'))),
             ],
             selected: {_scope},
             onSelectionChanged: (s) {
@@ -84,28 +88,29 @@ class _RankingsScreenState extends State<RankingsScreen> {
             },
           ),
         ),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Row(
-            children: [
-              for (final p in const ['day', 'week', 'month', 'all'])
-                Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: ChoiceChip(
-                    label: Text(tr(p == 'all' ? 'all_time' : p)),
-                    selected: _period == p,
-                    onSelected: (_) {
-                      setState(() => _period = p);
-                      _load();
-                    },
+        if (_scope != 'leagues')
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              children: [
+                for (final p in const ['day', 'week', 'month', 'all'])
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: ChoiceChip(
+                      label: Text(tr(p == 'all' ? 'all_time' : p)),
+                      selected: _period == p,
+                      onSelected: (_) {
+                        setState(() => _period = p);
+                        _load();
+                      },
+                    ),
                   ),
-                ),
-            ],
+              ],
+            ),
           ),
-        ),
         const SizedBox(height: 8),
-        Expanded(child: _content()),
+        Expanded(child: _scope == 'leagues' ? const LeaguesPanel() : _content()),
         const BannerSlot(),
       ],
     );
@@ -142,7 +147,7 @@ class _RankingsScreenState extends State<RankingsScreen> {
           ),
           const SizedBox(height: 10),
           if (b.me != null) ...[
-            _RowTile(b.me!, highlight: true),
+            RankingRow(b.me!, highlight: true),
             const SizedBox(height: 10),
           ],
           if (b.top.isEmpty)
@@ -150,13 +155,13 @@ class _RankingsScreenState extends State<RankingsScreen> {
               padding: const EdgeInsets.all(32),
               child: Text(tr('no_players_yet'), textAlign: TextAlign.center),
             ),
-          for (final r in b.top) _RowTile(r),
+          for (final r in b.top) RankingRow(r),
           if (b.around.isNotEmpty) ...[
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 6),
               child: Center(child: Icon(Icons.more_vert_rounded, color: AppColors.textMuted)),
             ),
-            for (final r in b.around) _RowTile(r),
+            for (final r in b.around) RankingRow(r),
           ],
         ],
       ),
@@ -164,10 +169,10 @@ class _RankingsScreenState extends State<RankingsScreen> {
   }
 }
 
-class _RowTile extends StatelessWidget {
+class RankingRow extends StatelessWidget {
   final LeaderboardRow row;
   final bool highlight;
-  const _RowTile(this.row, {this.highlight = false});
+  const RankingRow(this.row, {this.highlight = false});
 
   @override
   Widget build(BuildContext context) {

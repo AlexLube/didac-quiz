@@ -88,6 +88,35 @@ class Strings {
     'area_of': {'es': 'Área de {name}', 'en': '{name} area'},
     'no_players_yet': {'es': 'Todavía no hay nadie aquí. ¡Sé el primero!', 'en': 'Nobody here yet. Be the first!'},
     'rankings_need_account': {'es': 'Crea una cuenta para ver tu país y tu ciudad.', 'en': 'Create an account to see your country and city.'},
+    // Ligas privadas
+    'leagues': {'es': 'Ligas', 'en': 'Leagues'},
+    'my_leagues': {'es': 'Mis ligas', 'en': 'My leagues'},
+    'leagues_intro': {
+      'es': 'Crea una liga y compite con tus amigos con las mismas partidas del reto diario.',
+      'en': 'Create a league and compete with your friends using the same daily games.'
+    },
+    'create_league': {'es': 'Crear liga', 'en': 'Create league'},
+    'join_league': {'es': 'Unirme con código', 'en': 'Join with code'},
+    'league_name': {'es': 'Nombre de la liga', 'en': 'League name'},
+    'invite_code': {'es': 'Código de invitación', 'en': 'Invite code'},
+    'invite_friends': {'es': 'Invitar amigos', 'en': 'Invite friends'},
+    'invite_text': {
+      'es': '¡Únete a mi liga «{name}» en Didac-Quiz! Código: {code}',
+      'en': 'Join my league “{name}” on Didac-Quiz! Code: {code}'
+    },
+    'members_n': {'es': '{n} miembros', 'en': '{n} members'},
+    'owner': {'es': 'Creador', 'en': 'Owner'},
+    'leave_league': {'es': 'Salir de la liga', 'en': 'Leave league'},
+    'delete_league': {'es': 'Borrar la liga', 'en': 'Delete league'},
+    'delete_league_confirm': {'es': 'Se borrará la liga para todos sus miembros.', 'en': 'The league will be deleted for all members.'},
+    'remove_member': {'es': 'Expulsar a {alias}', 'en': 'Remove {alias}'},
+    'no_leagues': {'es': 'Todavía no estás en ninguna liga.', 'en': "You're not in any league yet."},
+    'leagues_need_account': {'es': 'Crea una cuenta para jugar ligas con tus amigos.', 'en': 'Create an account to play leagues with your friends.'},
+    'joined_league': {'es': 'Te has unido a «{name}»', 'en': 'You joined “{name}”'},
+    'err_invalid_league_name': {'es': 'El nombre debe tener entre 3 y 40 caracteres y no puede ser ofensivo.', 'en': 'The name must be 3-40 characters and not offensive.'},
+    'err_league_not_found': {'es': 'No existe ninguna liga con ese código.', 'en': 'No league with that code.'},
+    'err_league_full': {'es': 'Esa liga está llena (máximo 100).', 'en': 'That league is full (max 100).'},
+    'err_too_many_leagues': {'es': 'Puedes estar como máximo en 20 ligas.', 'en': 'You can be in at most 20 leagues.'},
     // Perfil y cuentas
     'create_account': {'es': 'Crear cuenta', 'en': 'Create account'},
     'login': {'es': 'Iniciar sesión', 'en': 'Log in'},
