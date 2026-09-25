@@ -8,6 +8,8 @@ from __future__ import annotations
 
 import hashlib
 import random
+import re
+import unicodedata
 from collections import defaultdict
 from typing import Callable
 
@@ -18,6 +20,15 @@ Question = dict
 
 def _t(film: Film, lang: str) -> str:
     return f"«{film.title_es}»" if lang == "es" else f"“{film.title_en}”"
+
+
+_ARTICLES = re.compile(r"^(el|la|los|las|un|una|the|a|an|le|les|il|lo|der|die|das)\s+", re.I)
+
+
+def title_key(title: str) -> str:
+    t = unicodedata.normalize("NFKD", title).encode("ascii", "ignore").decode().lower()
+    t = re.sub(r"[^a-z0-9 ]+", " ", t).strip()
+    return _ARTICLES.sub("", t).strip()
 
 
 def _opt(es: str, en: str | None = None) -> dict:
@@ -79,6 +90,12 @@ class Generator:
         self.films = films
         self.rng = random.Random(seed)
         set_tier_cuts(films)
+        counts: dict[str, int] = defaultdict(int)
+        for f in films:
+            for k in {title_key(f.title_es), title_key(f.title_en)}:
+                counts[k] += 1
+        self.ambiguous = {f.qid for f in films
+                          if counts[title_key(f.title_es)] > 1 or counts[title_key(f.title_en)] > 1}
         self.by_director: dict[str, list[Film]] = defaultdict(list)
         self.directors: dict[str, Person] = {}
         for f in films:
@@ -87,6 +104,13 @@ class Generator:
                 self.directors[d.qid] = d
 
     # -- utilidades -------------------------------------------------------
+    def _tt(self, film: Film, lang: str) -> str:
+        """Título; si hay otra película con un título parecido, añade el director."""
+        if film.qid in self.ambiguous and film.directors:
+            by = "de" if lang == "es" else "by"
+            return f"{_t(film, lang)}, {by} {film.directors[0].name},"
+        return _t(film, lang)
+
     def _era_films(self, film: Film, span: int = 12) -> list[Film]:
         return [f for f in self.films if f.qid != film.qid and abs(f.year - film.year) <= span]
 
@@ -139,8 +163,8 @@ class Generator:
             "difficulty": _difficulty(1, film),
             "topic": "year",
             "entity_ids": [film.qid],
-            "prompt": {"es": f"¿En qué década se estrenó {_t(film, 'es')}?",
-                       "en": f"In which decade was {_t(film, 'en')} released?"},
+            "prompt": {"es": f"¿En qué década se estrenó {self._tt(film, 'es').rstrip(',')}?",
+                       "en": f"In which decade was {self._tt(film, 'en').rstrip(',')} released?"},
             "options": opts,
             "answer": idx,
             "explanation": _explanation(film),
@@ -155,8 +179,8 @@ class Generator:
             "difficulty": _difficulty(1, film),
             "topic": "year",
             "entity_ids": [film.qid],
-            "prompt": {"es": f"{_t(film, 'es')} se estrenó en {year}.",
-                       "en": f"{_t(film, 'en')} was released in {year}."},
+            "prompt": {"es": f"{self._tt(film, 'es')} se estrenó en {year}.",
+                       "en": f"{self._tt(film, 'en')} was released in {year}."},
             "options": [_opt("Verdadero", "True"), _opt("Falso", "False")],
             "answer": 0 if truth else 1,
             "explanation": _explanation(film),
@@ -172,8 +196,8 @@ class Generator:
             "difficulty": 2 if truth else 1,
             "topic": "awards",
             "entity_ids": [film.qid],
-            "prompt": {"es": f"{_t(film, 'es')} ganó el Oscar a la mejor película.",
-                       "en": f"{_t(film, 'en')} won the Academy Award for Best Picture."},
+            "prompt": {"es": f"{self._tt(film, 'es')} ganó el Oscar a la mejor película.",
+                       "en": f"{self._tt(film, 'en')} won the Academy Award for Best Picture."},
             "options": [_opt("Verdadero", "True"), _opt("Falso", "False")],
             "answer": 0 if truth else 1,
             "explanation": _explanation(film),

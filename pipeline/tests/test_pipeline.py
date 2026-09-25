@@ -150,3 +150,15 @@ def test_cli_build_and_schedule_offline(tmp_path, monkeypatch, films):
     import json as _json
     cal = _json.loads((tmp_path / "out" / "calendar.json").read_text())
     assert len(cal) == 30 and cal[0]["date"] == "2030-01-01"
+
+
+def test_ambiguous_titles_mention_director():
+    from didacquiz_pipeline.generate import Generator, title_key
+    assert title_key("El cisne negro") == title_key("Cisne negro")
+    films = synthetic_films(200)
+    films[0].title_es, films[0].title_en = "El cisne negro", "The Black Swan"
+    films[1].title_es, films[1].title_en = "Cisne negro", "Black Swan"
+    g = Generator(films)
+    q = g.q_decade(films[0])
+    assert films[0].directors[0].name in q["prompt"]["es"]
+    assert g.q_true_false_year(films[1])["prompt"]["en"].count(films[1].directors[0].name) == 1
