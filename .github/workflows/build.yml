@@ -42,6 +42,16 @@ jobs:
           python -m pytest -q supabase/tests 2>&1 | tee ci-logs/backend.log
           (cd pipeline && python -m pytest -q tests) 2>&1 | tee -a ci-logs/backend.log
 
+      - name: Prueba contra el servidor real
+        id: live
+        continue-on-error: true
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          set -o pipefail
+          python tool/live_check.py 2>&1 | tee ci-logs/live.log
+
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -108,6 +118,7 @@ jobs:
             echo "commit: ${{ github.sha }}"
             echo "run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
             echo "backend: ${{ steps.backend.outcome }}"
+            echo "live: ${{ steps.live.outcome }}"
             echo "prepare: ${{ steps.prepare.outcome }}"
             echo "analyze_test: ${{ steps.analyze.outcome }}"
             echo "apk: ${{ steps.apk.outcome }}"
