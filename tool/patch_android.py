@@ -5,6 +5,8 @@
 - ID de aplicación de AdMob (por defecto, el de pruebas de Google)
 - Enlace de vuelta para el inicio de sesión con Google/Apple
 - minSdk 23 (requisito de los anuncios)
+- Reglas de R8 para que no elimine la base de datos interna de WorkManager
+  (la usa la librería de anuncios; sin esto la app se cierra al abrir)
 """
 from __future__ import annotations
 
@@ -46,6 +48,15 @@ if "login-callback" not in m:
 
 manifest.write_text(m, encoding="utf-8")
 
+PROGUARD = """# Didac-Quiz: evitar que R8 elimine clases generadas por Room/WorkManager
+-keep class androidx.work.** { *; }
+-keep class * extends androidx.room.RoomDatabase { <init>(); }
+-keep class androidx.room.** { *; }
+-keep class androidx.startup.** { *; }
+-dontwarn androidx.work.**
+"""
+(APP / "android/app/proguard-rules.pro").write_text(PROGUARD, encoding="utf-8")
+
 for name in ("build.gradle.kts", "build.gradle"):
     gradle = APP / "android/app" / name
     if not gradle.exists():
@@ -53,6 +64,13 @@ for name in ("build.gradle.kts", "build.gradle"):
     g = gradle.read_text(encoding="utf-8")
     g = re.sub(r'applicationId\s*=?\s*"[^"]+"', 'applicationId = "com.didacquiz.app"', g)
     g = re.sub(r"minSdk(Version)?\s*=?\s*flutter\.minSdkVersion", "minSdk = 23", g)
+    if "proguard-rules.pro" not in g:
+        if name.endswith(".kts"):
+            rule = ('proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), '
+                    '"proguard-rules.pro")')
+        else:
+            rule = "proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'"
+        g = re.sub(r"(release\s*\{)", r"\1\n            " + rule, g, count=1)
     gradle.write_text(g, encoding="utf-8")
     print(f"Ajustado {gradle}")
 
