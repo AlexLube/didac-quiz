@@ -1,0 +1,127 @@
+name: Pruebas y APK
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      PGHOST: localhost
+      PGPORT: "5432"
+      PGUSER: postgres
+      PGPASSWORD: postgres
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Pruebas de base de datos y generador
+        id: backend
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          mkdir -p ci-logs
+          pip install -q -r pipeline/requirements-dev.txt
+          python -m pytest -q supabase/tests 2>&1 | tee ci-logs/backend.log
+          (cd pipeline && python -m pytest -q tests) 2>&1 | tee -a ci-logs/backend.log
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Preparar proyecto Android
+        id: prepare
+        continue-on-error: true
+        working-directory: app
+        env:
+          ADMOB_APP_ID: ${{ vars.ADMOB_APP_ID }}
+        run: |
+          set -o pipefail
+          flutter --version 2>&1 | tee ../ci-logs/flutter-version.log
+          flutter create --platforms=android --org com.didacquiz --project-name didac_quiz . 2>&1 | tail -5 | tee ../ci-logs/create.log
+          rm -f test/widget_test.dart
+          python ../tool/patch_android.py . 2>&1 | tee -a ../ci-logs/create.log
+          flutter pub get 2>&1 | tee ../ci-logs/pub.log
+
+      - name: Análisis y pruebas de la app
+        id: analyze
+        continue-on-error: true
+        working-directory: app
+        run: |
+          set -o pipefail
+          flutter analyze --no-fatal-infos 2>&1 | tee ../ci-logs/analyze.log
+          flutter test 2>&1 | tee ../ci-logs/test.log
+
+      - name: Compilar APK
+        id: apk
+        continue-on-error: true
+        working-directory: app
+        run: |
+          set -o pipefail
+          flutter build apk --release \
+            --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_URL }} \
+            --dart-define=SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }} \
+            --dart-define=ENABLE_GOOGLE_LOGIN=${{ vars.ENABLE_GOOGLE_LOGIN || 'false' }} \
+            --dart-define=ENABLE_APPLE_LOGIN=${{ vars.ENABLE_APPLE_LOGIN || 'false' }} \
+            ${{ vars.ADMOB_BANNER_ID && format('--dart-define=ADMOB_BANNER_ID={0}', vars.ADMOB_BANNER_ID) || '' }} \
+            ${{ vars.ADMOB_INTERSTITIAL_ID && format('--dart-define=ADMOB_INTERSTITIAL_ID={0}', vars.ADMOB_INTERSTITIAL_ID) || '' }} \
+            ${{ vars.ADMOB_REWARDED_ID && format('--dart-define=ADMOB_REWARDED_ID={0}', vars.ADMOB_REWARDED_ID) || '' }} \
+            2>&1 | tail -40 | tee ../ci-logs/apk.log
+
+      - name: Guardar APK
+        if: steps.apk.outcome == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: didac-quiz-apk
+          path: app/build/app/outputs/flutter-apk/app-release.apk
+
+      # Resumen legible también desde fuera de GitHub (rama ci-status)
+      - name: Publicar resumen
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          {
+            echo "commit: ${{ github.sha }}"
+            echo "run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            echo "backend: ${{ steps.backend.outcome }}"
+            echo "prepare: ${{ steps.prepare.outcome }}"
+            echo "analyze_test: ${{ steps.analyze.outcome }}"
+            echo "apk: ${{ steps.apk.outcome }}"
+          } > ci-logs/SUMMARY.txt
+          cat ci-logs/SUMMARY.txt
+          tmp=$(mktemp -d); cp -r ci-logs/. "$tmp"/; cd "$tmp"
+          git init -q && git checkout -q -b ci-status
+          git -c user.name=ci -c user.email=ci@users.noreply.github.com add -A
+          git -c user.name=ci -c user.email=ci@users.noreply.github.com commit -qm "CI ${{ github.sha }}"
+          git push -qf "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" ci-status
+
+      - name: Resultado
+        if: always()
+        run: |
+          test "${{ steps.backend.outcome }}" = success
+          test "${{ steps.analyze.outcome }}" = success
+          test "${{ steps.apk.outcome }}" = success

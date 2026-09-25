@@ -1,0 +1,63 @@
+name: Preguntas y base de datos
+
+on:
+  workflow_dispatch:
+    inputs:
+      task:
+        description: "Qué hacer"
+        type: choice
+        options:
+          - generar-retos          # lote anual: Wikidata → preguntas → calendario → Supabase
+          - preparar-base-datos    # aplica migraciones y datos de países/ciudades
+          - comprobar-reservas     # avisa si quedan pocos días con reto
+        default: generar-retos
+      days:
+        description: "Días de retos a generar"
+        default: "365"
+      ai:
+        description: "Usar IA para redactar curiosidades y revisar preguntas"
+        type: boolean
+        default: true
+  schedule:
+    - cron: "17 6 * * 1"   # cada lunes: comprobar que quedan retos programados
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -q -r pipeline/requirements.txt
+
+      - name: Preparar base de datos
+        if: github.event.inputs.task == 'preparar-base-datos'
+        run: |
+          sudo apt-get install -y -q postgresql-client >/dev/null
+          tool/db_setup.sh
+
+      - name: Generar retos
+        if: github.event.inputs.task == 'generar-retos'
+        working-directory: pipeline
+        run: |
+          python -m didacquiz_pipeline yearly --days "${{ github.event.inputs.days }}" \
+            ${{ github.event.inputs.ai == 'true' && '--ai' || '' }}
+
+      - name: Guardar resultados (preguntas, descartes, revisión)
+        if: github.event.inputs.task == 'generar-retos'
+        uses: actions/upload-artifact@v4
+        with:
+          name: preguntas
+          path: pipeline/out/
+
+      - name: Comprobar reservas
+        if: github.event_name == 'schedule' || github.event.inputs.task == 'comprobar-reservas'
+        working-directory: pipeline
+        run: python -m didacquiz_pipeline check --min-days 45

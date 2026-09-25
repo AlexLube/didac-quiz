@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+.pytest_cache/
+pipeline/data/
+pipeline/out/
+# Flutter (las carpetas de plataforma se generan en CI)
+app/.dart_tool/
+app/build/
+app/.flutter-plugins
+app/.flutter-plugins-dependencies
+app/android/
+app/ios/
+app/.metadata
+app/pubspec.lock
+.env
