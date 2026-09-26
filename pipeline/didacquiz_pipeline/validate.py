@@ -11,7 +11,8 @@ import unicodedata
 
 from .wikidata import Film
 
-FORMATS = {"choice", "true_false", "order", "intruder", "decade", "clues", "image_choice", "image_reveal"}
+FORMATS = {"choice", "true_false", "order", "intruder", "decade", "clues", "emoji", "image_choice",
+           "image_reveal", "audio"}
 
 
 def _norm(s: str) -> str:
@@ -180,6 +181,23 @@ def _semantic_new_types(q, films, film, names, correct) -> list[str] | None:
             if (f.qid != film.qid and f.year == film.year and d in {x.qid for x in f.directors}
                     and star in f.cast_all and _norm(f"«{f.title_es}»") in {_norm(n) for n in names}):
                 errs.append("otra opción también encaja con las pistas")
+    elif topic in ("location_photo", "still", "emoji", "music_film") and film:
+        if _norm(correct) != _norm(f"«{film.title_es}»"):
+            errs.append("la película correcta no coincide")
+        if topic in ("location_photo", "still") and not q.get("image_url"):
+            errs.append("falta la imagen")
+        if topic == "location_photo":
+            loc = q["entity_ids"][1]
+            titles = {_norm(f"«{f.title_es}»"): f for f in films.values()}
+            for n in wrong:
+                f = titles.get(_norm(n))
+                if f and loc in {l["qid"] for l in f.location_photos}:
+                    errs.append("otra opción también se rodó allí")
+        if topic == "music_film" and not q.get("audio_url"):
+            errs.append("falta el audio")
+    elif topic == "music_piece":
+        if not q.get("audio_url"):
+            errs.append("falta el audio")
     elif topic == "saga_next":
         saga = [films[x] for x in q["entity_ids"][1:] if x in films]
         if not saga:

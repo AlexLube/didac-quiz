@@ -227,3 +227,74 @@ def test_schedule_mixes_many_types(questions, films):
         topics = [by_id[x]["topic"] for x in c["external_ids"]]
         assert len(set(topics)) >= 6, topics
         assert max(topics.count(t) for t in set(topics)) <= 3
+
+
+def _media_films():
+    films = synthetic_films(300, seed=5)
+    for i, f in enumerate(films):
+        f.popularity = max(f.popularity, 90) if i % 2 == 0 else f.popularity
+        if i % 3 == 0:
+            f.location_photos = [{"qid": f"QL{i}", "name_es": f"Lugar {i}", "name_en": f"Place {i}",
+                                  "file": f"L{i}.jpg", "url": f"https://upload.wikimedia.org/L{i}.jpg",
+                                  "license": "CC BY-SA 4.0", "artist": "Fotógrafa", "mime": "image/jpeg"}]
+        if i % 7 == 0:
+            f.year = 1920 + i % 10
+            f.still = {"file": f"S{i}.jpg", "url": f"https://upload.wikimedia.org/S{i}.jpg",
+                       "license": "Public domain", "artist": "Desconocido", "mime": "image/jpeg"}
+    return films
+
+
+def test_media_questions_generated_and_valid():
+    films = _media_films()
+    music = [{"piece_es": f"Pieza {k}", "piece_en": f"Piece {k}", "composer": f"Compositor {k}",
+              "died": 1900, "films": [], "search": f"pieza {k}", "start_s": 3,
+              "film_qids": [films[k * 10].qid],
+              "recording": {"url": f"https://upload.wikimedia.org/p{k}.ogg", "license": "CC0",
+                            "artist": "Orquesta", "mime": "application/ogg"}} for k in range(6)]
+    emojis = {films[0].qid: "🦈🚤🏖️", films[2].qid: "👦🏠🎄"}
+    qs = Generator(films, music=music, emojis=emojis).generate_all()
+    ok, rejected = validate_all(qs, films)
+    topics = {q["topic"] for q in ok}
+    assert {"location_photo", "still", "emoji", "music_film", "music_piece"} <= topics
+    loc = next(q for q in ok if q["topic"] == "location_photo")
+    assert loc["format"] == "image_choice" and "CC BY-SA" in loc["image_attribution"]
+    mus = next(q for q in ok if q["topic"] == "music_film")
+    assert mus["format"] == "audio" and mus["_audio_start_s"] == 3
+    emo = next(q for q in ok if q["topic"] == "emoji")
+    assert emo["prompt"]["es"].split("\n")[0] in emojis.values()
+    assert not [e for q, e in rejected if q["topic"] in topics and q["topic"].startswith(("loc", "still", "music", "emoji"))]
+
+
+def test_commons_helpers():
+    from didacquiz_pipeline import ai, media
+    assert media.license_ok("CC BY-SA 4.0") and media.license_ok("Public domain") and media.license_ok("CC0")
+    assert not media.license_ok("CC BY-NC-SA 3.0") and not media.license_ok("Fair use") and not media.license_ok("")
+    assert media.filename_from_url(
+        "http://commons.wikimedia.org/wiki/Special:FilePath/Monument%20Valley.jpg") == "Monument Valley.jpg"
+    assert ai._emoji_ok("🦈🚤🏖️") and not ai._emoji_ok("🦈 Jaws") and not ai._emoji_ok("1️⃣9️⃣8️⃣4️⃣")
+
+
+def test_media_failures_drop_question(monkeypatch):
+    from didacquiz_pipeline import media, upload
+
+    class FakeStore:
+        def __init__(self, *a, **k):
+            pass
+
+        def mirror_image(self, url):
+            if "bad" in url:
+                raise RuntimeError("404")
+            return "https://x.supabase.co/storage/v1/object/public/media/img/a.jpg"
+
+        def mirror_clip(self, url, start):
+            return "https://x.supabase.co/storage/v1/object/public/media/audio/a.mp3"
+
+    monkeypatch.setattr(media, "MediaStore", FakeStore)
+    sb = upload.Supabase("https://x.supabase.co", "sb_secret_x")
+    qs = [{"external_id": "a", "image_url": "https://upload.wikimedia.org/good.jpg"},
+          {"external_id": "b", "image_url": "https://upload.wikimedia.org/bad.jpg"},
+          {"external_id": "c", "audio_url": "https://upload.wikimedia.org/p.ogg", "_audio_start_s": 2},
+          {"external_id": "d"}]
+    out = sb.mirror_media(qs)
+    assert [q["external_id"] for q in out] == ["a", "c", "d"]
+    assert out[1]["audio_url"].endswith(".mp3") and out[1]["media_start_ms"] == 0

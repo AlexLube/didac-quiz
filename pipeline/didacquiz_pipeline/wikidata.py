@@ -5,6 +5,7 @@ Todas las respuestas correctas del juego salen de aquí: la IA nunca inventa dat
 from __future__ import annotations
 
 import json
+import re
 import time
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
@@ -61,6 +62,8 @@ class Film:
     series_ordinal: float | None = None                    # posición en la saga (si consta)
     duration: int | None = None                            # minutos
     filming_countries: list[str] = field(default_factory=list)
+    location_photos: list[dict] = field(default_factory=list)  # fotos libres de lugares de rodaje
+    still: dict | None = None             # imagen de dominio público (solo cine antiguo)
 
     @staticmethod
     def from_dict(d: dict) -> "Film":
@@ -205,6 +208,30 @@ SELECT DISTINCT ?film ?iso WHERE {{
 }}
 """
 
+LOCATION_PHOTO_QUERY = """
+SELECT ?film ?loc ?lEs ?lEn ?img WHERE {{
+  VALUES ?film {{ {values} }}
+  ?film wdt:P915 ?loc .
+  ?loc wdt:P18 ?img .
+  OPTIONAL {{ ?loc rdfs:label ?lEs FILTER(LANG(?lEs) = "es") }}
+  OPTIONAL {{ ?loc rdfs:label ?lEn FILTER(LANG(?lEn) = "en") }}
+}}
+"""
+
+STILL_QUERY = """
+SELECT ?film ?img WHERE {{
+  VALUES ?film {{ {values} }}
+  ?film wdt:P18 ?img .
+}}
+"""
+
+DEATHS_QUERY = """
+SELECT ?p ?death WHERE {{
+  VALUES ?p {{ {values} }}
+  ?p wdt:P570 ?death .
+}}
+"""
+
 AWARDS_QUERY = """
 SELECT ?film ?award WHERE {{
   VALUES ?award {{ {awards} }}
@@ -265,6 +292,7 @@ def fetch_films(min_links: int = 20, cast_per_film: int = 4, verbose: bool = Tru
             films[fq].cast_all = sorted(set(films[fq].cast_all))
 
     fetch_details(films, ids, verbose=verbose)
+    fetch_media(films, verbose=verbose)
 
     goya = _sparql(GOYA_LOOKUP)
     award_ids = {BEST_PICTURE_OSCAR: "oscar_best_picture"}
@@ -362,6 +390,102 @@ def fetch_details(films: dict[str, "Film"], ids: list[str], verbose: bool = True
                 films[fq].filming_countries.append(iso)
         if verbose and n % 20 == 0:
             print(f"  detalles: {min((n + 1) * 100, len(ids))}/{len(ids)}")
+
+
+_POSTER = re.compile(r"poster|affiche|cartel|plakat|lobby|card|title|locandina|cartaz", re.I)
+
+
+def fetch_media(films: dict[str, "Film"], verbose: bool = True) -> None:
+    """Fotos libres de lugares de rodaje e imágenes de cine antiguo en dominio público."""
+    from . import media
+
+    # 1) Lugares de rodaje con foto (solo películas conocidas y lugares concretos)
+    known = [fq for fq, f in films.items() if f.popularity >= 45]
+    raw: dict[str, list[dict]] = {}
+    loc_use: dict[str, int] = {}
+    for chunk in _chunks(known):
+        for b in _sparql_chunked(LOCATION_PHOTO_QUERY, chunk):
+            fq, lq = _qid(_val(b, "film")), _qid(_val(b, "loc"))
+            name_en = _val(b, "lEn") or _val(b, "lEs")
+            if not name_en:
+                continue
+            raw.setdefault(fq, []).append({"qid": lq, "name_es": _val(b, "lEs") or name_en, "name_en": name_en,
+                                           "file": media.filename_from_url(_val(b, "img"))})
+    for items in raw.values():
+        for lq in {i["qid"] for i in items}:
+            loc_use[lq] = loc_use.get(lq, 0) + 1
+    files = [i["file"] for items in raw.values() for i in items if loc_use[i["qid"]] <= 2]
+    infos = media.file_infos(files)
+    for fq, items in raw.items():
+        seen = set()
+        for i in items:
+            info = infos.get(i["file"])
+            if loc_use[i["qid"]] > 2 or not info or not info["ok"] or i["qid"] in seen:
+                continue
+            seen.add(i["qid"])
+            films[fq].location_photos.append({**i, "url": info["thumb"], "license": info["license"],
+                                              "artist": info["artist"], "mime": info["mime"]})
+    if verbose:
+        print(f"  fotos de lugares de rodaje: {sum(len(f.location_photos) for f in films.values())}")
+
+    # 2) Cine antiguo en dominio público en la UE: autores fallecidos hace más de 70 años
+    limit_year = time.gmtime().tm_year - 71
+    old = [fq for fq, f in films.items() if f.year <= 1950]
+    people = sorted({p.qid for fq in old for p in films[fq].directors + films[fq].writers
+                     + films[fq].composers})
+    deaths: dict[str, int] = {}
+    for chunk in _chunks(people):
+        for b in _sparql_chunked(DEATHS_QUERY.replace("?film", "?p"), chunk):
+            try:
+                deaths[_qid(_val(b, "p"))] = int(_val(b, "death")[:4])
+            except (TypeError, ValueError):
+                pass
+    pd_films = [fq for fq in old
+                if all(deaths.get(p.qid, 9999) <= limit_year
+                       for p in films[fq].directors + films[fq].writers + films[fq].composers)]
+    stills: dict[str, str] = {}
+    for chunk in _chunks(pd_films):
+        for b in _sparql_chunked(STILL_QUERY, chunk):
+            name = media.filename_from_url(_val(b, "img"))
+            if not _POSTER.search(name):
+                stills.setdefault(_qid(_val(b, "film")), name)
+    infos = media.file_infos(list(stills.values()))
+    for fq, name in stills.items():
+        info = infos.get(name)
+        if info and info["ok"] and info["mime"].startswith("image"):
+            films[fq].still = {"file": name, "url": info["thumb"], "license": info["license"],
+                               "artist": info["artist"], "mime": info["mime"]}
+    if verbose:
+        print(f"  imágenes de dominio público: {sum(1 for f in films.values() if f.still)}")
+
+
+def resolve_music(films: list["Film"], path: Path | None = None) -> list[dict]:
+    """Lista curada de música clásica de cine: busca grabaciones libres en Commons."""
+    from . import media
+    path = path or Path(__file__).with_name("music.json")
+    items = json.loads(path.read_text(encoding="utf-8"))
+    by_title = {}
+    for f in films:
+        for t in (f.title_en, f.title_es):
+            by_title.setdefault((t.lower(), f.year), f)
+    out = []
+    for it in items:
+        qids = []
+        for title, year in it["films"]:
+            f = next((by_title.get((title.lower(), y)) for y in (year, year - 1, year + 1)
+                      if by_title.get((title.lower(), y))), None)
+            if f:
+                qids.append(f.qid)
+        if not qids:
+            print(f"  música: no encuentro la película de «{it['piece_es']}»")
+            continue
+        recs = media.search_audio(it["search"])
+        if not recs:
+            print(f"  música: sin grabación libre para «{it['piece_es']}»")
+            continue
+        out.append({**it, "film_qids": qids, "recording": recs[0]})
+    print(f"  música: {len(out)} piezas con grabación libre")
+    return out
 
 
 def save_films(films: list[Film], path: Path) -> None:

@@ -8,6 +8,7 @@ import '../models.dart';
 import '../services/api.dart';
 import '../strings.dart';
 import '../theme.dart';
+import '../widgets/audio_clip.dart';
 import '../widgets/common.dart';
 import 'result_screen.dart';
 
@@ -260,10 +261,36 @@ class _PlayScreenState extends State<PlayScreen> {
             ),
             const SizedBox(height: 14),
             if (q.imageUrl != null) _QuestionImage(q: q, fraction: fraction),
-            Text(
-              Strings.pick(q.prompt),
-              style: const TextStyle(fontSize: 23, fontWeight: FontWeight.w800, height: 1.25),
-            ),
+            if (q.audioUrl != null)
+              AudioClip(
+                key: ValueKey('audio-${q.id}'),
+                url: q.audioUrl!,
+                startMs: q.mediaStartMs,
+                attribution: q.audioAttribution,
+                stop: _feedback != _Feedback.none,
+              ),
+            if (q.emojiLine != null) ...[
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 22),
+                margin: const EdgeInsets.only(bottom: 14),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(22),
+                ),
+                child: Text(q.emojiLine!,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(fontSize: 54, letterSpacing: 6)),
+              ),
+              Text(
+                Strings.pick(q.prompt).split('\n').skip(1).join('\n'),
+                style: const TextStyle(fontSize: 23, fontWeight: FontWeight.w800, height: 1.25),
+              ),
+            ] else
+              Text(
+                Strings.pick(q.prompt),
+                style: const TextStyle(fontSize: 23, fontWeight: FontWeight.w800, height: 1.25),
+              ),
             const SizedBox(height: 22),
             if (q.isOrder) _orderOptions(q) else _choiceOptions(q),
             if (_error != null)

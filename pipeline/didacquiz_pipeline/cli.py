@@ -20,7 +20,7 @@ from . import ai
 from .generate import Generator
 from .schedule import plan
 from .validate import validate_all
-from .wikidata import fetch_films, load_films, save_films
+from .wikidata import fetch_films, load_films, resolve_music, save_films
 
 DATA = Path("data")
 OUT = Path("out")
@@ -36,11 +36,18 @@ def cmd_fetch(args) -> None:
     films = fetch_films(min_links=args.min_links)
     save_films(films, DATA / "films.json")
     print(f"{len(films)} películas guardadas en {DATA / 'films.json'}")
+    _write(DATA / "music.json", resolve_music(films))
 
 
 def cmd_build(args) -> None:
     films = load_films(DATA / "films.json")
-    raw = Generator(films, seed=args.seed).generate_all()
+    music = json.loads((DATA / "music.json").read_text(encoding="utf-8")) if (DATA / "music.json").exists() else []
+    cache_path = DATA / "emoji.json"
+    cache = json.loads(cache_path.read_text(encoding="utf-8")) if cache_path.exists() else {}
+    emojis = ai.build_emojis(films, cache) if args.ai else {k: v for k, v in cache.items() if v}
+    if args.ai:
+        _write(cache_path, cache)
+    raw = Generator(films, seed=args.seed, music=music, emojis=emojis).generate_all()
     ok, rejected = validate_all(raw, films)
     review = []
     if args.ai:
@@ -96,9 +103,18 @@ def cmd_upload(args) -> None:
     print(f"Subidas {len(ids)} preguntas y {len(calendar)} retos.")
 
 
+def cmd_media(args) -> None:
+    """Copia a Supabase Storage las imágenes y audios de las preguntas (descarta las que fallan)."""
+    questions = json.loads((OUT / "questions.json").read_text(encoding="utf-8"))
+    kept = _supabase().mirror_media(questions)
+    _write(OUT / "questions.json", kept)
+    print(f"Preguntas tras copiar medios: {len(kept)}")
+
+
 def cmd_yearly(args) -> None:
     cmd_fetch(args)
     cmd_build(args)
+    cmd_media(args)
     args.remote = True
     cmd_schedule(args)
     cmd_upload(args)
@@ -127,8 +143,8 @@ def main(argv=None) -> None:
         sp.add_argument("--all-questions", action="store_true", help="subir también la reserva")
         sp.add_argument("--replace-from", help="'tomorrow' o AAAA-MM-DD: rehace los retos desde esa fecha")
 
-    for name, fn in [("fetch", cmd_fetch), ("build", cmd_build), ("schedule", cmd_schedule),
-                     ("upload", cmd_upload), ("yearly", cmd_yearly)]:
+    for name, fn in [("fetch", cmd_fetch), ("build", cmd_build), ("media", cmd_media),
+                     ("schedule", cmd_schedule), ("upload", cmd_upload), ("yearly", cmd_yearly)]:
         sp = sub.add_parser(name)
         common(sp)
         sp.set_defaults(fn=fn)

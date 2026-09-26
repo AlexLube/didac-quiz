@@ -29,13 +29,38 @@ class Supabase:
 
     def upsert_questions(self, questions: list[dict]) -> dict[str, int]:
         cols = ("external_id", "format", "difficulty", "topic", "entity_ids", "prompt", "options",
-                "answer", "explanation", "image_url", "image_attribution", "source")
+                "answer", "explanation", "image_url", "image_attribution", "audio_url",
+                "audio_attribution", "media_start_ms", "source")
+        questions = self.mirror_media(questions)
         ids: dict[str, int] = {}
         for i in range(0, len(questions), 500):
             rows = [{c: q.get(c) for c in cols} for q in questions[i : i + 500]]
             for row in self._post("questions", rows, "external_id", returning=True):
                 ids[row["external_id"]] = row["id"]
         return ids
+
+    def mirror_media(self, questions: list[dict]) -> list[dict]:
+        """Copia imágenes y audios de Commons a Supabase Storage (y recorta los audios)."""
+        needs = [q for q in questions if q.get("image_url") or q.get("audio_url")]
+        if not needs:
+            return questions
+        from .media import MediaStore
+        store = MediaStore(self.url, self.h)
+        out = []
+        for q in questions:
+            q = dict(q)
+            try:
+                if q.get("image_url") and "supabase" not in q["image_url"]:
+                    q["image_url"] = store.mirror_image(q["image_url"])
+                if q.get("audio_url") and "supabase" not in q["audio_url"]:
+                    q["audio_url"] = store.mirror_clip(q["audio_url"], q.get("_audio_start_s", 0))
+                    q["media_start_ms"] = 0
+            except Exception as e:  # noqa: BLE001 - sin su medio, la pregunta no se usa
+                print(f"  aviso: no se pudo copiar el medio de {q['external_id']}: {e}")
+                continue
+            out.append(q)
+        print(f"  medios copiados: {len(needs) - (len(questions) - len(out))}/{len(needs)}")
+        return out
 
     def used_external_ids(self) -> set[str]:
         """Preguntas ya programadas en algún reto (para no repetirlas)."""

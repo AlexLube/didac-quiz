@@ -117,8 +117,15 @@ def country_name(iso: str, lang: str) -> str:
         return iso
 
 
+def _media_credit(info: dict, kind: str) -> str:
+    return f"{kind}: {info['artist']} · {info['license']} · Wikimedia Commons"
+
+
 class Generator:
-    def __init__(self, films: list[Film], seed: int = 2026):
+    def __init__(self, films: list[Film], seed: int = 2026, music: list[dict] | None = None,
+                 emojis: dict[str, str] | None = None):
+        self.music = music or []
+        self.emojis = emojis or {}
         self.films = films
         self.rng = random.Random(seed)
         set_tier_cuts(films)
@@ -673,6 +680,101 @@ class Generator:
                            "en": f"🎬 {film.year} · 🎥 Directed by {d.name} · ⭐ Starring {star.name}. Which film is it?"},
                           opts, idx)
 
+    # -- multimedia -------------------------------------------------------
+    def _film_options(self, film: Film, exclude: set[str], span: int = 6,
+                      extra_ok=lambda f: True) -> tuple[list[dict], int] | None:
+        others = [f for f in self._era_films(film, span)
+                  if f.qid not in exclude and extra_ok(f)
+                  and title_key(f.title_es) != title_key(film.title_es)]
+        others.sort(key=lambda f: abs(f.popularity - film.popularity))
+        wrong = self._pick(others[:12], 3)
+        if len({title_key(f.title_es) for f in wrong}) < 3:
+            return None
+        lab = lambda f: _opt(_t(f, "es"), _t(f, "en"))  # noqa: E731
+        return _shuffle_with_answer(self.rng, lab(film), [lab(f) for f in wrong])
+
+    def q_location_photo(self, film: Film) -> Question | None:
+        if not film.location_photos or film_tier(film) > 1:
+            return None
+        loc = film.location_photos[0]
+        res = self._film_options(film, {film.qid}, span=10,
+                                 extra_ok=lambda f: loc["qid"] not in {l["qid"] for l in f.location_photos})
+        if not res:
+            return None
+        opts, idx = res
+        q = self._base("location_photo", film, "image_choice", 2 + film_tier(film), "location_photo",
+                       [film.qid, loc["qid"]],
+                       {"es": "📍 ¿Qué película se rodó en este lugar?",
+                        "en": "📍 Which film was shot at this location?"},
+                       opts, idx,
+                       {"es": f"Es {loc['name_es']}, escenario de {_t(film, 'es')} ({film.year}).",
+                        "en": f"This is {loc['name_en']}, a filming location of {_t(film, 'en')} ({film.year})."},
+                       key=loc["qid"])
+        q["image_url"] = loc["url"]
+        q["image_attribution"] = _media_credit(loc, "Foto")
+        return q
+
+    def q_still(self, film: Film) -> Question | None:
+        if not film.still:
+            return None
+        res = self._film_options(film, {film.qid}, span=8)
+        if not res:
+            return None
+        opts, idx = res
+        q = self._base("still", film, "image_reveal", 2 + (1 if film_tier(film) == 2 else 0), "still",
+                       [film.qid],
+                       {"es": "🎞️ ¿A qué película pertenece esta imagen?",
+                        "en": "🎞️ Which film is this image from?"},
+                       opts, idx)
+        q["image_url"] = film.still["url"]
+        q["image_attribution"] = _media_credit(film.still, "Imagen") + " · Dominio público"
+        return q
+
+    def q_emoji(self, film: Film) -> Question | None:
+        emo = self.emojis.get(film.qid)
+        if not emo:
+            return None
+        res = self._film_options(film, {film.qid}, span=10, extra_ok=lambda f: film_tier(f) <= 1)
+        if not res:
+            return None
+        opts, idx = res
+        return self._base("emoji", film, "emoji", 1 + film_tier(film), "emoji", [film.qid],
+                          {"es": f"{emo}\n¿Qué película es?", "en": f"{emo}\nWhich film is it?"},
+                          opts, idx)
+
+    def _music_questions(self) -> list[Question]:
+        out: list[Question] = []
+        by_qid = {f.qid: f for f in self.films}
+        for it in self.music:
+            film = by_qid.get(it["film_qids"][0])
+            if not film:
+                continue
+            rec = it["recording"]
+            credit = f"{it['composer']} · {_media_credit(rec, 'Grabación')}"
+            expl = {"es": f"Es «{it['piece_es']}», de {it['composer']}, que suena en {_t(film, 'es')} ({film.year}).",
+                    "en": f"It is \u201c{it['piece_en']}\u201d by {it['composer']}, heard in {_t(film, 'en')} ({film.year})."}
+            res = self._film_options(film, set(it["film_qids"]), span=15, extra_ok=lambda f: film_tier(f) <= 1)
+            if res:
+                opts, idx = res
+                q = self._base("music_film", film, "audio", 2, "music_film", [film.qid, "music:" + it["search"]],
+                               {"es": "🎵 Escucha: ¿en qué película famosa suena esta pieza?",
+                                "en": "🎵 Listen: which famous film features this piece?"},
+                               opts, idx, expl, key=it["search"])
+                q.update(audio_url=rec["url"], audio_attribution=credit, _audio_start_s=it.get("start_s", 0))
+                out.append(q)
+            others = [m for m in self.music if m is not it and m["composer"] != it["composer"]]
+            wrong = self._pick(others, 3)
+            if len(wrong) == 3:
+                lab = lambda m: _opt(f"{m['piece_es']} ({m['composer']})", f"{m['piece_en']} ({m['composer']})")  # noqa: E731
+                opts, idx = _shuffle_with_answer(self.rng, lab(it), [lab(m) for m in wrong])
+                q = self._base("music_piece", film, "audio", 2, "music_piece", ["music:" + it["search"]],
+                               {"es": f"🎵 Suena en {_t(film, 'es')}. ¿Qué pieza es?",
+                                "en": f"🎵 Heard in {_t(film, 'en')}. Which piece is this?"},
+                               opts, idx, expl, key="piece" + it["search"])
+                q.update(audio_url=rec["url"], audio_attribution=credit, _audio_start_s=it.get("start_s", 0))
+                out.append(q)
+        return out
+
     # -- generación masiva ------------------------------------------------
     def generate_all(self) -> list[Question]:
         out: list[Question] = []
@@ -680,7 +782,7 @@ class Generator:
             self.q_director, self.q_decade, self.q_true_false_year, self.q_cast, self.q_true_false_oscar,
             self.q_character, self.q_actor_by_character, self.q_composer, self.q_writer,
             self.q_book_author, self.q_based_on, self.q_country, self.q_filmed_in,
-            self.q_cast_intruder, self.q_clues,
+            self.q_cast_intruder, self.q_clues, self.q_location_photo, self.q_still, self.q_emoji,
         ]
         for f in self.films:
             for fn in per_film:
@@ -706,6 +808,7 @@ class Generator:
             if q:
                 q["source"] = "wikidata"
                 out.append(q)
+        out += self._music_questions()
         for sq in self.series:
             for fn in (self.q_saga_order, self.q_saga_next):
                 q = fn(sq)

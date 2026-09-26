@@ -402,3 +402,29 @@ def test_private_leagues(db):
     assert mine[0]["is_owner"] is True and mine[0]["members"] == 1
     ben.call("select leave_league(%s)", (league["id"],))
     assert db.execute("select count(*) from leagues where id = %s", (league["id"],)).fetchone()[0] == 0
+
+
+def test_media_questions(db):
+    day = "2027-05-03"
+    qids = make_questions(db, start=1100)
+    db.execute("""update questions set format = 'audio', audio_url = 'https://upload.wikimedia.org/x.mp3',
+                  audio_attribution = 'Orquesta X · Dominio público', media_start_ms = 1500 where id = %s""",
+               (qids[0],))
+    db.execute("""update questions set format = 'emoji', prompt = '{"es": "🦈🚤\\n¿Qué película es?", "en": "x"}'
+                  where id = %s""", (qids[1],))
+    db.execute("""update questions set format = 'image_choice', image_url = 'https://commons/x.jpg',
+                  image_attribution = 'Foto: Y · CC BY-SA 4.0' where id = %s""", (qids[2],))
+    make_challenge(db, day, qids)
+    p = Player(db)
+    p.register("multimedia")
+    q = p.call("select next_question()", today=day)["question"]
+    assert q["format"] == "audio" and q["audio_url"].endswith(".mp3") and q["media_start_ms"] == 1500
+    assert p.call("select use_joker(0)", today=day)["jokers_left"] == 2
+    p.call("select submit_answer(0, '2')", today=day)
+    q = p.call("select next_question()", today=day)["question"]
+    assert q["format"] == "emoji"
+    p.call("select submit_answer(1, '2')", today=day)
+    q = p.call("select next_question()", today=day)["question"]
+    assert q["image_attribution"].startswith("Foto")
+    with pytest.raises(psycopg.errors.CheckViolation):
+        db.execute("update questions set format = 'video' where id = %s", (qids[3],))

@@ -110,6 +110,9 @@ class Question {
   final List<dynamic> options;
   final String? imageUrl;
   final String? imageAttribution;
+  final String? audioUrl;
+  final String? audioAttribution;
+  final int mediaStartMs;
   final int timeLimitMs;
   final int remainingMs;
   final List<int> removedOptions;
@@ -123,6 +126,9 @@ class Question {
         options = List<dynamic>.from(j['options'] as List),
         imageUrl = j['image_url'] as String?,
         imageAttribution = j['image_attribution'] as String?,
+        audioUrl = j['audio_url'] as String?,
+        audioAttribution = j['audio_attribution'] as String?,
+        mediaStartMs = asInt(j['media_start_ms']),
         timeLimitMs = asInt(j['time_limit_ms'], 20000),
         remainingMs = asInt(j['remaining_ms'], 20000),
         removedOptions = ((j['removed_options'] ?? []) as List).map((e) => asInt(e)).toList();
@@ -130,8 +136,15 @@ class Question {
   bool get isOrder => format == 'order';
   bool get jokerAllowed =>
       options.length == 4 &&
-      const ['choice', 'intruder', 'decade', 'clues', 'image_choice', 'image_reveal']
+      const ['choice', 'intruder', 'decade', 'clues', 'emoji', 'image_choice', 'image_reveal', 'audio']
           .contains(format);
+
+  /// Emojis de la pregunta (primera línea del enunciado en el formato 'emoji').
+  String? get emojiLine {
+    if (format != 'emoji') return null;
+    final text = (prompt is Map ? (prompt['es'] ?? '') : '$prompt').toString();
+    return text.split('\n').first.trim();
+  }
 }
 
 class LeaderboardRow {

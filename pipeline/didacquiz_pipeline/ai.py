@@ -115,3 +115,63 @@ def enrich(questions: list[dict], cross: bool = True, log=print) -> tuple[list[d
         if (i + 1) % 100 == 0:
             log(f"  IA: {i + 1}/{len(questions)}")
     return out, review
+
+
+# ---------------------------------------------------------------------------
+# Adivina la película por emojis
+# ---------------------------------------------------------------------------
+_TEXTY = re.compile(r"[A-Za-z0-9\u00C0-\u024F]")
+
+
+def _emoji_ok(text: str) -> bool:
+    text = text.strip()
+    return 2 <= len(text) <= 24 and not _TEXTY.search(text)
+
+
+def make_emoji(film, distractor_titles: list[str]) -> str | None:
+    """Pide 3-5 emojis para la película y comprueba que otra consulta la adivina."""
+    facts = (f"Título: {film.title_en} ({film.year}). Director: {film.directors[0].name}. "
+             f"Reparto: {', '.join(p.name for p in film.cast[:3])}. "
+             f"Personajes: {', '.join(r.character for r in film.roles[:3])}.")
+    prompt = ("Juego de adivinar películas con emojis. Escribe entre 3 y 5 emojis que representen la trama "
+              "o los elementos más icónicos de esta película, en orden. Sin letras, números, banderas ni "
+              "texto. Responde SOLO con los emojis.\n" + facts)
+    try:
+        emo = _ask(prompt, max_tokens=40).strip().split("\n")[0].strip()
+    except Exception:  # noqa: BLE001
+        return None
+    if not _emoji_ok(emo):
+        return None
+    letters = "ABCD"
+    titles = distractor_titles[:3] + [film.title_en]
+    order = sorted(range(4), key=lambda i: hash((film.qid, i)) % 97)
+    shown = [titles[i] for i in order]
+    check = ("¿Qué película representan estos emojis? " + emo + "\n"
+             + "\n".join(f"{letters[i]}) {t}" for i, t in enumerate(shown))
+             + "\nResponde solo con la letra.")
+    try:
+        ans = _ask(check, max_tokens=5).strip().upper()[:1]
+    except Exception:  # noqa: BLE001
+        return None
+    return emo if ans and ans in letters and shown[letters.index(ans)] == film.title_en else None
+
+
+def build_emojis(films, cache: dict[str, str], limit: int = 900, log=print) -> dict[str, str]:
+    """Emojis para las películas más conocidas (con caché para no pagar dos veces)."""
+    if not available():
+        log("  emojis: sin ANTHROPIC_API_KEY, se omiten")
+        return cache
+    famous = sorted([f for f in films if f.cast], key=lambda f: -f.popularity)[:limit]
+    by_year = sorted(films, key=lambda f: f.year)
+    done = 0
+    for f in famous:
+        if f.qid in cache:
+            continue
+        near = [o.title_en for o in by_year if abs(o.year - f.year) <= 5 and o.qid != f.qid
+                and o.popularity >= f.popularity * 0.5][:40]
+        emo = make_emoji(f, near[::max(1, len(near) // 3)][:3] if len(near) >= 3 else near)
+        cache[f.qid] = emo or ""
+        done += 1
+        if done % 100 == 0:
+            log(f"  emojis: {done} películas procesadas")
+    return {k: v for k, v in cache.items() if v}

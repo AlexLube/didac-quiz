@@ -98,6 +98,23 @@ class _SolutionCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 10),
+            if (q['image_url'] != null) ...[
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.network('${q['image_url']}',
+                    height: 140,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stack) => const SizedBox.shrink()),
+              ),
+              if (q['image_attribution'] != null)
+                Text('${q['image_attribution']}',
+                    style: const TextStyle(fontSize: 10, color: AppColors.textMuted)),
+              const SizedBox(height: 8),
+            ],
+            if (q['audio_attribution'] != null)
+              Text('🎵 ${q['audio_attribution']}',
+                  style: const TextStyle(fontSize: 11, color: AppColors.textMuted)),
             Text(Strings.pick(q['prompt']),
                 style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700)),
             const SizedBox(height: 8),

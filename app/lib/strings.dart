@@ -43,6 +43,8 @@ class Strings {
     'pts': {'es': 'pts', 'en': 'pts'},
     'pt': {'es': 'pt', 'en': 'pt'},
     'joker': {'es': '50/50', 'en': '50/50'},
+    'listen': {'es': 'Escucha con atención…', 'en': 'Listen carefully…'},
+    'audio_error': {'es': 'No se pudo cargar el audio', 'en': 'Audio could not be loaded'},
     'confirm_order': {'es': 'Confirmar orden', 'en': 'Confirm order'},
     'drag_to_order': {'es': 'Arrastra para ordenar (arriba, la más antigua)', 'en': 'Drag to reorder (oldest on top)'},
     'correct': {'es': '¡Correcto!', 'en': 'Correct!'},
