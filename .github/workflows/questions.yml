@@ -57,11 +57,14 @@ jobs:
             ${{ github.event.inputs.replace == 'true' && '--replace-from tomorrow' || '' }}
 
       - name: Guardar resultados (preguntas, descartes, revisión)
-        if: github.event.inputs.task == 'generar-retos'
+        if: always() && github.event.inputs.task == 'generar-retos'
         uses: actions/upload-artifact@v4
         with:
           name: preguntas
-          path: pipeline/out/
+          path: |
+            pipeline/out/
+            pipeline/data/emoji.json
+            pipeline/data/music.json
 
       - name: Comprobar reservas
         if: github.event_name == 'schedule' || github.event.inputs.task == 'comprobar-reservas'

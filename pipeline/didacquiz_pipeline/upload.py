@@ -35,6 +35,9 @@ class Supabase:
         ids: dict[str, int] = {}
         for i in range(0, len(questions), 500):
             rows = [{c: q.get(c) for c in cols} for q in questions[i : i + 500]]
+            for row in rows:  # columnas NOT NULL con valor por defecto
+                row["media_start_ms"] = row.get("media_start_ms") or 0
+                row["entity_ids"] = row.get("entity_ids") or []
             for row in self._post("questions", rows, "external_id", returning=True):
                 ids[row["external_id"]] = row["id"]
         return ids

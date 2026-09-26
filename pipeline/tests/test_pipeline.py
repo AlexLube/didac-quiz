@@ -298,3 +298,14 @@ def test_media_failures_drop_question(monkeypatch):
     out = sb.mirror_media(qs)
     assert [q["external_id"] for q in out] == ["a", "c", "d"]
     assert out[1]["audio_url"].endswith(".mp3") and out[1]["media_start_ms"] == 0
+
+
+def test_upload_rows_fill_defaults(monkeypatch):
+    from didacquiz_pipeline import upload
+    sent = []
+    sb = upload.Supabase("https://x.supabase.co", "sb_secret_x")
+    monkeypatch.setattr(sb, "mirror_media", lambda qs: qs)
+    monkeypatch.setattr(sb, "_post", lambda table, rows, oc, returning: sent.extend(rows) or
+                        [{"external_id": r["external_id"], "id": n} for n, r in enumerate(rows)])
+    ids = sb.upsert_questions([{"external_id": "a", "format": "choice"}])
+    assert ids == {"a": 0} and sent[0]["media_start_ms"] == 0 and sent[0]["entity_ids"] == []
