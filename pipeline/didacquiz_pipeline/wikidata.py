@@ -77,7 +77,7 @@ class Film:
         return Film(**d)
 
 
-def _sparql(query: str, retries: int = 5) -> list[dict]:
+def _sparql(query: str, retries: int = 6) -> list[dict]:
     """Consulta con reintentos. Wikidata a veces corta la respuesta (JSON incompleto)."""
     last_error: Exception | None = None
     for attempt in range(retries):
@@ -256,8 +256,19 @@ SELECT ?award WHERE { ?award rdfs:label "Goya Award for Best Film"@en } LIMIT 1
 def fetch_films(min_links: int = 20, cast_per_film: int = 4, verbose: bool = True) -> list[Film]:
     films: dict[str, Film] = {}
     decades = [(1895, 1930)] + [(y, y + 10) for y in range(1930, 2030, 10)]
+    def _range(y0: int, y1: int) -> list[dict]:
+        """Si Wikidata no puede con una década, se pide en tramos más cortos."""
+        try:
+            return _sparql(FILMS_QUERY.format(min_links=min_links, y0=y0, y1=y1), retries=3)
+        except RuntimeError:
+            if y1 - y0 <= 1:
+                raise
+            mid = (y0 + y1) // 2
+            print(f"  Wikidata lento en {y0}-{y1}: se divide en dos tramos")
+            return _range(y0, mid) + _range(mid, y1)
+
     for y0, y1 in decades:
-        rows = _sparql(FILMS_QUERY.format(min_links=min_links, y0=y0, y1=y1))
+        rows = _range(y0, y1)
         for b in rows:
             fq = _qid(_val(b, "film"))
             title_en = _val(b, "en") or _val(b, "es")

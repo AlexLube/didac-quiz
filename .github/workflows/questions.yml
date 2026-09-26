@@ -25,6 +25,9 @@ on:
   schedule:
     - cron: "17 6 * * 1"   # cada lunes: comprobar que quedan retos programados
 
+permissions:
+  contents: write
+
 jobs:
   run:
     runs-on: ubuntu-latest
@@ -40,6 +43,13 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install -q -r pipeline/requirements.txt
+
+      # Caché de Wikidata (una semana) y de emojis: repetir un intento no lo descarga ni paga de nuevo
+      - uses: actions/cache/restore@v4
+        with:
+          path: pipeline/data
+          key: wikidata-${{ github.run_id }}
+          restore-keys: wikidata-
       - run: sudo apt-get install -y -q ffmpeg >/dev/null
 
       - name: Preparar base de datos
@@ -51,10 +61,14 @@ jobs:
       - name: Generar retos
         if: github.event.inputs.task == 'generar-retos'
         working-directory: pipeline
+        env:
+          PYTHONUNBUFFERED: "1"
         run: |
+          set -o pipefail
           python -m didacquiz_pipeline yearly --days "${{ github.event.inputs.days }}" \
             ${{ github.event.inputs.ai == 'true' && '--ai' || '' }} \
-            ${{ github.event.inputs.replace == 'true' && '--replace-from tomorrow' || '' }}
+            ${{ github.event.inputs.replace == 'true' && '--replace-from tomorrow' || '' }} \
+            2>&1 | tee ../generacion.log
 
       - name: Guardar resultados (preguntas, descartes, revisión)
         if: always() && github.event.inputs.task == 'generar-retos'
@@ -65,6 +79,23 @@ jobs:
             pipeline/out/
             pipeline/data/emoji.json
             pipeline/data/music.json
+
+      - name: Guardar caché de datos
+        if: always() && github.event.inputs.task == 'generar-retos'
+        uses: actions/cache/save@v4
+        with:
+          path: pipeline/data
+          key: wikidata-${{ github.run_id }}
+
+      - name: Publicar el registro (rama ci-questions)
+        if: always() && github.event.inputs.task == 'generar-retos'
+        run: |
+          tmp=$(mktemp -d); tail -n 400 generacion.log > "$tmp/generacion.log" 2>/dev/null || echo "sin registro" > "$tmp/generacion.log"
+          echo "run: ${{ github.run_id }} commit: ${{ github.sha }}" > "$tmp/SUMMARY.txt"
+          cd "$tmp" && git init -q && git checkout -q -b ci-questions
+          git -c user.name=ci -c user.email=ci@users.noreply.github.com add -A
+          git -c user.name=ci -c user.email=ci@users.noreply.github.com commit -qm "registro ${{ github.run_id }}"
+          git push -qf "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" ci-questions
 
       - name: Comprobar reservas
         if: github.event_name == 'schedule' || github.event.inputs.task == 'comprobar-reservas'

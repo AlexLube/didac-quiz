@@ -32,6 +32,11 @@ def _write(path: Path, obj) -> None:
 
 
 def cmd_fetch(args) -> None:
+    cached = DATA / "films.json"
+    if cached.exists() and (dt.datetime.now().timestamp() - cached.stat().st_mtime) < 6 * 86400 \
+            and (DATA / "music.json").exists():
+        print("Usando los datos de Wikidata descargados hace menos de 6 días (caché).")
+        return
     print("Descargando películas de Wikidata…")
     films = fetch_films(min_links=args.min_links)
     save_films(films, DATA / "films.json")
