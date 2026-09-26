@@ -1,0 +1,7 @@
+Analyzing app...                                                
+
+   info • Constructors for public widgets should have a named 'key' parameter. Try adding a named parameter to the constructor • lib/screens/rankings_screen.dart:175:9 • use_key_in_widget_constructors
+   info • 'tagForUnderAgeOfConsent' is deprecated and shouldn't be used. Use ageRestrictedTreatment instead. Try replacing the use of the deprecated member with the replacement • lib/services/ads.dart:20:11 • deprecated_member_use
+   info • 'TagForUnderAgeOfConsent' is deprecated and shouldn't be used. Use AgeRestrictedTreatment instead. Try replacing the use of the deprecated member with the replacement • lib/services/ads.dart:20:36 • deprecated_member_use
+
+3 issues found. (ran in 11.9s)

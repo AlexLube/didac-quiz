@@ -1,0 +1,9 @@
+alta de invitado: 200
+reto de hoy: {"date": "2026-09-26", "available": true, "status": "not_started", "jokers_left": 3}
+pregunta 1 [true_false, dificultad 1]: «Amarcord» ganó el Oscar a la mejor película.
+  opciones: ['Verdadero', 'Falso']
+  ¿la respuesta viaja a la app?: False
+ranking mundial de hoy, jugadores: 1
+búsqueda de ciudades: ['Valencia']
+usuario de prueba borrado
+RESULTADO: OK

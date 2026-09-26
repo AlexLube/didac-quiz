@@ -1,0 +1,7 @@
+
+  $ flutter run
+
+Your application code is in ./lib/main.dart.
+
+Ajustado android/app/build.gradle.kts
+AndroidManifest ajustado
