@@ -121,7 +121,8 @@ def _qid(uri: str) -> str:
 
 FILMS_QUERY = """
 SELECT ?film ?es ?en ?date ?links ?dir ?dirEs ?dirEn ?dirLinks ?iso WHERE {{
-  ?film wdt:P31 wd:Q11424 ;
+  VALUES ?type {{ wd:Q11424 wd:Q202866 wd:Q29168811 wd:Q24869 }}   # película, animación, largometraje
+  ?film wdt:P31 ?type ;
         wikibase:sitelinks ?links ;
         wdt:P577 ?date ;
         wdt:P57 ?dir .
@@ -136,14 +137,22 @@ SELECT ?film ?es ?en ?date ?links ?dir ?dirEs ?dirEn ?dirLinks ?iso WHERE {{
 }}
 """
 
+# isActor: solo actores de profesión (evita políticos o cantantes que salen en
+# imágenes de archivo, como Kennedy en «The Man from U.N.C.L.E.»)
 CAST_QUERY = """
-SELECT ?film ?actor ?es ?en ?links WHERE {{
+SELECT ?film ?actor ?es ?en ?links (SAMPLE(?flag) AS ?isActor) WHERE {{
   VALUES ?film {{ {values} }}
   ?film wdt:P161 ?actor .
   ?actor wikibase:sitelinks ?links .
   OPTIONAL {{ ?actor rdfs:label ?es FILTER(LANG(?es) = "es") }}
   OPTIONAL {{ ?actor rdfs:label ?en FILTER(LANG(?en) = "en") }}
-}}
+  OPTIONAL {{
+    ?actor wdt:P106 ?occ .
+    VALUES ?occ {{ wd:Q33999 wd:Q10800557 wd:Q10798782 wd:Q2259451 wd:Q2405480 wd:Q970153
+                  wd:Q948329 wd:Q245068 wd:Q465501 }}
+    BIND(1 AS ?flag)
+  }}
+}} GROUP BY ?film ?actor ?es ?en ?links
 """
 
 ROLES_QUERY = """
@@ -284,7 +293,7 @@ def fetch_films(min_links: int = 20, cast_per_film: int = 4, verbose: bool = Tru
             fq, aq = _qid(_val(b, "film")), _qid(_val(b, "actor"))
             name = _val(b, "es") or _val(b, "en")
             per_film.setdefault(fq, {})
-            if name:
+            if name and _val(b, "isActor"):
                 per_film[fq][aq] = Person(aq, name, int(_val(b, "links")))
             films[fq].cast_all.append(aq)
         for fq, people in per_film.items():
