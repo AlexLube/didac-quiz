@@ -24,6 +24,10 @@ on:
         default: true
   schedule:
     - cron: "17 6 * * 1"   # cada lunes: comprobar que quedan retos programados
+  # Lanzar una tarea editando ops/tarea.txt (una línea: generar-retos | preparar-base-datos)
+  push:
+    branches: [main]
+    paths: ["ops/tarea.txt"]
 
 permissions:
   contents: write
@@ -37,8 +41,18 @@ jobs:
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
       SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      DAYS: ${{ github.event.inputs.days || '365' }}
+      USE_AI: ${{ github.event.inputs.ai || 'true' }}
+      REPLACE: ${{ github.event.inputs.replace || 'true' }}
     steps:
       - uses: actions/checkout@v4
+
+      - name: Decidir la tarea
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then t="${{ github.event.inputs.task }}";
+          elif [ "${{ github.event_name }}" = "push" ]; then t="$(head -n1 ops/tarea.txt | tr -d '[:space:]')";
+          else t="comprobar-reservas"; fi
+          echo "TASK=$t" >> "$GITHUB_ENV"; echo "Tarea: $t"
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -53,25 +67,25 @@ jobs:
       - run: sudo apt-get install -y -q ffmpeg >/dev/null
 
       - name: Preparar base de datos
-        if: github.event.inputs.task == 'preparar-base-datos'
+        if: env.TASK == 'preparar-base-datos'
         run: |
           sudo apt-get install -y -q postgresql-client >/dev/null
           tool/db_setup.sh
 
       - name: Generar retos
-        if: github.event.inputs.task == 'generar-retos'
+        if: env.TASK == 'generar-retos'
         working-directory: pipeline
         env:
           PYTHONUNBUFFERED: "1"
         run: |
           set -o pipefail
-          python -m didacquiz_pipeline yearly --days "${{ github.event.inputs.days }}" \
-            ${{ github.event.inputs.ai == 'true' && '--ai' || '' }} \
-            ${{ github.event.inputs.replace == 'true' && '--replace-from tomorrow' || '' }} \
+          python -m didacquiz_pipeline yearly --days "$DAYS" \
+            $( [ "$USE_AI" = "true" ] && echo --ai ) \
+            $( [ "$REPLACE" = "true" ] && echo --replace-from tomorrow ) \
             2>&1 | tee ../generacion.log
 
       - name: Guardar resultados (preguntas, descartes, revisión)
-        if: always() && github.event.inputs.task == 'generar-retos'
+        if: always() && env.TASK == 'generar-retos'
         uses: actions/upload-artifact@v4
         with:
           name: preguntas
@@ -81,14 +95,15 @@ jobs:
             pipeline/data/music.json
 
       - name: Guardar caché de datos
-        if: always() && github.event.inputs.task == 'generar-retos'
+        if: always() && env.TASK == 'generar-retos'
+        continue-on-error: true
         uses: actions/cache/save@v4
         with:
           path: pipeline/data
           key: wikidata-${{ github.run_id }}
 
       - name: Publicar el registro (rama ci-questions)
-        if: always() && github.event.inputs.task == 'generar-retos'
+        if: always() && env.TASK == 'generar-retos'
         run: |
           tmp=$(mktemp -d); tail -n 400 generacion.log > "$tmp/generacion.log" 2>/dev/null || echo "sin registro" > "$tmp/generacion.log"
           echo "run: ${{ github.run_id }} commit: ${{ github.sha }}" > "$tmp/SUMMARY.txt"
@@ -98,6 +113,6 @@ jobs:
           git push -qf "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" ci-questions
 
       - name: Comprobar reservas
-        if: github.event_name == 'schedule' || github.event.inputs.task == 'comprobar-reservas'
+        if: env.TASK == 'comprobar-reservas'
         working-directory: pipeline
         run: python -m didacquiz_pipeline check --min-days 45

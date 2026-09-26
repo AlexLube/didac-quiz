@@ -1,0 +1,3 @@
+generar-retos
+# Editar este archivo lanza la tarea indicada en la primera línea
+# (generar-retos: 365 días, sustituyendo desde mañana, con emojis por IA).
