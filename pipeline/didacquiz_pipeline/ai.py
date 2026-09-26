@@ -26,8 +26,16 @@ def available() -> bool:
     return bool(os.environ.get("ANTHROPIC_API_KEY"))
 
 
+_RPM = int(os.environ.get("DIDACQUIZ_AI_RPM", "45"))   # cuentas nuevas: ~50 consultas/minuto
+_last_call = [0.0]
+
+
 def _ask(prompt: str, max_tokens: int = 400) -> str:
-    for attempt in range(4):
+    for attempt in range(8):
+        wait = 60.0 / _RPM - (time.time() - _last_call[0])
+        if wait > 0:
+            time.sleep(wait)
+        _last_call[0] = time.time()
         r = requests.post(
             API_URL,
             headers={
@@ -42,7 +50,7 @@ def _ask(prompt: str, max_tokens: int = 400) -> str:
         if r.status_code == 200:
             return "".join(b.get("text", "") for b in r.json()["content"])
         if r.status_code in (429, 500, 529):
-            time.sleep(5 * (attempt + 1))
+            time.sleep(float(r.headers.get("retry-after", 10 * (attempt + 1))))
             continue
         r.raise_for_status()
     raise RuntimeError("La API de IA no respondió")
@@ -156,7 +164,7 @@ def make_emoji(film, distractor_titles: list[str]) -> str | None:
     return emo if ans and ans in letters and shown[letters.index(ans)] == film.title_en else None
 
 
-def build_emojis(films, cache: dict[str, str], limit: int = 900, log=print) -> dict[str, str]:
+def build_emojis(films, cache: dict[str, str], limit: int = 600, log=print) -> dict[str, str]:
     """Emojis para las películas más conocidas (con caché para no pagar dos veces)."""
     if not available():
         log("  emojis: sin ANTHROPIC_API_KEY, se omiten")

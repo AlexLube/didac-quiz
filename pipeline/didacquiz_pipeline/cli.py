@@ -50,7 +50,8 @@ def cmd_build(args) -> None:
     raw = Generator(films, seed=args.seed, music=music, emojis=emojis).generate_all()
     ok, rejected = validate_all(raw, films)
     review = []
-    if args.ai:
+    if args.ai and args.ai_review:
+        # Revisión con IA de todas las preguntas (lenta con cuentas nuevas: ~50 consultas/min)
         print(f"Revisando {len(ok)} preguntas con IA…")
         ok, flagged = ai.enrich(ok)
         review = [{"question": q, "reason": r} for q, r in flagged]
@@ -135,7 +136,8 @@ def main(argv=None) -> None:
     def common(sp):
         sp.add_argument("--min-links", type=int, default=20, help="mínimo de Wikipedias por película")
         sp.add_argument("--seed", type=int, default=2026)
-        sp.add_argument("--ai", action="store_true", help="revisar y redactar curiosidades con IA")
+        sp.add_argument("--ai", action="store_true", help="usar IA para las preguntas de emojis")
+        sp.add_argument("--ai-review", action="store_true", help="además, revisar todas las preguntas con IA (lento)")
         sp.add_argument("--days", type=int, default=365)
         sp.add_argument("--start", help="primer día (AAAA-MM-DD); por defecto, tras el último programado")
         sp.add_argument("--spacing", type=int, default=60)

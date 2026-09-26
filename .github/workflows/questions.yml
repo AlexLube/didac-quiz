@@ -19,7 +19,7 @@ on:
         type: boolean
         default: false
       ai:
-        description: "Usar IA para redactar curiosidades y revisar preguntas"
+        description: "Usar IA para crear las preguntas de emojis"
         type: boolean
         default: true
   schedule:
@@ -28,7 +28,7 @@ on:
 jobs:
   run:
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 330
     env:
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
