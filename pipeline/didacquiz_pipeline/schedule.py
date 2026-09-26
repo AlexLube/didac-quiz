@@ -34,24 +34,31 @@ def plan(questions: list[dict], start: dt.date, days: int, spacing: int = 60,
 
         for relax in (False, True):
             chosen, entities, formats = [], set(), {}
+            chosen_ids: set[str] = set()
             ok = True
             for diff, count in MIX.items():
                 picked = 0
-                for q in pools[diff]:
+                limit = 3 if relax else 2
+                # 1.ª pasada: solo tipos que aún no han salido hoy; 2.ª: se permiten repetidos
+                for fresh_only in (True, False):
+                    for q in pools[diff]:
+                        if picked == count:
+                            break
+                        if q["external_id"] in chosen_ids:
+                            continue
+                        ents = set(q.get("entity_ids") or [])
+                        if ents & blocked or ents & entities:
+                            continue
+                        kind = q.get("topic") or q["format"]
+                        if (fresh_only and kind in formats) or formats.get(kind, 0) >= limit:
+                            continue
+                        chosen.append(q)
+                        chosen_ids.add(q["external_id"])
+                        entities |= ents
+                        formats[kind] = formats.get(kind, 0) + 1
+                        picked += 1
                     if picked == count:
                         break
-                    ents = set(q.get("entity_ids") or [])
-                    if ents & blocked or ents & entities:
-                        continue
-                    # Variedad: como mucho 2 preguntas del mismo tipo (3 si hay que relajar)
-                    kind = q.get("topic") or q["format"]
-                    limit = 3 if relax else 2
-                    if formats.get(kind, 0) >= limit:
-                        continue
-                    chosen.append(q)
-                    entities |= ents
-                    formats[kind] = formats.get(kind, 0) + 1
-                    picked += 1
                 if picked < count:
                     ok = False
                     break

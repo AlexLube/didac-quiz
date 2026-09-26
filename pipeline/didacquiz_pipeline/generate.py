@@ -86,6 +86,25 @@ def _explanation(film: Film) -> dict:
     return {"es": es, "en": en}
 
 
+def clean_character(name: str) -> str:
+    """'Norman Osborn (trilogía de Sam Raimi)' -> 'Norman Osborn'."""
+    return re.sub(r"\s*[\(\[].*?[\)\]]\s*", " ", name).strip() or name
+
+
+def titles_overlap(work, film) -> bool:
+    film_keys = {title_key(film.title_es), title_key(film.title_en)}
+    for t in (work.title_es, work.title_en):
+        k = title_key(t)
+        if not k:
+            continue
+        if any(k == f or k in f or f in k for f in film_keys if f):
+            return True
+        words = {w for w in k.split() if len(w) > 3}
+        if any(words & {w for w in f.split() if len(w) > 3} for f in film_keys):
+            return True
+    return False
+
+
 COMMON_COUNTRIES = ["US", "GB", "FR", "IT", "ES", "DE", "JP", "IN", "KR", "MX", "AR", "CA",
                     "AU", "SE", "DK", "CN", "HK", "BR", "RU", "IE", "NZ", "PL", "IR", "BE"]
 
@@ -375,12 +394,15 @@ class Generator:
             return None
         role = film.roles[0]
         own = {title_key(r.character) for r in film.roles}
-        pool = [r.character for f in self._era_films(film, 15) if f.qid != film.qid
+        tier = film_tier(film)
+        pool = [clean_character(r.character) for f in self._era_films(film, 15)
+                if f.qid != film.qid and abs(film_tier(f) - tier) <= 1
                 for r in f.roles if title_key(r.character) not in own]
         wrong = self._pick(sorted(set(pool)), 3)
         if len({title_key(w) for w in wrong}) < 3:
             return None
-        opts, idx = _shuffle_with_answer(self.rng, _opt(role.character), [_opt(w) for w in wrong])
+        opts, idx = _shuffle_with_answer(self.rng, _opt(clean_character(role.character)),
+                                         [_opt(w) for w in wrong])
         return self._base("character", film, "choice", 1 + film_tier(film), "character",
                           [film.qid, role.actor_qid],
                           {"es": f"¿A qué personaje interpreta {role.actor} en {_t(film, 'es')}?",
@@ -472,8 +494,8 @@ class Generator:
         if len(film.based_on) != 1:
             return None
         work = film.based_on[0]
-        if title_key(work.title_es) in {title_key(film.title_es), title_key(film.title_en)}:
-            return None  # mismo título que la película: sería regalada
+        if titles_overlap(work, film):
+            return None  # título parecido al de la película: sería regalada
         pool = {w.qid: w for f in self._era_films(film, 25) if f.qid != film.qid for w in f.based_on
                 if title_key(w.title_es) != title_key(work.title_es)}
         wrong = self._pick(sorted(pool.values(), key=lambda w: w.qid), 3)
@@ -609,9 +631,11 @@ class Generator:
         }
 
     def q_cast_intruder(self, film: Film) -> Question | None:
-        if len(film.cast) < 3:
+        directors = {d.qid for d in film.directors}
+        actors = [p for p in film.cast if p.qid not in directors]
+        if len(actors) < 3:
             return None
-        members = film.cast[:3]
+        members = actors[:3]
         pool = {p.qid: p for f in self._era_films(film, 6) for p in f.cast}
         banned = set(film.cast_all) | {p.qid for p in film.cast}
         top = max(members, key=lambda p: p.popularity)

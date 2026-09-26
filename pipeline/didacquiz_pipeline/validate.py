@@ -126,7 +126,8 @@ def _semantic_new_types(q, films, film, names, correct) -> list[str] | None:
     errs: list[str] = []
     wrong = [n for i, n in enumerate(names) if i != q["answer"]] if isinstance(q["answer"], int) else []
     if topic == "character" and film:
-        real = {_norm(r.character) for r in film.roles}
+        from .generate import clean_character
+        real = {_norm(r.character) for r in film.roles} | {_norm(clean_character(r.character)) for r in film.roles}
         if _norm(correct) not in real:
             errs.append("el personaje no coincide con Wikidata")
         if any(_norm(n) in real for n in wrong):
