@@ -1,7 +1,8 @@
 """Planificador del calendario de retos diarios.
 
-Reglas: 4 fáciles + 4 medias + 2 difíciles; al menos 4 formatos distintos por
-reto; la misma película, actor o director no se repite en 60 días.
+Reglas: 4 fáciles + 4 medias + 2 difíciles; al menos 6 tipos de pregunta
+distintos por reto (máximo 2 del mismo tipo); la misma película, actor o
+director no se repite en 60 días.
 """
 from __future__ import annotations
 
@@ -13,7 +14,7 @@ MIX = {1: 4, 2: 4, 3: 2}
 
 
 def plan(questions: list[dict], start: dt.date, days: int, spacing: int = 60,
-         min_formats: int = 4, used_external_ids: set[str] | None = None,
+         min_formats: int = 6, used_external_ids: set[str] | None = None,
          seed: int = 7) -> list[dict]:
     rng = random.Random(seed)
     used_external_ids = set(used_external_ids or ())
@@ -42,13 +43,14 @@ def plan(questions: list[dict], start: dt.date, days: int, spacing: int = 60,
                     ents = set(q.get("entity_ids") or [])
                     if ents & blocked or ents & entities:
                         continue
-                    # Variedad: no más de 4 preguntas del mismo formato (3 si aún no hay 4 formatos)
-                    limit = 4 if relax else 3
-                    if formats.get(q["format"], 0) >= limit:
+                    # Variedad: como mucho 2 preguntas del mismo tipo (3 si hay que relajar)
+                    kind = q.get("topic") or q["format"]
+                    limit = 3 if relax else 2
+                    if formats.get(kind, 0) >= limit:
                         continue
                     chosen.append(q)
                     entities |= ents
-                    formats[q["format"]] = formats.get(q["format"], 0) + 1
+                    formats[kind] = formats.get(kind, 0) + 1
                     picked += 1
                 if picked < count:
                     ok = False

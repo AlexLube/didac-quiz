@@ -6,6 +6,7 @@ que ninguna sea también verdadera.
 """
 from __future__ import annotations
 
+import bisect
 import hashlib
 import random
 import re
@@ -85,6 +86,18 @@ def _explanation(film: Film) -> dict:
     return {"es": es, "en": en}
 
 
+COMMON_COUNTRIES = ["US", "GB", "FR", "IT", "ES", "DE", "JP", "IN", "KR", "MX", "AR", "CA",
+                    "AU", "SE", "DK", "CN", "HK", "BR", "RU", "IE", "NZ", "PL", "IR", "BE"]
+
+
+def country_name(iso: str, lang: str) -> str:
+    try:
+        from babel import Locale
+        return Locale(lang).territories.get(iso, iso)
+    except Exception:  # noqa: BLE001 - sin Babel, el código ISO
+        return iso
+
+
 class Generator:
     def __init__(self, films: list[Film], seed: int = 2026):
         self.films = films
@@ -96,6 +109,12 @@ class Generator:
                 counts[k] += 1
         self.ambiguous = {f.qid for f in films
                           if counts[title_key(f.title_es)] > 1 or counts[title_key(f.title_en)] > 1}
+        self._by_year = sorted(films, key=lambda f: f.year)
+        self._years = [f.year for f in self._by_year]
+        self.series: dict[str, list[Film]] = defaultdict(list)
+        for f in films:
+            if f.series:
+                self.series[f.series].append(f)
         self.by_director: dict[str, list[Film]] = defaultdict(list)
         self.directors: dict[str, Person] = {}
         for f in films:
@@ -112,7 +131,40 @@ class Generator:
         return _t(film, lang)
 
     def _era_films(self, film: Film, span: int = 12) -> list[Film]:
-        return [f for f in self.films if f.qid != film.qid and abs(f.year - film.year) <= span]
+        lo = bisect.bisect_left(self._years, film.year - span)
+        hi = bisect.bisect_right(self._years, film.year + span)
+        return [f for f in self._by_year[lo:hi] if f.qid != film.qid]
+
+    def _similar_people(self, correct: Person, pool: dict[str, Person], banned: set[str],
+                        k: int = 3) -> list[Person]:
+        """Distractores reales de popularidad parecida, con nombres distintos."""
+        names = {title_key(correct.name)}
+        cands = [p for q, p in pool.items() if q not in banned and title_key(p.name) not in names]
+        cands.sort(key=lambda p: abs(p.popularity - correct.popularity))
+        out: list[Person] = []
+        for p in self._pick(cands[:14], min(len(cands[:14]), 14)):
+            if title_key(p.name) not in names:
+                out.append(p)
+                names.add(title_key(p.name))
+            if len(out) == k:
+                return out
+        return []
+
+    def _base(self, kind: str, film: Film, fmt: str, difficulty: int, topic: str, entities: list[str],
+              prompt: dict, options: list[dict], answer, explanation: dict | None = None,
+              key: str = "") -> Question:
+        return {
+            "external_id": _xid(kind, film.qid, key),
+            "format": fmt,
+            "difficulty": max(1, min(3, difficulty)),
+            "topic": topic,
+            "entity_ids": entities,
+            "prompt": prompt,
+            "options": options,
+            "answer": answer,
+            "explanation": explanation or _explanation(film),
+            "source": f"wikidata:{film.qid}",
+        }
 
     def _pick(self, pool: list, k: int) -> list:
         return self.rng.sample(pool, k) if len(pool) >= k else []
@@ -315,11 +367,296 @@ class Generator:
             "explanation": _explanation(film),
         }
 
+
+    # -- tipos nuevos -----------------------------------------------------
+    def q_character(self, film: Film) -> Question | None:
+        """¿A quién interpreta X en la película?"""
+        if not film.roles:
+            return None
+        role = film.roles[0]
+        own = {title_key(r.character) for r in film.roles}
+        pool = [r.character for f in self._era_films(film, 15) if f.qid != film.qid
+                for r in f.roles if title_key(r.character) not in own]
+        wrong = self._pick(sorted(set(pool)), 3)
+        if len({title_key(w) for w in wrong}) < 3:
+            return None
+        opts, idx = _shuffle_with_answer(self.rng, _opt(role.character), [_opt(w) for w in wrong])
+        return self._base("character", film, "choice", 1 + film_tier(film), "character",
+                          [film.qid, role.actor_qid],
+                          {"es": f"¿A qué personaje interpreta {role.actor} en {_t(film, 'es')}?",
+                           "en": f"Who does {role.actor} play in {_t(film, 'en')}?"},
+                          opts, idx,
+                          {"es": f"{role.actor} es {role.character} en {_t(film, 'es')} ({film.year}).",
+                           "en": f"{role.actor} plays {role.character} in {_t(film, 'en')} ({film.year})."},
+                          key=role.actor_qid)
+
+    def q_actor_by_character(self, film: Film) -> Question | None:
+        """¿Qué actor interpreta a <personaje>?"""
+        if not film.roles:
+            return None
+        role = film.roles[-1] if len(film.roles) > 1 else film.roles[0]
+        correct = next((p for p in film.cast if p.qid == role.actor_qid), None)
+        if correct is None:
+            return None
+        pool = {p.qid: p for f in self._era_films(film, 8) for p in f.cast}
+        wrong = self._similar_people(correct, pool, set(film.cast_all) | {p.qid for p in film.cast})
+        if not wrong:
+            return None
+        opts, idx = _shuffle_with_answer(self.rng, _opt(correct.name), [_opt(p.name) for p in wrong])
+        return self._base("actor_by_character", film, "choice", 1 + film_tier(film), "actor_by_character",
+                          [film.qid, correct.qid],
+                          {"es": f"¿Quién da vida a {role.character} en {_t(film, 'es')}?",
+                           "en": f"Who plays {role.character} in {_t(film, 'en')}?"},
+                          opts, idx,
+                          {"es": f"{role.character} es {correct.name} en {_t(film, 'es')} ({film.year}).",
+                           "en": f"{role.character} is played by {correct.name} in {_t(film, 'en')} ({film.year})."},
+                          key=role.actor_qid)
+
+    def _crew_question(self, film: Film, people: list[Person], kind: str, span: int,
+                       prompt: dict, expl: tuple[str, str]) -> Question | None:
+        if not people:
+            return None
+        correct = max(people, key=lambda p: p.popularity)
+        attr = "composers" if kind == "composer" else "writers"
+        pool = {p.qid: p for f in self._era_films(film, span) for p in getattr(f, attr)}
+        banned = {p.qid for p in people}
+        wrong = self._similar_people(correct, pool, banned)
+        if not wrong:
+            return None
+        opts, idx = _shuffle_with_answer(self.rng, _opt(correct.name), [_opt(p.name) for p in wrong])
+        return self._base(kind, film, "choice", 2 + film_tier(film) - (1 if correct.popularity >= 60 else 0),
+                          kind, [film.qid, correct.qid], prompt, opts, idx,
+                          {"es": expl[0].format(n=correct.name), "en": expl[1].format(n=correct.name)})
+
+    def q_composer(self, film: Film) -> Question | None:
+        return self._crew_question(
+            film, film.composers, "composer", 15,
+            {"es": f"¿Quién compuso la banda sonora de {_t(film, 'es')} ({film.year})?",
+             "en": f"Who composed the score for {_t(film, 'en')} ({film.year})?"},
+            (f"La música de {_t(film, 'es')} es de {{n}}.", f"The score of {_t(film, 'en')} is by {{n}}."))
+
+    def q_writer(self, film: Film) -> Question | None:
+        # Si el guionista es también el director, la pregunta es demasiado obvia
+        writers = [w for w in film.writers if w.qid not in {d.qid for d in film.directors}]
+        if not writers or len(writers) != len(film.writers):
+            return None
+        return self._crew_question(
+            film, film.writers, "writer", 12,
+            {"es": f"¿Quién escribió el guion de {_t(film, 'es')} ({film.year})?",
+             "en": f"Who wrote the screenplay for {_t(film, 'en')} ({film.year})?"},
+            (f"El guion de {_t(film, 'es')} es de {{n}}.", f"The screenplay of {_t(film, 'en')} is by {{n}}."))
+
+    def q_book_author(self, film: Film) -> Question | None:
+        """¿Quién escribió la obra en la que se basa la película?"""
+        if len(film.based_on) != 1:
+            return None
+        work = film.based_on[0]
+        if not work.authors:
+            return None
+        correct = max(work.authors, key=lambda p: p.popularity)
+        pool = {a.qid: a for f in self._era_films(film, 25) for w in f.based_on for a in w.authors}
+        wrong = self._similar_people(correct, pool, {a.qid for a in work.authors})
+        if not wrong:
+            return None
+        opts, idx = _shuffle_with_answer(self.rng, _opt(correct.name), [_opt(p.name) for p in wrong])
+        return self._base("book_author", film, "choice", 2 + film_tier(film), "book_author",
+                          [film.qid, correct.qid, work.qid],
+                          {"es": f"{_t(film, 'es')} ({film.year}) adapta una obra literaria. ¿Quién la escribió?",
+                           "en": f"{_t(film, 'en')} ({film.year}) is based on a literary work. Who wrote it?"},
+                          opts, idx,
+                          {"es": f"Se basa en «{work.title_es}», de {correct.name}.",
+                           "en": f"It is based on \u201c{work.title_en}\u201d by {correct.name}."})
+
+    def q_based_on(self, film: Film) -> Question | None:
+        """¿En qué obra se basa la película?"""
+        if len(film.based_on) != 1:
+            return None
+        work = film.based_on[0]
+        if title_key(work.title_es) in {title_key(film.title_es), title_key(film.title_en)}:
+            return None  # mismo título que la película: sería regalada
+        pool = {w.qid: w for f in self._era_films(film, 25) if f.qid != film.qid for w in f.based_on
+                if title_key(w.title_es) != title_key(work.title_es)}
+        wrong = self._pick(sorted(pool.values(), key=lambda w: w.qid), 3)
+        if len({title_key(w.title_es) for w in wrong}) < 3:
+            return None
+        lab = lambda w: _opt(f"«{w.title_es}»", f"\u201c{w.title_en}\u201d")  # noqa: E731
+        opts, idx = _shuffle_with_answer(self.rng, lab(work), [lab(w) for w in wrong])
+        return self._base("based_on", film, "choice", 2 + film_tier(film), "based_on",
+                          [film.qid, work.qid], 
+                          {"es": f"¿En qué obra literaria se basa {_t(film, 'es')} ({film.year})?",
+                           "en": f"Which literary work is {_t(film, 'en')} ({film.year}) based on?"},
+                          opts, idx,
+                          {"es": f"Adapta «{work.title_es}», de {', '.join(a.name for a in work.authors[:2])}.",
+                           "en": f"It adapts \u201c{work.title_en}\u201d by {', '.join(a.name for a in work.authors[:2])}."})
+
+    def _saga_sorted(self, sq: str) -> list[Film]:
+        films = self.series.get(sq, [])
+        if all(f.series_ordinal is not None for f in films):
+            return sorted(films, key=lambda f: (f.series_ordinal, f.year))
+        return sorted(films, key=lambda f: f.year)
+
+    def q_saga_order(self, sq: str) -> Question | None:
+        saga = self._saga_sorted(sq)
+        years = [f.year for f in saga]
+        if len(saga) < 3 or len(set(years)) != len(years):
+            return None
+        picks = sorted(self._pick(saga, min(4, len(saga))), key=lambda f: f.year)
+        shown = picks[:]
+        self.rng.shuffle(shown)
+        answer = sorted(range(len(shown)), key=lambda i: shown[i].year)
+        head = picks[0]
+        return {
+            "external_id": _xid("saga_order", sq, *sorted(f.qid for f in picks)),
+            "format": "order",
+            "difficulty": 2 if max(film_tier(f) for f in picks) <= 1 else 3,
+            "topic": "saga_order",
+            "entity_ids": [sq] + [f.qid for f in picks],
+            "prompt": {"es": f"Saga «{head.series_es}»: ordena estas películas por fecha de estreno.",
+                       "en": f"\u201c{head.series_en}\u201d: put these films in release order."},
+            "options": [_opt(_t(f, "es"), _t(f, "en")) for f in shown],
+            "answer": answer,
+            "explanation": {
+                "es": " → ".join(f"{_t(shown[i], 'es')} ({shown[i].year})" for i in answer),
+                "en": " → ".join(f"{_t(shown[i], 'en')} ({shown[i].year})" for i in answer),
+            },
+            "source": f"wikidata:{sq}",
+        }
+
+    def q_saga_next(self, sq: str) -> Question | None:
+        saga = self._saga_sorted(sq)
+        if len(saga) < 4 or len({f.year for f in saga}) != len(saga):
+            return None
+        i = self.rng.randrange(0, len(saga) - 1)
+        film, nxt = saga[i], saga[i + 1]
+        others = [f for f in saga if f.qid not in (film.qid, nxt.qid)]
+        wrong = self._pick(others, min(3, len(others)))
+        if len(wrong) < 3:  # sagas cortas: se completa con películas de la misma época
+            fill = [f for f in self._era_films(nxt, 5) if f.series != film.series
+                    and title_key(f.title_es) not in {title_key(x.title_es) for x in saga}]
+            wrong += self._pick(fill, 3 - len(wrong)) if len(fill) >= 3 - len(wrong) else []
+        if len(wrong) < 3:
+            return None
+        lab = lambda f: _opt(_t(f, "es"), _t(f, "en"))  # noqa: E731
+        opts, idx = _shuffle_with_answer(self.rng, lab(nxt), [lab(f) for f in wrong])
+        return {
+            "external_id": _xid("saga_next", sq, film.qid),
+            "format": "choice",
+            "difficulty": 2 if film_tier(film) == 0 else 3,
+            "topic": "saga_next",
+            "entity_ids": [sq] + [f.qid for f in saga],
+            "prompt": {"es": f"En la saga «{film.series_es}», ¿qué película llegó justo después de {_t(film, 'es')} ({film.year})?",
+                       "en": f"In the \u201c{film.series_en}\u201d series, which film came right after {_t(film, 'en')} ({film.year})?"},
+            "options": opts,
+            "answer": idx,
+            "explanation": {"es": f"Después llegó {_t(nxt, 'es')} ({nxt.year}).",
+                            "en": f"Next came {_t(nxt, 'en')} ({nxt.year})."},
+            "source": f"wikidata:{sq}",
+        }
+
+    def q_country(self, film: Film) -> Question | None:
+        if len(film.countries) != 1:
+            return None
+        iso = film.countries[0]
+        if iso == "US" and self.rng.random() < 0.8:
+            return None  # evitar que casi siempre la respuesta sea EE. UU.
+        wrong = [c for c in self.rng.sample(COMMON_COUNTRIES, len(COMMON_COUNTRIES)) if c != iso][:3]
+        opts, idx = _shuffle_with_answer(self.rng, _opt(country_name(iso, "es"), country_name(iso, "en")),
+                                         [_opt(country_name(c, "es"), country_name(c, "en")) for c in wrong])
+        return self._base("country", film, "choice", 1 + film_tier(film) + (1 if iso == "US" else 0),
+                          "country", [film.qid],
+                          {"es": f"¿De qué país es {self._tt(film, 'es').rstrip(',')} ({film.year})?",
+                           "en": f"Which country is {self._tt(film, 'en').rstrip(',')} ({film.year}) from?"},
+                          opts, idx)
+
+    def q_filmed_in(self, film: Film) -> Question | None:
+        shot = [c for c in film.filming_countries if c not in film.countries]
+        if not shot:
+            return None
+        iso = self.rng.choice(shot)
+        banned = set(film.filming_countries) | set(film.countries)
+        wrong = [c for c in self.rng.sample(COMMON_COUNTRIES, len(COMMON_COUNTRIES)) if c not in banned][:3]
+        opts, idx = _shuffle_with_answer(self.rng, _opt(country_name(iso, "es"), country_name(iso, "en")),
+                                         [_opt(country_name(c, "es"), country_name(c, "en")) for c in wrong])
+        return self._base("filmed_in", film, "choice", 2 + film_tier(film), "filmed_in", [film.qid],
+                          {"es": f"¿En cuál de estos países se rodó parte de {_t(film, 'es')} ({film.year})?",
+                           "en": f"In which of these countries was part of {_t(film, 'en')} ({film.year}) filmed?"},
+                          opts, idx,
+                          {"es": f"Parte del rodaje fue en {country_name(iso, 'es')}.",
+                           "en": f"Part of it was filmed in {country_name(iso, 'en')}."}, key=iso)
+
+    def q_longest(self, films: list[Film]) -> Question | None:
+        if len(films) != 4 or any(f.duration is None for f in films):
+            return None
+        durs = sorted(f.duration for f in films)
+        if durs[-1] - durs[-2] < 12:
+            return None  # diferencia clara
+        longest = max(films, key=lambda f: f.duration)
+        shown = films[:]
+        self.rng.shuffle(shown)
+        return {
+            "external_id": _xid("longest", *sorted(f.qid for f in films)),
+            "format": "choice",
+            "difficulty": 2 if durs[-1] - durs[-2] >= 25 else 3,
+            "topic": "longest",
+            "entity_ids": [f.qid for f in films],
+            "prompt": {"es": "¿Cuál de estas películas dura más?",
+                       "en": "Which of these films is the longest?"},
+            "options": [_opt(_t(f, "es"), _t(f, "en")) for f in shown],
+            "answer": shown.index(longest),
+            "explanation": {"es": ", ".join(f"{_t(f, 'es')}: {f.duration} min" for f in shown),
+                            "en": ", ".join(f"{_t(f, 'en')}: {f.duration} min" for f in shown)},
+            "source": "wikidata",
+        }
+
+    def q_cast_intruder(self, film: Film) -> Question | None:
+        if len(film.cast) < 3:
+            return None
+        members = film.cast[:3]
+        pool = {p.qid: p for f in self._era_films(film, 6) for p in f.cast}
+        banned = set(film.cast_all) | {p.qid for p in film.cast}
+        top = max(members, key=lambda p: p.popularity)
+        intruder = self._similar_people(top, pool, banned, k=1)
+        if not intruder:
+            return None
+        if title_key(intruder[0].name) in {title_key(p.name) for p in members}:
+            return None
+        opts, idx = _shuffle_with_answer(self.rng, _opt(intruder[0].name), [_opt(p.name) for p in members])
+        return self._base("cast_intruder", film, "intruder", 1 + film_tier(film), "cast_intruder",
+                          [film.qid, intruder[0].qid] + [p.qid for p in members],
+                          {"es": f"¿Qué actor o actriz NO aparece en {_t(film, 'es')} ({film.year})?",
+                           "en": f"Which actor is NOT in {_t(film, 'en')} ({film.year})?"},
+                          opts, idx,
+                          {"es": f"En {_t(film, 'es')} actúan {', '.join(p.name for p in members)}.",
+                           "en": f"{_t(film, 'en')} stars {', '.join(p.name for p in members)}."})
+
+    def q_clues(self, film: Film) -> Question | None:
+        """Adivina la película con tres pistas (año, director y protagonista)."""
+        if not film.cast or film.qid in self.ambiguous:
+            return None
+        d, star = film.directors[0], film.cast[0]
+        others = [f for f in self._era_films(film, 3)
+                  if d.qid not in {x.qid for x in f.directors} and star.qid not in f.cast_all
+                  and title_key(f.title_es) != title_key(film.title_es)]
+        others.sort(key=lambda f: abs(f.popularity - film.popularity))
+        wrong = self._pick(others[:12], 3)
+        if not wrong:
+            return None
+        lab = lambda f: _opt(_t(f, "es"), _t(f, "en"))  # noqa: E731
+        opts, idx = _shuffle_with_answer(self.rng, lab(film), [lab(f) for f in wrong])
+        return self._base("clues", film, "clues", 1 + film_tier(film), "clues",
+                          [film.qid, d.qid, star.qid],
+                          {"es": f"🎬 {film.year} · 🎥 Dirigida por {d.name} · ⭐ Con {star.name}. ¿Qué película es?",
+                           "en": f"🎬 {film.year} · 🎥 Directed by {d.name} · ⭐ Starring {star.name}. Which film is it?"},
+                          opts, idx)
+
     # -- generación masiva ------------------------------------------------
     def generate_all(self) -> list[Question]:
         out: list[Question] = []
         per_film: list[Callable[[Film], Question | None]] = [
             self.q_director, self.q_decade, self.q_true_false_year, self.q_cast, self.q_true_false_oscar,
+            self.q_character, self.q_actor_by_character, self.q_composer, self.q_writer,
+            self.q_book_author, self.q_based_on, self.q_country, self.q_filmed_in,
+            self.q_cast_intruder, self.q_clues,
         ]
         for f in self.films:
             for fn in per_film:
@@ -344,6 +681,17 @@ class Generator:
             q = self.q_order(self._pick(known, 4))
             if q:
                 q["source"] = "wikidata"
+                out.append(q)
+        for sq in self.series:
+            for fn in (self.q_saga_order, self.q_saga_next):
+                q = fn(sq)
+                if q:
+                    out.append(q)
+        # ¿Cuál dura más?: grupos de 4 películas conocidas de la misma época
+        timed = [f for f in self._by_year if f.duration and film_tier(f) <= 1]
+        for i in range(0, len(timed) - 8, 3):
+            q = self.q_longest(self._pick(timed[i : i + 8], 4))
+            if q:
                 out.append(q)
         uniq = {q["external_id"]: q for q in out}
         return list(uniq.values())

@@ -1,1 +1,2 @@
 requests>=2.31
+babel>=2.14

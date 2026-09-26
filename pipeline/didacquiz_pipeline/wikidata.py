@@ -25,6 +25,21 @@ class Person:
 
 
 @dataclass
+class Role:
+    actor_qid: str
+    actor: str
+    character: str
+
+
+@dataclass
+class Work:
+    qid: str
+    title_es: str
+    title_en: str
+    authors: list[Person] = field(default_factory=list)
+
+
+@dataclass
 class Film:
     qid: str
     title_es: str
@@ -36,12 +51,26 @@ class Film:
     cast_all: list[str] = field(default_factory=list)      # QIDs de todo el reparto conocido
     countries: list[str] = field(default_factory=list)     # códigos ISO
     awards: list[str] = field(default_factory=list)        # 'oscar_best_picture', 'goya_best_film'
+    roles: list[Role] = field(default_factory=list)        # personaje de cada actor principal
+    composers: list[Person] = field(default_factory=list)  # banda sonora
+    writers: list[Person] = field(default_factory=list)    # guion
+    based_on: list[Work] = field(default_factory=list)     # obra literaria original
+    series: str | None = None                              # QID de la saga
+    series_es: str | None = None
+    series_en: str | None = None
+    series_ordinal: float | None = None                    # posición en la saga (si consta)
+    duration: int | None = None                            # minutos
+    filming_countries: list[str] = field(default_factory=list)
 
     @staticmethod
     def from_dict(d: dict) -> "Film":
         d = dict(d)
-        d["directors"] = [Person(**p) for p in d.get("directors", [])]
-        d["cast"] = [Person(**p) for p in d.get("cast", [])]
+        for k in ("directors", "cast", "composers", "writers"):
+            d[k] = [Person(**p) for p in d.get(k, [])]
+        d["roles"] = [Role(**r) for r in d.get("roles", [])]
+        d["based_on"] = [Work(qid=w["qid"], title_es=w["title_es"], title_en=w["title_en"],
+                              authors=[Person(**a) for a in w.get("authors", [])])
+                         for w in d.get("based_on", [])]
         return Film(**d)
 
 
@@ -114,6 +143,68 @@ SELECT ?film ?actor ?es ?en ?links WHERE {{
 }}
 """
 
+ROLES_QUERY = """
+SELECT ?film ?actor ?charEs ?charEn ?charStr WHERE {{
+  VALUES ?film {{ {values} }}
+  ?film p:P161 ?st . ?st ps:P161 ?actor .
+  {{ ?st pq:P453 ?char .
+     OPTIONAL {{ ?char rdfs:label ?charEs FILTER(LANG(?charEs) = "es") }}
+     OPTIONAL {{ ?char rdfs:label ?charEn FILTER(LANG(?charEn) = "en") }} }}
+  UNION
+  {{ ?st pq:P4633 ?charStr }}
+}}
+"""
+
+CREW_QUERY = """
+SELECT ?film ?prop ?p ?es ?en ?links WHERE {{
+  VALUES ?film {{ {values} }}
+  VALUES ?prop {{ wdt:P86 wdt:P58 }}
+  ?film ?prop ?p .
+  ?p wikibase:sitelinks ?links .
+  OPTIONAL {{ ?p rdfs:label ?es FILTER(LANG(?es) = "es") }}
+  OPTIONAL {{ ?p rdfs:label ?en FILTER(LANG(?en) = "en") }}
+}}
+"""
+
+BASED_ON_QUERY = """
+SELECT ?film ?work ?wEs ?wEn ?author ?aEs ?aEn ?aLinks WHERE {{
+  VALUES ?film {{ {values} }}
+  ?film wdt:P144 ?work .
+  ?work wdt:P50 ?author .
+  ?author wikibase:sitelinks ?aLinks .
+  OPTIONAL {{ ?work rdfs:label ?wEs FILTER(LANG(?wEs) = "es") }}
+  OPTIONAL {{ ?work rdfs:label ?wEn FILTER(LANG(?wEn) = "en") }}
+  OPTIONAL {{ ?author rdfs:label ?aEs FILTER(LANG(?aEs) = "es") }}
+  OPTIONAL {{ ?author rdfs:label ?aEn FILTER(LANG(?aEn) = "en") }}
+}}
+"""
+
+SERIES_QUERY = """
+SELECT ?film ?series ?sEs ?sEn ?ord WHERE {{
+  VALUES ?film {{ {values} }}
+  ?film p:P179 ?st . ?st ps:P179 ?series .
+  OPTIONAL {{ ?st pq:P1545 ?ord }}
+  OPTIONAL {{ ?series rdfs:label ?sEs FILTER(LANG(?sEs) = "es") }}
+  OPTIONAL {{ ?series rdfs:label ?sEn FILTER(LANG(?sEn) = "en") }}
+}}
+"""
+
+DURATION_QUERY = """
+SELECT ?film ?amount WHERE {{
+  VALUES ?film {{ {values} }}
+  ?film p:P2047/psv:P2047 ?v .
+  ?v wikibase:quantityAmount ?amount ; wikibase:quantityUnit wd:Q7727 .
+}}
+"""
+
+FILMING_QUERY = """
+SELECT DISTINCT ?film ?iso WHERE {{
+  VALUES ?film {{ {values} }}
+  ?film wdt:P915 ?loc .
+  {{ ?loc wdt:P297 ?iso }} UNION {{ ?loc wdt:P17 ?c . ?c wdt:P297 ?iso }}
+}}
+"""
+
 AWARDS_QUERY = """
 SELECT ?film ?award WHERE {{
   VALUES ?award {{ {awards} }}
@@ -173,6 +264,8 @@ def fetch_films(min_links: int = 20, cast_per_film: int = 4, verbose: bool = Tru
             films[fq].cast = sorted(people.values(), key=lambda p: -p.popularity)[:cast_per_film]
             films[fq].cast_all = sorted(set(films[fq].cast_all))
 
+    fetch_details(films, ids, verbose=verbose)
+
     goya = _sparql(GOYA_LOOKUP)
     award_ids = {BEST_PICTURE_OSCAR: "oscar_best_picture"}
     if goya:
@@ -185,6 +278,90 @@ def fetch_films(min_links: int = 20, cast_per_film: int = 4, verbose: bool = Tru
             if tag not in films[fq].awards:
                 films[fq].awards.append(tag)
     return [f for f in films.values() if f.directors]
+
+
+_BAD_ROLE = ("himself", "herself", "themselves", "él mismo", "ella misma", "narrator", "narrador",
+             "voice", "voz", "cameo", "uncredited", "extra", "self")
+
+
+def _good_character(name: str | None, actor: str) -> bool:
+    if not name or not 2 <= len(name) <= 40:
+        return False
+    low = name.lower()
+    if any(b in low for b in _BAD_ROLE) or name.startswith("Q"):
+        return False
+    return actor.split()[-1].lower() not in low  # "Tom Hanks" en "Tom Hanks (voz)"
+
+
+def _chunks(ids: list[str], n: int = 100):
+    for i in range(0, len(ids), n):
+        yield ids[i : i + n]
+
+
+def fetch_details(films: dict[str, "Film"], ids: list[str], verbose: bool = True) -> None:
+    """Personajes, compositor, guionista, obra original, saga, duración y rodaje."""
+    named = {fq: {p.qid: p.name for p in f.cast} for fq, f in films.items()}
+    for n, chunk in enumerate(_chunks(ids)):
+        for b in _sparql_chunked(ROLES_QUERY, chunk):
+            fq, aq = _qid(_val(b, "film")), _qid(_val(b, "actor"))
+            actor = named.get(fq, {}).get(aq)
+            char = _val(b, "charEs") or _val(b, "charEn") or _val(b, "charStr")
+            if actor and _good_character(char, actor) and all(r.actor_qid != aq for r in films[fq].roles):
+                films[fq].roles.append(Role(aq, actor, char))
+
+        for b in _sparql_chunked(CREW_QUERY, chunk):
+            fq, pq = _qid(_val(b, "film")), _qid(_val(b, "p"))
+            name = _val(b, "es") or _val(b, "en")
+            if not name or name.startswith("Q"):
+                continue
+            target = films[fq].composers if _val(b, "prop").endswith("P86") else films[fq].writers
+            if all(x.qid != pq for x in target):
+                target.append(Person(pq, name, int(_val(b, "links"))))
+
+        for b in _sparql_chunked(BASED_ON_QUERY, chunk):
+            fq, wq = _qid(_val(b, "film")), _qid(_val(b, "work"))
+            wen = _val(b, "wEn") or _val(b, "wEs")
+            aname = _val(b, "aEs") or _val(b, "aEn")
+            if not wen or not aname:
+                continue
+            work = next((w for w in films[fq].based_on if w.qid == wq), None)
+            if work is None:
+                work = Work(wq, _val(b, "wEs") or wen, wen)
+                films[fq].based_on.append(work)
+            aq = _qid(_val(b, "author"))
+            if all(a.qid != aq for a in work.authors):
+                work.authors.append(Person(aq, aname, int(_val(b, "aLinks"))))
+
+        for b in _sparql_chunked(SERIES_QUERY, chunk):
+            fq = _qid(_val(b, "film"))
+            f = films[fq]
+            if f.series:
+                continue  # una sola saga por película
+            name_en = _val(b, "sEn") or _val(b, "sEs")
+            if not name_en:
+                continue
+            f.series = _qid(_val(b, "series"))
+            f.series_en, f.series_es = name_en, _val(b, "sEs") or name_en
+            try:
+                f.series_ordinal = float(_val(b, "ord")) if _val(b, "ord") else None
+            except ValueError:
+                f.series_ordinal = None
+
+        for b in _sparql_chunked(DURATION_QUERY, chunk):
+            fq = _qid(_val(b, "film"))
+            try:
+                minutes = round(float(_val(b, "amount")))
+            except (TypeError, ValueError):
+                continue
+            if 40 <= minutes <= 400 and films[fq].duration is None:
+                films[fq].duration = minutes
+
+        for b in _sparql_chunked(FILMING_QUERY, chunk):
+            fq, iso = _qid(_val(b, "film")), _val(b, "iso")
+            if iso and iso not in films[fq].filming_countries:
+                films[fq].filming_countries.append(iso)
+        if verbose and n % 20 == 0:
+            print(f"  detalles: {min((n + 1) * 100, len(ids))}/{len(ids)}")
 
 
 def save_films(films: list[Film], path: Path) -> None:

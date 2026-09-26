@@ -14,6 +14,10 @@ on:
       days:
         description: "Días de retos a generar"
         default: "365"
+      replace:
+        description: "Sustituir los retos ya programados a partir de mañana (con los tipos de pregunta nuevos)"
+        type: boolean
+        default: false
       ai:
         description: "Usar IA para redactar curiosidades y revisar preguntas"
         type: boolean
@@ -48,7 +52,8 @@ jobs:
         working-directory: pipeline
         run: |
           python -m didacquiz_pipeline yearly --days "${{ github.event.inputs.days }}" \
-            ${{ github.event.inputs.ai == 'true' && '--ai' || '' }}
+            ${{ github.event.inputs.ai == 'true' && '--ai' || '' }} \
+            ${{ github.event.inputs.replace == 'true' && '--replace-from tomorrow' || '' }}
 
       - name: Guardar resultados (preguntas, descartes, revisión)
         if: github.event.inputs.task == 'generar-retos'

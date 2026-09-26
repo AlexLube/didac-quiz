@@ -34,9 +34,15 @@ jobs:
           rej = json.load(open("out/rejected.json"))
           random.seed(1)
           print("\n== Muestra de preguntas ==")
-          for q in random.sample(qs, 25):
-              opts = " | ".join(o["es"] for o in q["options"])
-              print(f'[{q["format"]} d{q["difficulty"]}] {q["prompt"]["es"]}\n   {opts}\n   -> {q["answer"]}')
+          from collections import Counter, defaultdict
+          print(Counter(q["topic"] for q in qs))
+          by = defaultdict(list)
+          for q in qs:
+              by[q["topic"]].append(q)
+          for topic, items in sorted(by.items()):
+              for q in random.sample(items, min(3, len(items))):
+                  opts = " | ".join(o["es"] for o in q["options"])
+                  print(f'[{topic} d{q["difficulty"]}] {q["prompt"]["es"]}\n   {opts}\n   -> {q["answer"]}')
           print("\n== Motivos de descarte ==")
           from collections import Counter
           print(Counter(e for r in rej for e in r["errors"]).most_common(10))

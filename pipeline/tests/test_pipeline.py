@@ -9,13 +9,16 @@ import pytest
 from didacquiz_pipeline.generate import Generator
 from didacquiz_pipeline.schedule import plan
 from didacquiz_pipeline.validate import semantic_errors, structural_errors, validate_all
-from didacquiz_pipeline.wikidata import Film, Person
+from didacquiz_pipeline.wikidata import Film, Person, Role, Work
 
 
 def synthetic_films(n=900, seed=1) -> list[Film]:
     rng = random.Random(seed)
     directors = [Person(f"QD{i}", f"Director {i}", rng.randint(10, 120)) for i in range(160)]
     actors = [Person(f"QA{i}", f"Actor {i}", rng.randint(10, 150)) for i in range(600)]
+    composers = [Person(f"QC{i}", f"Compositor {i}", rng.randint(10, 90)) for i in range(60)]
+    writers = [Person(f"QW{i}", f"Guionista {i}", rng.randint(10, 90)) for i in range(200)]
+    authors = [Person(f"QB{i}", f"Novelista {i}", rng.randint(10, 150)) for i in range(120)]
     films = []
     for i in range(n):
         cast = rng.sample(actors, 6)
@@ -25,12 +28,22 @@ def synthetic_films(n=900, seed=1) -> list[Film]:
             awards.append("oscar_best_picture")
         if i % 30 == 3:
             awards.append("goya_best_film")
-        films.append(Film(
+        f = Film(
             qid=f"QF{i}", title_es=f"Película {i}", title_en=f"Movie {i}",
             year=rng.randint(1925, 2024), popularity=rng.randint(20, 140),
             directors=[rng.choice(directors)], cast=cast[:4], cast_all=[p.qid for p in cast],
-            countries=["ES"] if i % 3 == 0 else ["US"], awards=awards,
-        ))
+            countries=["ES"] if i % 3 == 0 else (["FR"] if i % 3 == 1 else ["US"]), awards=awards,
+            roles=[Role(p.qid, p.name, f"Personaje {i}-{k}") for k, p in enumerate(cast[:2])],
+            composers=[rng.choice(composers)], writers=[rng.choice(writers)],
+            duration=rng.randint(80, 200), filming_countries=["IT"] if i % 4 == 0 else [],
+        )
+        if i % 5 == 0:
+            f.based_on = [Work(f"QN{i}", f"Novela {i}", f"Novel {i}", [rng.choice(authors)])]
+        if i < 60:  # 15 sagas de 4 películas
+            f.series, f.series_es, f.series_en = f"QS{i // 4}", f"Saga {i // 4}", f"Saga {i // 4}"
+            f.series_ordinal = float(i % 4 + 1)
+            f.year = 1980 + (i // 4) + (i % 4) * 3
+        films.append(f)
     return films
 
 
@@ -95,7 +108,7 @@ def test_schedule_rules(questions, films):
     for n, c in enumerate(cal):
         qs = [by_id[x] for x in c["external_ids"]]
         assert [q["difficulty"] for q in qs] == [1, 1, 1, 1, 2, 2, 2, 2, 3, 3]
-        assert len({q["format"] for q in qs}) >= 3
+        assert len({q["topic"] for q in qs}) >= 5
         for q in qs:
             for e in q["entity_ids"]:
                 assert n - last_seen.get(e, -999) >= 20 or last_seen.get(e) == n
@@ -184,3 +197,33 @@ def test_sparql_retries_and_splits(monkeypatch):
     monkeypatch.setattr(wikidata.requests, "get", fake_get)
     rows = wikidata._sparql_chunked("VALUES {{ {values} }}", ["Q1", "BAD", "Q2", "Q3"])
     assert len(rows) == 2  # los bloques sanos se recuperan, BAD se omite
+
+
+def test_new_question_types(questions, films):
+    topics = {q["topic"] for q in questions}
+    expected = {"character", "actor_by_character", "composer", "writer", "book_author", "based_on",
+                "country", "filmed_in", "longest", "cast_intruder", "clues", "saga_order", "saga_next"}
+    assert expected <= topics, expected - topics
+    ok, rejected = validate_all(questions, films)
+    bad = [(q["topic"], e) for q, e in rejected if q["topic"] in expected]
+    assert len(bad) < 0.03 * len(ok), bad[:5]
+
+
+def test_new_types_catch_wrong_answers(questions, films):
+    index = {f.qid: f for f in films}
+    for topic in ("character", "composer", "country", "clues", "longest", "book_author"):
+        q = next(q for q in questions if q["topic"] == topic and not semantic_errors(q, index))
+        broken = dict(q, answer=(q["answer"] + 1) % len(q["options"]))
+        assert semantic_errors(broken, index), topic
+    ci = next(q for q in questions if q["topic"] == "cast_intruder")
+    assert not semantic_errors(ci, index)
+
+
+def test_schedule_mixes_many_types(questions, films):
+    ok, _ = validate_all(questions, films)
+    cal = plan(ok, dt.date(2027, 1, 1), days=30, spacing=10)
+    by_id = {q["external_id"]: q for q in ok}
+    for c in cal:
+        topics = [by_id[x]["topic"] for x in c["external_ids"]]
+        assert len(set(topics)) >= 6, topics
+        assert max(topics.count(t) for t in set(topics)) <= 3

@@ -67,6 +67,13 @@ def cmd_schedule(args) -> None:
     start = dt.date.fromisoformat(args.start) if args.start else None
     if args.remote:
         sb = _supabase()
+        if args.replace_from:
+            day = (dt.datetime.now(dt.timezone.utc).date() + dt.timedelta(days=1)
+                   if args.replace_from == "tomorrow" else dt.date.fromisoformat(args.replace_from))
+            # Los retos de esos días se sobrescriben al subir (upsert por fecha);
+            # el de hoy y los pasados no se tocan.
+            print(f"Se sustituirán los retos desde el {day}.")
+            start = day
         used = sb.used_external_ids()
         if start is None:
             last = sb.last_challenge_date()
@@ -118,6 +125,7 @@ def main(argv=None) -> None:
         sp.add_argument("--spacing", type=int, default=60)
         sp.add_argument("--remote", action="store_true", help="consultar Supabase al planificar")
         sp.add_argument("--all-questions", action="store_true", help="subir también la reserva")
+        sp.add_argument("--replace-from", help="'tomorrow' o AAAA-MM-DD: rehace los retos desde esa fecha")
 
     for name, fn in [("fetch", cmd_fetch), ("build", cmd_build), ("schedule", cmd_schedule),
                      ("upload", cmd_upload), ("yearly", cmd_yearly)]:

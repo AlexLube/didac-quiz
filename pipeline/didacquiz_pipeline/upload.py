@@ -70,6 +70,13 @@ class Supabase:
         for i in range(0, len(rows), 200):
             self._post("challenges", rows[i : i + 200], "challenge_date", returning=False)
 
+    def delete_challenges_from(self, day: str) -> None:
+        """Borra los retos desde `day` (incluido). Solo retos futuros, que nadie ha jugado."""
+        r = requests.delete(f"{self.url}/rest/v1/challenges", params={"challenge_date": f"gte.{day}"},
+                            headers={**self.h, "Prefer": "return=minimal"}, timeout=120)
+        if r.status_code >= 300:
+            raise RuntimeError(f"No se pudieron borrar los retos futuros: {r.status_code} {r.text[:300]}")
+
     def challenges_remaining(self) -> int:
         r = requests.post(f"{self.url}/rest/v1/rpc/challenges_remaining", headers=self.h, json={}, timeout=60)
         r.raise_for_status()
