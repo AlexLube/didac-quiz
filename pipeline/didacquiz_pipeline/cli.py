@@ -134,6 +134,24 @@ def cmd_check(args) -> None:
         sys.exit(1)
 
 
+MEDIA_FORMATS = {"emoji", "image_choice", "image_reveal", "audio"}
+
+
+def cmd_report(args) -> None:
+    today = dt.datetime.now(dt.timezone.utc).date()
+    start = today - dt.timedelta(days=args.past)
+    end = today + dt.timedelta(days=args.future)
+    rows = _supabase().challenge_report(start.isoformat(), end.isoformat())
+    total = 0
+    for d in rows:
+        media = [q for q in d["questions"] if q.get("format") in MEDIA_FORMATS]
+        total += len(media)
+        tag = ", ".join(f"{q['format']}({q.get('topic')})" for q in media) or "—"
+        mark = "  <- hoy" if d["date"] == today.isoformat() else ""
+        print(f"{d['date']}: {len(media)} multimedia: {tag}{mark}")
+    print(f"TOTAL multimedia en {len(rows)} retos: {total}")
+
+
 def main(argv=None) -> None:
     p = argparse.ArgumentParser(prog="didacquiz_pipeline")
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -155,6 +173,10 @@ def main(argv=None) -> None:
         sp = sub.add_parser(name)
         common(sp)
         sp.set_defaults(fn=fn)
+    sp = sub.add_parser("report")
+    sp.add_argument("--past", type=int, default=15)
+    sp.add_argument("--future", type=int, default=30)
+    sp.set_defaults(fn=cmd_report)
     sp = sub.add_parser("check")
     sp.add_argument("--min-days", type=int, default=45)
     sp.set_defaults(fn=cmd_check)

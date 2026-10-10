@@ -105,6 +105,26 @@ class Supabase:
         if r.status_code >= 300:
             raise RuntimeError(f"No se pudieron borrar los retos futuros: {r.status_code} {r.text[:300]}")
 
+    def challenge_report(self, start: str, end: str) -> list[dict]:
+        """Formatos y temas de las preguntas de cada reto entre dos fechas."""
+        r = requests.get(f"{self.url}/rest/v1/challenges",
+                         params={"select": "challenge_date,question_ids",
+                                 "and": f"(challenge_date.gte.{start},challenge_date.lte.{end})",
+                                 "order": "challenge_date"}, headers=self.h, timeout=120)
+        r.raise_for_status()
+        days = r.json()
+        ids = sorted({q for d in days for q in d["question_ids"]})
+        info: dict[int, dict] = {}
+        for i in range(0, len(ids), 300):
+            chunk = ",".join(map(str, ids[i : i + 300]))
+            q = requests.get(f"{self.url}/rest/v1/questions",
+                             params={"select": "id,format,topic,image_url,audio_url", "id": f"in.({chunk})"},
+                             headers=self.h, timeout=120)
+            q.raise_for_status()
+            info.update({row["id"]: row for row in q.json()})
+        return [{"date": d["challenge_date"], "questions": [info.get(x, {}) for x in d["question_ids"]]}
+                for d in days]
+
     def challenges_remaining(self) -> int:
         r = requests.post(f"{self.url}/rest/v1/rpc/challenges_remaining", headers=self.h, json={}, timeout=60)
         r.raise_for_status()
