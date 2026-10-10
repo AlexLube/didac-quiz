@@ -309,3 +309,21 @@ def test_upload_rows_fill_defaults(monkeypatch):
                         [{"external_id": r["external_id"], "id": n} for n, r in enumerate(rows)])
     ids = sb.upsert_questions([{"external_id": "a", "format": "choice"}])
     assert ids == {"a": 0} and sent[0]["media_start_ms"] == 0 and sent[0]["entity_ids"] == []
+
+
+def test_schedule_guarantees_media_each_day():
+    """Con pocas preguntas multimedia entre muchas, igual salen 2 al día."""
+    from didacquiz_pipeline.schedule import is_media
+    rng = random.Random(3)
+    topics = ["year", "director", "cast", "composer", "writer", "character", "country", "longest"]
+    qs = [{"external_id": f"t{i}", "difficulty": rng.choice([1, 1, 2, 2, 3, 3]), "format": "choice",
+           "topic": rng.choice(topics), "entity_ids": [f"F{i}"]} for i in range(20000)]
+    # 1,5 % multimedia, como en el banco real
+    media = [{"external_id": f"m{i}", "difficulty": rng.choice([1, 2, 2, 3]),
+              "format": rng.choice(["emoji", "image_choice", "audio"]),
+              "topic": "emoji", "entity_ids": [f"M{i}"]} for i in range(300)]
+    cal = plan(qs + media, dt.date(2027, 1, 1), days=100, spacing=30)
+    by_id = {q["external_id"]: q for q in qs + media}
+    counts = [sum(is_media(by_id[x]) for x in c["external_ids"]) for c in cal]
+    assert min(counts) >= 2, counts[:10]
+    assert all(len(c["external_ids"]) == 10 for c in cal)

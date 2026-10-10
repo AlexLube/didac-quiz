@@ -1,2 +1,2 @@
-informe-retos
+generar-retos
 # Editar este archivo lanza la tarea indicada en la primera línea.

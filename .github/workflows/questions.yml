@@ -65,6 +65,22 @@ jobs:
           path: pipeline/data
           key: wikidata-${{ github.run_id }}
           restore-keys: wikidata-
+      - name: Recuperar emojis ya generados
+        if: env.TASK == 'generar-retos'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p pipeline/data
+          if [ -s pipeline/data/emoji.json ]; then echo "emojis ya en caché"; exit 0; fi
+          id=$(curl -sS -H "Authorization: Bearer $GH_TOKEN" \
+            "https://api.github.com/repos/${{ github.repository }}/actions/artifacts?name=preguntas&per_page=1" \
+            | python3 -c "import sys,json;a=json.load(sys.stdin).get('artifacts') or [];print(a[0]['id'] if a else '')")
+          if [ -z "$id" ]; then echo "sin artefacto previo"; exit 0; fi
+          curl -sSL -H "Authorization: Bearer $GH_TOKEN" -o /tmp/preguntas.zip \
+            "https://api.github.com/repos/${{ github.repository }}/actions/artifacts/$id/zip"
+          python3 -I tool/restore_emoji.py /tmp/preguntas.zip pipeline/data
+
       - run: sudo apt-get install -y -q ffmpeg >/dev/null
 
       - name: Preparar base de datos

@@ -693,10 +693,10 @@ class Generator:
         lab = lambda f: _opt(_t(f, "es"), _t(f, "en"))  # noqa: E731
         return _shuffle_with_answer(self.rng, lab(film), [lab(f) for f in wrong])
 
-    def q_location_photo(self, film: Film) -> Question | None:
-        if not film.location_photos or film_tier(film) > 1:
+    def q_location_photo(self, film: Film, index: int = 0) -> Question | None:
+        if len(film.location_photos) <= index or film_tier(film) > 1:
             return None
-        loc = film.location_photos[0]
+        loc = film.location_photos[index]
         res = self._film_options(film, {film.qid}, span=10,
                                  extra_ok=lambda f: loc["qid"] not in {l["qid"] for l in f.location_photos})
         if not res:
@@ -713,6 +713,15 @@ class Generator:
         q["image_url"] = loc["url"]
         q["image_attribution"] = _media_credit(loc, "Foto")
         return q
+
+    def q_location_photos(self, film: Film) -> list[Question]:
+        """Una pregunta por cada lugar de rodaje con foto (hasta 3)."""
+        out = []
+        for i in range(min(3, len(film.location_photos))):
+            q = self.q_location_photo(film, i)
+            if q:
+                out.append(q)
+        return out
 
     def q_still(self, film: Film) -> Question | None:
         if not film.still:
@@ -782,7 +791,7 @@ class Generator:
             self.q_director, self.q_decade, self.q_true_false_year, self.q_cast, self.q_true_false_oscar,
             self.q_character, self.q_actor_by_character, self.q_composer, self.q_writer,
             self.q_book_author, self.q_based_on, self.q_country, self.q_filmed_in,
-            self.q_cast_intruder, self.q_clues, self.q_location_photo, self.q_still, self.q_emoji,
+            self.q_cast_intruder, self.q_clues, self.q_still, self.q_emoji,
         ]
         for f in self.films:
             for fn in per_film:
@@ -808,6 +817,8 @@ class Generator:
             if q:
                 q["source"] = "wikidata"
                 out.append(q)
+        for f in self.films:
+            out += self.q_location_photos(f)
         out += self._music_questions()
         for sq in self.series:
             for fn in (self.q_saga_order, self.q_saga_next):
