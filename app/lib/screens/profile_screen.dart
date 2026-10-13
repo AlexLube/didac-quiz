@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../app_state.dart';
@@ -86,7 +87,7 @@ class ProfileScreen extends StatelessWidget {
                       ),
                     ),
                   ),
-                  if (p != null)
+                  if (Supabase.instance.client.auth.currentUser != null)
                     FutureBuilder<bool>(
                       future: state.api.isAdmin().catchError((_) => false),
                       builder: (context, snap) => snap.data == true

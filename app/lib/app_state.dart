@@ -142,7 +142,8 @@ class AppState extends ChangeNotifier {
   Future<void> login(String alias, String password) async {
     try {
       await Supabase.instance.client.auth
-          .signInWithPassword(email: api.emailFor(alias.trim()), password: password);
+          .signInWithPassword(
+              email: alias.contains('@') ? alias.trim() : api.emailFor(alias.trim()), password: password);
     } on AuthException {
       throw ApiError('login');
     }

@@ -168,8 +168,9 @@ class _AccountScreenState extends State<AccountScreen> {
             TextField(
               controller: _alias,
               autocorrect: false,
-              inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[A-Za-z0-9_.\-]'))],
-              maxLength: 20,
+              inputFormatters: _login ? null : [FilteringTextInputFormatter.allow(RegExp(r'[A-Za-z0-9_.\-]'))],
+              maxLength: _login ? 80 : 20,
+              keyboardType: _login ? TextInputType.emailAddress : null,
               decoration: InputDecoration(
                 labelText: tr('alias'),
                 helperText: _login ? null : tr('alias_help'),
