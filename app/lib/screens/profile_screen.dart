@@ -10,6 +10,7 @@ import '../strings.dart';
 import '../theme.dart';
 import '../widgets/cinema.dart';
 import '../widgets/common.dart';
+import 'admin_screen.dart';
 import 'auth_screens.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -85,6 +86,21 @@ class ProfileScreen extends StatelessWidget {
                       ),
                     ),
                   ),
+                  if (p != null)
+                    FutureBuilder<bool>(
+                      future: state.api.isAdmin().catchError((_) => false),
+                      builder: (context, snap) => snap.data == true
+                          ? Card(
+                              child: ListTile(
+                                leading: const Icon(Icons.dashboard_customize_rounded, color: AppColors.gold),
+                                title: const Text('Administración'),
+                                subtitle: const Text('Panel, preguntas y retos'),
+                                onTap: () => Navigator.of(context)
+                                    .push(MaterialPageRoute(builder: (_) => AdminScreen(api: state.api))),
+                              ),
+                            )
+                          : const SizedBox.shrink(),
+                    ),
                   Card(
                     child: ListTile(
                       leading: const Icon(Icons.privacy_tip_rounded, color: AppColors.amber),

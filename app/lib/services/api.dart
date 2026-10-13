@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../config.dart';
@@ -30,7 +32,7 @@ class Api {
     'account_not_permanent', 'no_challenge_today', 'wrong_position', 'not_served',
     'streak_restore_unavailable', 'profile_required', 'challenge_still_open', 'question_not_seen',
     'invalid_league_name', 'league_not_found', 'league_full', 'too_many_leagues', 'not_a_member',
-    'not_league_owner',
+    'not_league_owner', 'not_admin', 'question_not_found', 'challenge_already_open',
   ];
 
   Future<dynamic> _rpc(String fn, [Map<String, dynamic>? params]) async {
@@ -149,6 +151,36 @@ class Api {
   Future<List<City>> searchCities(String country, String query) async {
     final rows = await _rpc('search_cities', {'p_country': country, 'p_query': query, 'p_limit': 20});
     return (rows as List).map((r) => City(asInt(r['id']), r['name'] as String)).toList();
+  }
+
+  // --- Administración (solo cuentas de administrador) ------------------------
+  Future<bool> isAdmin() async => (await _rpc('is_admin')) == true;
+  Future<Map<String, dynamic>> adminDashboard() async => asMap(await _rpc('admin_dashboard'));
+  Future<List<Map<String, dynamic>>> adminQuestions(
+          {String? search, String? format, bool onlyManual = false, int offset = 0}) async =>
+      asMapList(await _rpc('admin_list_questions', {
+        'p_search': search, 'p_format': format, 'p_only_manual': onlyManual,
+        'p_limit': 30, 'p_offset': offset,
+      }));
+  Future<int> adminSaveQuestion(int? id, Map<String, dynamic> data) async =>
+      asInt(asMap(await _rpc('admin_save_question', {'p_id': id, 'p_data': data}))['id']);
+  Future<void> adminSetActive(int id, bool active) =>
+      _rpc('admin_set_question_active', {'p_id': id, 'p_active': active});
+  Future<void> adminResolveReport(int id, String status) =>
+      _rpc('admin_resolve_report', {'p_id': id, 'p_status': status});
+  Future<Map<String, dynamic>?> adminChallenge(DateTime d) async {
+    final r = await _rpc('admin_get_challenge', {'p_date': _d(d)});
+    return r == null ? null : asMap(r);
+  }
+  Future<void> adminReplace(DateTime d, int position, int questionId) => _rpc(
+      'admin_replace_challenge_question', {'p_date': _d(d), 'p_position': position, 'p_question_id': questionId});
+
+  /// Sube una imagen propia al almacenamiento público y devuelve su dirección.
+  Future<String> adminUploadImage(List<int> bytes, String ext) async {
+    final path = 'manual/${DateTime.now().millisecondsSinceEpoch}.$ext';
+    await _c.storage.from('media').uploadBinary(path, Uint8List.fromList(bytes),
+        fileOptions: FileOptions(contentType: ext == 'png' ? 'image/png' : 'image/jpeg', upsert: true));
+    return _c.storage.from('media').getPublicUrl(path);
   }
 
   String _d(DateTime d) =>
