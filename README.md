@@ -60,8 +60,8 @@ Cada cambio en `main` ejecuta **Pruebas y APK**. Si todo pasa, en la ejecución 
 
 ## Mantenimiento
 
-- **Una vez al año**: ejecutar `generar-retos`.
-- **Semanalmente (15 min)**: mirar la tabla `reports` en Supabase (preguntas reportadas por jugadores) y desactivar las erróneas (`active = false`).
+- **Automático**: cada lunes la tarea `rutina-mensual` comprueba cuántos días de retos quedan. Si son menos de 15, genera los 30 siguientes y abre una incidencia en GitHub para avisar.
+- **Administración**: tu cuenta de administrador ve en Perfil la sección **Administración** (panel con usuarios activos, partidas, retos preparados, preguntas más falladas y avisos; editor de preguntas con subida de imagen propia; cambio de preguntas en retos futuros). Para dar permisos a una cuenta: crearla en Supabase (Authentication → Users) y lanzar la tarea `registrar-admin` con su correo.
 - **Recalibrar dificultad** (opcional, en el editor SQL de Supabase): `select recalibrate_questions();`
 
 ## Configuración opcional
