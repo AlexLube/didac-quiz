@@ -12,7 +12,11 @@ on:
           - preparar-base-datos    # aplica migraciones y datos de países/ciudades
           - comprobar-reservas     # avisa si quedan pocos días con reto
           - informe-retos          # qué preguntas multimedia hay en los retos
+          - registrar-admin        # da permisos de administración a la cuenta con el correo indicado
         default: rutina-mensual
+      admin_email:
+        description: "Correo de la cuenta de administración (solo en «registrar-admin»)"
+        default: ""
       days:
         description: "Días de retos a generar (solo en «generar-retos»)"
         default: "30"
@@ -92,6 +96,27 @@ jobs:
         run: |
           sudo apt-get install -y -q postgresql-client >/dev/null
           tool/db_setup.sh
+
+      - name: Registrar administrador
+        if: env.TASK == 'registrar-admin'
+        env:
+          ADMIN_EMAIL: ${{ github.event.inputs.admin_email }}
+        run: |
+          sudo apt-get install -y -q postgresql-client >/dev/null
+          [ -n "$ADMIN_EMAIL" ] || { echo "Falta el correo (admin_email)"; exit 1; }
+          psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -v email="$ADMIN_EMAIL" <<'SQL'
+          select id as uid from auth.users where lower(email) = lower(:'email') \gset
+          \if :{?uid}
+            update public.app_config
+               set value = (select coalesce(jsonb_agg(distinct u), '[]'::jsonb)
+                              from jsonb_array_elements_text(value || to_jsonb(:'uid'::text)) u)
+             where key = 'admin_uids';
+            select 'Administrador registrado: ' || :'uid' as resultado;
+          \else
+            \echo 'No existe ninguna cuenta con ese correo: créala primero en Supabase (Authentication → Users)'
+            select 1/0;
+          \endif
+          SQL
 
       - name: Generar retos
         if: env.TASK == 'generar-retos'
