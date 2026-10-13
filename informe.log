@@ -1,0 +1,47 @@
+2026-09-28: 1 multimedia: emoji(emoji)
+2026-09-29: 1 multimedia: image_choice(location_photo)
+2026-09-30: 0 multimedia: —
+2026-10-01: 0 multimedia: —
+2026-10-02: 1 multimedia: audio(music_piece)
+2026-10-03: 0 multimedia: —
+2026-10-04: 1 multimedia: emoji(emoji)
+2026-10-05: 0 multimedia: —
+2026-10-06: 1 multimedia: emoji(emoji)
+2026-10-07: 1 multimedia: emoji(emoji)
+2026-10-08: 0 multimedia: —
+2026-10-09: 0 multimedia: —
+2026-10-10: 0 multimedia: —
+2026-10-11: 2 multimedia: emoji(emoji), emoji(emoji)
+2026-10-12: 2 multimedia: emoji(emoji), emoji(emoji)
+2026-10-13: 2 multimedia: emoji(emoji), emoji(emoji)  <- hoy
+2026-10-14: 2 multimedia: map(map), image_reveal(location_photo)
+2026-10-15: 5 multimedia: map(map), image_reveal(still), audio(music_film), image_reveal(location_photo), odd_images(odd_images)
+2026-10-16: 2 multimedia: image_choice(location_photo), odd_images(odd_images)
+2026-10-17: 2 multimedia: image_reveal(location_photo), map(map)
+2026-10-18: 2 multimedia: image_choice(location_photo), odd_images(odd_images)
+2026-10-19: 2 multimedia: map(map), image_choice(location_photo)
+2026-10-20: 2 multimedia: map(map), image_reveal(location_photo)
+2026-10-21: 3 multimedia: map(map), image_reveal(location_photo), odd_images(odd_images)
+2026-10-22: 5 multimedia: map(map), audio(music_film), image_reveal(still), odd_images(odd_images), image_reveal(location_photo)
+2026-10-23: 2 multimedia: map(map), image_reveal(location_photo)
+2026-10-24: 2 multimedia: map(map), image_choice(location_photo)
+2026-10-25: 2 multimedia: map(map), image_reveal(location_photo)
+2026-10-26: 2 multimedia: image_choice(location_photo), odd_images(odd_images)
+2026-10-27: 2 multimedia: image_choice(location_photo), map(map)
+2026-10-28: 2 multimedia: image_reveal(location_photo), map(map)
+2026-10-29: 5 multimedia: image_reveal(still), audio(music_film), audio(music_piece), image_choice(location_photo), map(map)
+2026-10-30: 3 multimedia: emoji(emoji), map(map), image_reveal(location_photo)
+2026-10-31: 2 multimedia: image_reveal(location_photo), map(map)
+2026-11-01: 2 multimedia: image_reveal(location_photo), map(map)
+2026-11-02: 3 multimedia: image_choice(location_photo), map(map), odd_images(odd_images)
+2026-11-03: 2 multimedia: image_reveal(location_photo), map(map)
+2026-11-04: 2 multimedia: image_reveal(still), image_choice(location_photo)
+2026-11-05: 5 multimedia: map(map), image_choice(location_photo), image_reveal(location_photo), map(map), odd_images(odd_images)
+2026-11-06: 3 multimedia: emoji(emoji), map(map), image_reveal(location_photo)
+2026-11-07: 2 multimedia: image_choice(location_photo), odd_images(odd_images)
+2026-11-08: 2 multimedia: odd_images(odd_images), image_choice(location_photo)
+2026-11-09: 2 multimedia: odd_images(odd_images), image_reveal(still)
+2026-11-10: 2 multimedia: map(map), image_reveal(location_photo)
+2026-11-11: 2 multimedia: image_reveal(location_photo), odd_images(odd_images)
+2026-11-12: 5 multimedia: emoji(emoji), image_choice(location_photo), map(map), image_reveal(location_photo), map(map)
+TOTAL multimedia en 46 retos: 91
