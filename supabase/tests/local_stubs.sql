@@ -14,7 +14,8 @@ create table if not exists auth.users (
   email              text,
   encrypted_password text,
   is_anonymous       boolean not null default false,
-  updated_at         timestamptz
+  updated_at         timestamptz,
+  created_at         timestamptz not null default now()
 );
 
 create or replace function auth.uid() returns uuid

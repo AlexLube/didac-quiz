@@ -540,3 +540,51 @@ def test_variable_game_and_titles(db):
     assert [f["title"] for f in found][:2] == ["Alien, el octavo pasajero", "Aliens"]
     assert p.call("select search_titles('el padrino')")[0]["title"] == "El Padrino"
     assert p.call("select search_titles('a')") == []
+
+
+def test_admin_functions(db):
+    import psycopg.errors as pe
+    qids = make_questions(db, 10, start=1200)
+    p = Player(db)
+    p.register("proyectora")
+    admin = Player(db)
+    admin.register("taquillera")
+    # Un jugador normal no puede usar nada de administración
+    with pytest.raises(pe.Error, match="not_admin"):
+        p.call("select admin_dashboard()")
+    assert p.call("select is_admin()") is False
+    db.execute("update app_config set value = %s where key = 'admin_uids'", (json.dumps([admin.id]),))
+    assert admin.call("select is_admin()") is True
+    with pytest.raises(pe.Error, match="not_admin"):
+        p.call("select admin_save_question(null, '{}'::jsonb)")
+
+    d = admin.call("select admin_dashboard()", today="2027-04-02")
+    assert d["users"]["registered"] >= 2 and d["questions"]["total"] > 0
+    assert isinstance(d["reports"], list) and "by_format" in d["questions"]
+
+    new = admin.call("select admin_save_question(null, %s::jsonb)", (json.dumps({
+        "format": "choice", "difficulty": 2, "topic": "manual",
+        "prompt": {"es": "¿Prueba?", "en": "Test?"},
+        "options": [{"es": "a", "en": "a"}, {"es": "b", "en": "b"}], "answer": 1,
+        "explanation": {"es": "x", "en": "x"}, "image_url": "https://x/y.jpg"}),))
+    qid = new["id"]
+    listed = admin.call("select admin_list_questions('Prueba', null, true)")
+    assert [q["id"] for q in listed] == [qid] and listed[0]["image_url"] == "https://x/y.jpg"
+    admin.call("select admin_save_question(%s, %s::jsonb)", (qid, json.dumps({
+        "format": "choice", "difficulty": 3, "prompt": {"es": "¿Cambiada?", "en": "Changed?"},
+        "options": [{"es": "a", "en": "a"}, {"es": "b", "en": "b"}], "answer": 0}),))
+    assert admin.call("select admin_list_questions('Cambiada')")[0]["difficulty"] == 3
+    admin.call("select admin_set_question_active(%s, false)", (qid,))
+
+    # Cambiar una pregunta de un reto futuro
+    make_challenge(db, "2027-04-10", qids)
+    ch = admin.call("select admin_get_challenge('2027-04-10')", today="2027-04-02")
+    assert ch["editable"] is True and len(ch["questions"]) == 10
+    with pytest.raises(pe.Error, match="question_not_found"):      # inactiva
+        admin.call("select admin_replace_challenge_question('2027-04-10', 3, %s)", (qid,), today="2027-04-02")
+    admin.call("select admin_set_question_active(%s, true)", (qid,))
+    admin.call("select admin_replace_challenge_question('2027-04-10', 3, %s)", (qid,), today="2027-04-02")
+    ch = admin.call("select admin_get_challenge('2027-04-10')", today="2027-04-02")
+    assert ch["questions"][3]["id"] == qid
+    with pytest.raises(pe.Error, match="challenge_already_open"):
+        admin.call("select admin_replace_challenge_question('2027-04-10', 3, %s)", (qid,), today="2027-04-10")
