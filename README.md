@@ -1,4 +1,4 @@
-# Didac-Quiz
+# DidacCine Quiz
 
 El reto diario de cine: 10 preguntas al día, las mismas para todo el mundo, con puntuación por dificultad (1, 2 y 3 puntos) y rankings mundial, nacional y local, y ligas privadas para competir con amigos mediante un código de invitación.
 
@@ -88,4 +88,4 @@ cd pipeline && pytest tests
 - Películas: [Wikidata](https://www.wikidata.org) (CC0).
 - Municipios: [GeoNames](https://www.geonames.org) (CC BY 4.0). Nombres de países: CLDR.
 
-Didac-Quiz no está afiliado ni patrocinado por ninguna academia, estudio o festival de cine.
+DidacCine Quiz no está afiliado ni patrocinado por ninguna academia, estudio o festival de cine.

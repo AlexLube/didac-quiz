@@ -51,14 +51,15 @@ def is_interactive(q: dict) -> bool:
 
 def plan(questions: list[dict], start: dt.date, days: int, spacing: int = 60,
          min_formats: int = 6, min_media: int = 2, min_interactive: int = 2,
-         used_external_ids: set[str] | None = None, seed: int = 7, specials: bool = True) -> list[dict]:
+         used_external_ids: set[str] | None = None, seed: int = 7, specials: bool = True,
+         recent_entities: list[set[str]] | None = None) -> list[dict]:
     rng = random.Random(seed)
     used_external_ids = set(used_external_ids or ())
     pools = {d: [q for q in questions if q["difficulty"] == d and q["external_id"] not in used_external_ids]
              for d in MIX}
     for p in pools.values():
         rng.shuffle(p)
-    recent: deque[set[str]] = deque(maxlen=spacing)
+    recent: deque[set[str]] = deque(recent_entities or [], maxlen=spacing)
     calendar = []
 
     def pick_day(blocked: set[str], want_media: int, want_inter: int, tag: str | None):

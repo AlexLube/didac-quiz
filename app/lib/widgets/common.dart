@@ -47,7 +47,7 @@ class TimerBar extends StatelessWidget {
       borderRadius: BorderRadius.circular(8),
       child: LinearProgressIndicator(
         value: fraction.clamp(0, 1),
-        minHeight: 10,
+        minHeight: 12,
         backgroundColor: AppColors.surfaceHigh,
         valueColor: AlwaysStoppedAnimation(color),
       ),
@@ -73,7 +73,7 @@ class OptionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Color border = AppColors.surfaceHigh;
+    Color border = AppColors.border;
     Color fill = AppColors.surface;
     switch (state) {
       case OptionState.selected:
@@ -96,13 +96,13 @@ class OptionButton extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
           color: fill,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(22),
           border: Border.all(color: border, width: 2),
         ),
         child: Material(
           type: MaterialType.transparency,
           child: InkWell(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(22),
             onTap: state == OptionState.idle ? onTap : null,
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),

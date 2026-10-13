@@ -8,6 +8,7 @@ import '../services/ads.dart';
 import '../services/api.dart';
 import '../strings.dart';
 import '../theme.dart';
+import '../widgets/cinema.dart';
 import '../widgets/common.dart';
 import 'auth_screens.dart';
 
@@ -44,6 +45,10 @@ class ProfileScreen extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 16),
+                    Text(tr('badges'), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
+                    const SizedBox(height: 10),
+                    BadgeRow(bestStreak: p.streakBest),
+                    const SizedBox(height: 18),
                     Card(
                       child: ListTile(
                         leading: const Icon(Icons.place_rounded, color: AppColors.amber),
@@ -230,7 +235,10 @@ class _Stat extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.circular(18)),
+      decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(color: AppColors.border, width: 1.5)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

@@ -2,7 +2,7 @@ import 'models.dart';
 
 /// Texto para compartir el resultado sin revelar respuestas.
 /// Ejemplo:
-///   Didac-Quiz 25/09/2026 · 14/18
+///   DidacCine Quiz 25/09/2026 · 14/18
 ///   🟩🟩🟥🟩 🟩🟩🟩⬛ 🟩🟥
 ///   ⏱ 1:32 · 🔥 5
 String buildShareText(GameSummary g, {int streak = 0, String lang = 'es'}) {
@@ -22,7 +22,7 @@ String buildShareText(GameSummary g, {int streak = 0, String lang = 'es'}) {
   final d = g.date;
   final date = '${_two(d.day)}/${_two(d.month)}/${d.year}';
   final lines = [
-    'Didac-Quiz $date · ${g.totalPoints}/${g.maxPoints}',
+    'DidacCine Quiz $date · ${g.totalPoints}/${g.maxPoints}',
     groups,
     '⏱ ${formatDuration(g.totalMs)}${streak > 1 ? ' · 🔥 $streak' : ''}',
   ];

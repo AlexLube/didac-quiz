@@ -99,7 +99,11 @@ def cmd_schedule(args) -> None:
             start = dt.date.fromisoformat(last) + dt.timedelta(days=1) if last else None
     today = dt.datetime.now(dt.timezone.utc).date()
     start = max(start or today, today)
-    calendar = plan(questions, start, args.days, spacing=args.spacing, used_external_ids=used)
+    recent = None
+    if args.remote:
+        recent = sb.recent_entity_sets(max(start, today).isoformat(), args.spacing)
+    calendar = plan(questions, start, args.days, spacing=args.spacing, used_external_ids=used,
+                    recent_entities=recent)
     _write(OUT / "calendar.json", calendar)
     print(f"Calendario: {calendar[0]['date']} → {calendar[-1]['date']} ({len(calendar)} retos)")
 
@@ -143,7 +147,7 @@ def cmd_check(args) -> None:
         sys.exit(1)
 
 
-MEDIA_FORMATS = {"emoji", "image_choice", "image_reveal", "audio"}
+from .variety import VISUAL_FORMATS as MEDIA_FORMATS  # noqa: E402
 
 
 def cmd_report(args) -> None:
@@ -159,6 +163,24 @@ def cmd_report(args) -> None:
         mark = "  <- hoy" if d["date"] == today.isoformat() else ""
         print(f"{d['date']}: {len(media)} multimedia: {tag}{mark}")
     print(f"TOTAL multimedia en {len(rows)} retos: {total}")
+
+
+def cmd_monthly(args) -> None:
+    """Rutina automática: si quedan pocos días de retos, genera el siguiente mes y lo anota
+    en out/mensual.md (el flujo de trabajo lo publica como aviso en GitHub)."""
+    left = _supabase().challenges_remaining()
+    print(f"Quedan {left} días con reto programado (mínimo para esperar: {args.min_days}).")
+    if left >= args.min_days:
+        print("Hay reservas de sobra: no hace falta generar nada.")
+        _write(OUT / "mensual.json", {"generated": False, "left": left})
+        return
+    args.remote = True
+    args.replace_from = None
+    cmd_yearly(args)
+    cal = json.loads((OUT / "calendar.json").read_text(encoding="utf-8"))
+    kinds = Counter(c["kind"] for c in cal)
+    _write(OUT / "mensual.json", {"generated": True, "left_before": left, "from": cal[0]["date"],
+                                  "to": cal[-1]["date"], "days": len(cal), "kinds": dict(kinds)})
 
 
 def main(argv=None) -> None:
@@ -178,9 +200,14 @@ def main(argv=None) -> None:
         sp.add_argument("--replace-from", help="'tomorrow' o AAAA-MM-DD: rehace los retos desde esa fecha")
 
     for name, fn in [("fetch", cmd_fetch), ("build", cmd_build), ("media", cmd_media),
-                     ("schedule", cmd_schedule), ("upload", cmd_upload), ("yearly", cmd_yearly)]:
+                     ("schedule", cmd_schedule), ("upload", cmd_upload), ("yearly", cmd_yearly),
+                     ("monthly", cmd_monthly)]:
         sp = sub.add_parser(name)
         common(sp)
+        if name == "monthly":
+            sp.add_argument("--min-days", type=int, default=15,
+                            help="si quedan menos días de retos que estos, genera el mes siguiente")
+            sp.set_defaults(days=30)
         sp.set_defaults(fn=fn)
     sp = sub.add_parser("report")
     sp.add_argument("--past", type=int, default=15)

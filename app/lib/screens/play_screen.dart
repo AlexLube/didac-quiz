@@ -8,6 +8,7 @@ import '../services/api.dart';
 import '../strings.dart';
 import '../theme.dart';
 import '../widgets/audio_clip.dart';
+import '../widgets/cinema.dart';
 import '../widgets/common.dart';
 import '../widgets/formats.dart';
 import 'result_screen.dart';
@@ -42,6 +43,7 @@ class _PlayScreenState extends State<PlayScreen> {
   List<int> _removed = [];
   _Feedback _feedback = _Feedback.none;
   int _lastPoints = 0;
+  final List<AnswerSummary> _results = [];
 
   @override
   void initState() {
@@ -110,6 +112,11 @@ class _PlayScreenState extends State<PlayScreen> {
       _totalPoints = asInt(r['total_points'], _totalPoints);
       setState(() {
         _lastPoints = asInt(r['points']);
+        _results.add(AnswerSummary.fromJson({
+          'position': q.position,
+          'correct': r['correct'],
+          'points': r['points'],
+        }));
         _feedback = r['timeout'] == true || answer == null
             ? _Feedback.timeout
             : (r['correct'] == true
@@ -245,7 +252,7 @@ class _PlayScreenState extends State<PlayScreen> {
         ListView(
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
           children: [
-            _ProgressDots(current: q.position),
+            FilmStrip(current: q.position, answers: _results),
             const SizedBox(height: 14),
             TimerBar(fraction),
             const SizedBox(height: 18),
@@ -447,32 +454,6 @@ class _PlayScreenState extends State<PlayScreen> {
           onPressed: locked ? null : () => _submit(List<int>.of(_order)),
           child: Text(tr('confirm_order')),
         ),
-      ],
-    );
-  }
-}
-
-class _ProgressDots extends StatelessWidget {
-  final int current;
-  const _ProgressDots({required this.current});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        for (var i = 0; i < 10; i++)
-          Expanded(
-            child: Container(
-              height: 6,
-              margin: const EdgeInsets.symmetric(horizontal: 2),
-              decoration: BoxDecoration(
-                color: i < current
-                    ? AppColors.amber
-                    : (i == current ? AppColors.text : AppColors.surfaceHigh),
-                borderRadius: BorderRadius.circular(3),
-              ),
-            ),
-          ),
       ],
     );
   }

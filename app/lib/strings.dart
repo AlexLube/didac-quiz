@@ -3,7 +3,7 @@ class Strings {
   static String lang = 'es';
 
   static const Map<String, Map<String, String>> _t = {
-    'app_name': {'es': 'Didac-Quiz', 'en': 'Didac-Quiz'},
+    'app_name': {'es': 'DidacCine Quiz', 'en': 'DidacCine Quiz'},
     'tagline': {'es': 'El reto diario de cine', 'en': 'The daily movie challenge'},
     'tab_today': {'es': 'Hoy', 'en': 'Today'},
     'tab_rankings': {'es': 'Rankings', 'en': 'Rankings'},
@@ -37,6 +37,15 @@ class Strings {
     },
     // Formatos nuevos
     'photo': {'es': 'Foto', 'en': 'Photo'},
+    'points_word': {'es': 'PUNTOS', 'en': 'POINTS'},
+    'badge_streak_3': {'es': 'Racha de 3', 'en': '3-day streak'},
+    'badge_streak_7': {'es': 'Semana de cine', 'en': 'Movie week'},
+    'badge_streak_30': {'es': 'Mes de estreno', 'en': 'Month of premieres'},
+    'badge_streak_100': {'es': 'Leyenda', 'en': 'Legend'},
+    'badges': {'es': 'Insignias', 'en': 'Badges'},
+    'special_day': {'es': 'RETO ESPECIAL', 'en': 'SPECIAL CHALLENGE'},
+    'spotlight_day': {'es': 'HOY, ESPECIAL', 'en': 'TODAY: FEATURED'},
+    'share_image_failed': {'es': 'No se pudo crear la imagen; se comparte el texto.', 'en': 'Could not create the image; sharing the text.'},
     'confirm': {'es': 'Confirmar', 'en': 'Confirm'},
     'slider_hint': {'es': 'Desliza para elegir el año', 'en': 'Slide to pick the year'},
     'map_hint': {'es': 'Toca el mapa para colocar el marcador. Pellizca para ampliar.', 'en': 'Tap the map to drop the pin. Pinch to zoom.'},
@@ -116,8 +125,8 @@ class Strings {
     'invite_code': {'es': 'Código de invitación', 'en': 'Invite code'},
     'invite_friends': {'es': 'Invitar amigos', 'en': 'Invite friends'},
     'invite_text': {
-      'es': '¡Únete a mi liga «{name}» en Didac-Quiz! Código: {code}',
-      'en': 'Join my league “{name}” on Didac-Quiz! Code: {code}'
+      'es': '¡Únete a mi liga «{name}» en DidacCine Quiz! Código: {code}',
+      'en': 'Join my league “{name}” on DidacCine Quiz! Code: {code}'
     },
     'members_n': {'es': '{n} miembros', 'en': '{n} members'},
     'owner': {'es': 'Creador', 'en': 'Owner'},
@@ -171,8 +180,8 @@ class Strings {
     'language': {'es': 'Idioma', 'en': 'Language'},
     'privacy': {'es': 'Política de privacidad', 'en': 'Privacy policy'},
     'legal_notice': {
-      'es': 'Didac-Quiz no está afiliado ni patrocinado por ninguna academia, estudio o festival de cine. Datos de películas: Wikidata (CC0). Lugares: GeoNames (CC BY 4.0).',
-      'en': 'Didac-Quiz is not affiliated with or sponsored by any film academy, studio or festival. Film data: Wikidata (CC0). Places: GeoNames (CC BY 4.0).'
+      'es': 'DidacCine Quiz no está afiliado ni patrocinado por ninguna academia, estudio o festival de cine. Datos de películas: Wikidata (CC0). Lugares: GeoNames (CC BY 4.0).',
+      'en': 'DidacCine Quiz is not affiliated with or sponsored by any film academy, studio or festival. Film data: Wikidata (CC0). Places: GeoNames (CC BY 4.0).'
     },
     'delete_account': {'es': 'Borrar mi cuenta', 'en': 'Delete my account'},
     'delete_account_confirm': {

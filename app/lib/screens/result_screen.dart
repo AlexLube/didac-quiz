@@ -1,4 +1,8 @@
+import 'dart:io';
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../app_state.dart';
@@ -8,6 +12,7 @@ import '../services/api.dart';
 import '../share_text.dart';
 import '../strings.dart';
 import '../theme.dart';
+import '../widgets/cinema.dart';
 import '../widgets/common.dart';
 import 'auth_screens.dart';
 
@@ -22,6 +27,7 @@ class ResultScreen extends StatefulWidget {
 
 class _ResultScreenState extends State<ResultScreen> {
   GameSummary? _game;
+  final _ticketKey = GlobalKey();
   Object? _error;
 
   @override
@@ -47,6 +53,21 @@ class _ResultScreenState extends State<ResultScreen> {
     final g = _game;
     if (g == null) return;
     final text = buildShareText(g, streak: AppState.instance.profile?.streakCurrent ?? 0);
+    try {
+      final boundary = _ticketKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
+      if (boundary != null) {
+        final image = await boundary.toImage(pixelRatio: 3);
+        final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
+        if (bytes != null) {
+          final file = File('${Directory.systemTemp.path}/didaccine-quiz-${g.date.toIso8601String().substring(0, 10)}.png');
+          await file.writeAsBytes(bytes.buffer.asUint8List(), flush: true);
+          await SharePlus.instance.share(ShareParams(text: text, files: [XFile(file.path, mimeType: 'image/png')]));
+          return;
+        }
+      }
+    } catch (_) {
+      if (mounted) showSnack(context, tr('share_image_failed'));
+    }
     await SharePlus.instance.share(ShareParams(text: text));
   }
 
@@ -83,40 +104,17 @@ class _ResultScreenState extends State<ResultScreen> {
     if (g == null) return const Center(child: CircularProgressIndicator());
     final state = AppState.instance;
     final profile = state.profile;
-    return ListView(
+    final celebrate = g.maxPoints > 0 && g.totalPoints / g.maxPoints >= 0.7;
+    return Stack(children: [
+      ListView(
       padding: const EdgeInsets.all(20),
       children: [
-        Container(
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            gradient: AppColors.heroGradient,
-            borderRadius: BorderRadius.circular(24),
-          ),
-          child: Column(
-            children: [
-              TweenAnimationBuilder<int>(
-                tween: IntTween(begin: 0, end: g.totalPoints),
-                duration: const Duration(milliseconds: 1200),
-                curve: Curves.easeOutCubic,
-                builder: (context, v, _) => Text(
-                  '$v',
-                  style: const TextStyle(fontSize: 72, fontWeight: FontWeight.w900, color: Colors.white),
-                ),
-              ),
-              Text(tr('points_of', {'p': g.totalPoints, 'max': g.maxPoints}),
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
-              const SizedBox(height: 16),
-              _AnswerGrid(g),
-              const SizedBox(height: 16),
-              Text('${tr('total_time')}: ${formatDuration(g.totalMs)}',
-                  style: const TextStyle(color: Colors.white70)),
-              if (profile != null && profile.streakCurrent > 0)
-                Padding(
-                  padding: const EdgeInsets.only(top: 6),
-                  child: Text('🔥 ${tr('streak')}: ${profile.streakCurrent} ${tr('days')}',
-                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
-                ),
-            ],
+        RepaintBoundary(
+          key: _ticketKey,
+          child: Container(
+            padding: const EdgeInsets.all(14),
+            decoration: const BoxDecoration(gradient: AppColors.backgroundGradient),
+            child: TicketCard(game: g, streak: profile?.streakCurrent ?? 0),
           ),
         ),
         const SizedBox(height: 20),
@@ -167,41 +165,8 @@ class _ResultScreenState extends State<ResultScreen> {
         Text(tr('solutions_tomorrow'),
             textAlign: TextAlign.center, style: const TextStyle(color: AppColors.textMuted)),
       ],
-    );
-  }
-}
-
-class _AnswerGrid extends StatelessWidget {
-  final GameSummary game;
-  const _AnswerGrid(this.game);
-
-  @override
-  Widget build(BuildContext context) {
-    final byPos = {for (final a in game.answers) a.position: a};
-    return Wrap(
-      alignment: WrapAlignment.center,
-      spacing: 8,
-      runSpacing: 8,
-      children: [
-        for (var i = 0; i < 10; i++)
-          Container(
-            width: 44,
-            height: 44,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: switch (byPos[i]?.correct) {
-                true => AppColors.success,
-                false => (byPos[i]?.points ?? 0) > 0 ? AppColors.amber : AppColors.error,
-                null => Colors.black26,
-              },
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Text(
-              '${byPos[i]?.points ?? 0}',
-              style: const TextStyle(fontWeight: FontWeight.w900, color: Colors.white),
-            ),
-          ),
-      ],
-    );
+    ),
+      if (celebrate) const Positioned.fill(child: ConfettiBurst()),
+    ]);
   }
 }

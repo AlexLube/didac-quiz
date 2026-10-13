@@ -1,6 +1,7 @@
 import 'package:didac_quiz/models.dart';
 import 'package:didac_quiz/share_text.dart';
 import 'package:didac_quiz/strings.dart';
+import 'package:didac_quiz/widgets/formats.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -27,7 +28,7 @@ void main() {
   test('el texto para compartir no revela respuestas', () {
     final g = GameSummary.fromJson(summaryJson);
     final text = buildShareText(g, streak: 5);
-    expect(text, contains('Didac-Quiz 25/09/2026 · 14/18'));
+    expect(text, contains('DidacCine Quiz 25/09/2026 · 14/18'));
     expect(text, contains('🟩🟩🟥🟩 🟩🟩🟩🟩 🟩🟥'));
     expect(text, contains('⏱ 1:32 · 🔥 5'));
   });
@@ -66,5 +67,25 @@ void main() {
     Strings.lang = 'es';
     expect(tr('points_of', {'p': 3, 'max': 18}), '3 de 18 puntos');
     expect(tr('clave_inexistente'), 'clave_inexistente');
+  });
+
+  test('puntos por rapidez: bajan cada tercio del tiempo y nunca bajan de 1', () {
+    final q = Question.fromJson({
+      'position': 0,
+      'id': 1,
+      'format': 'clues',
+      'difficulty': 3,
+      'max_points': 3,
+      'prompt': {'es': 'x', 'en': 'x'},
+      'options': [],
+      'extra': {'speed': true},
+      'time_limit_ms': 20000,
+      'remaining_ms': 20000,
+    });
+    expect(speedPointsNow(q, 19000), 3);
+    expect(speedPointsNow(q, 10000), 2);
+    expect(speedPointsNow(q, 1000), 1);
+    expect(q.speed, isTrue);
+    expect(q.maxPoints, 3);
   });
 }

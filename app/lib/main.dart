@@ -20,9 +20,10 @@ class DidacQuizApp extends StatelessWidget {
     return ListenableBuilder(
       listenable: AppState.instance,
       builder: (context, _) => MaterialApp(
-        title: 'Didac-Quiz',
+        title: 'DidacCine Quiz',
         debugShowCheckedModeBanner: false,
         theme: buildTheme(),
+        builder: (context, child) => CinemaBackground(child: child ?? const SizedBox.shrink()),
         home: const StartGate(),
       ),
     );
@@ -108,11 +109,11 @@ class _Splash extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.movie_filter_rounded, size: 72, color: Color(0xFFFFB300)),
+                const Icon(Icons.movie_creation_rounded, size: 72, color: AppColors.accent),
                 const SizedBox(height: 12),
                 Text(tr('app_name'),
                     style: const TextStyle(fontSize: 34, fontWeight: FontWeight.w900)),
-                Text(tr('tagline'), style: const TextStyle(color: Color(0xFFA0A0AE))),
+                Text(tr('tagline'), style: const TextStyle(color: AppColors.textMuted)),
                 const SizedBox(height: 32),
                 child,
               ],

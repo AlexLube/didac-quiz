@@ -131,9 +131,9 @@ class _TodayTabState extends State<TodayTab> {
         children: [
           Row(
             children: [
-              const Icon(Icons.movie_filter_rounded, color: AppColors.amber, size: 32),
+              const Icon(Icons.movie_creation_rounded, color: AppColors.accent, size: 34),
               const SizedBox(width: 10),
-              Text(tr('app_name'), style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w900)),
+              Text(tr('app_name'), style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900)),
               const Spacer(),
               if (profile != null) _StreakChip(profile.streakCurrent),
             ],
@@ -207,11 +207,21 @@ class _ChallengeCard extends StatelessWidget {
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
         gradient: AppColors.heroGradient,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: Colors.white24, width: 1.5),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          if (today.available && today.kind != 'general')
+            Container(
+              margin: const EdgeInsets.only(bottom: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+              decoration: BoxDecoration(color: Colors.black38, borderRadius: BorderRadius.circular(20)),
+              child: Text(today.kind == 'special' ? tr('special_day') : tr('spotlight_day'),
+                  style: const TextStyle(
+                      color: AppColors.gold, fontWeight: FontWeight.w900, fontSize: 12, letterSpacing: 1.2)),
+            ),
           Text('${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}',
               style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.w600)),
           const SizedBox(height: 6),
@@ -256,6 +266,7 @@ class _StreakChip extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.border, width: 1.5),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -279,7 +290,10 @@ class _InfoTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.circular(18)),
+      decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(color: AppColors.border, width: 1.5)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

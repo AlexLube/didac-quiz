@@ -97,6 +97,26 @@ class Supabase:
             out |= {row["external_id"] for row in r.json()}
         return out
 
+    def recent_entity_sets(self, before: str, days: int = 60) -> list[set[str]]:
+        """Entidades (películas, personas) de los últimos `days` retos anteriores a `before`,
+        en orden cronológico, para que un lote nuevo no repita las del anterior."""
+        r = requests.get(f"{self.url}/rest/v1/challenges",
+                         params={"select": "challenge_date,question_ids", "challenge_date": f"lt.{before}",
+                                 "order": "challenge_date.desc", "limit": days},
+                         headers=self.h, timeout=120)
+        r.raise_for_status()
+        rows = list(reversed(r.json()))
+        ids = sorted({q for d in rows for q in d["question_ids"]})
+        ents: dict[int, set[str]] = {}
+        for i in range(0, len(ids), 300):
+            chunk = ",".join(map(str, ids[i : i + 300]))
+            q = requests.get(f"{self.url}/rest/v1/questions",
+                             params={"select": "id,entity_ids", "id": f"in.({chunk})"},
+                             headers=self.h, timeout=120)
+            q.raise_for_status()
+            ents.update({row["id"]: set(row["entity_ids"] or []) for row in q.json()})
+        return [set().union(*(ents.get(x, set()) for x in d["question_ids"])) for d in rows]
+
     def last_challenge_date(self) -> str | None:
         r = requests.get(f"{self.url}/rest/v1/challenges",
                          params={"select": "challenge_date", "order": "challenge_date.desc", "limit": 1},

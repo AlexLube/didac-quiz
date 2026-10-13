@@ -7,14 +7,15 @@ on:
         description: "Qué hacer"
         type: choice
         options:
-          - generar-retos          # lote anual: Wikidata → preguntas → calendario → Supabase
+          - rutina-mensual         # genera el mes siguiente solo si quedan pocos días de retos
+          - generar-retos          # lote: Wikidata → preguntas → calendario → Supabase (usa «days»)
           - preparar-base-datos    # aplica migraciones y datos de países/ciudades
           - comprobar-reservas     # avisa si quedan pocos días con reto
           - informe-retos          # qué preguntas multimedia hay en los retos
-        default: generar-retos
+        default: rutina-mensual
       days:
-        description: "Días de retos a generar"
-        default: "365"
+        description: "Días de retos a generar (solo en «generar-retos»)"
+        default: "30"
       replace:
         description: "Sustituir los retos ya programados a partir de mañana (con los tipos de pregunta nuevos)"
         type: boolean
@@ -25,6 +26,7 @@ on:
         default: true
   schedule:
     - cron: "17 6 * * 1"   # cada lunes: comprobar que quedan retos programados
+  # Cada lunes: rutina-mensual (genera 30 días más si quedan menos de 15)
   # Lanzar una tarea editando ops/tarea.txt (una línea: generar-retos | preparar-base-datos)
   push:
     branches: [main]
@@ -32,6 +34,7 @@ on:
 
 permissions:
   contents: write
+  issues: write
 
 jobs:
   run:
@@ -42,7 +45,7 @@ jobs:
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
       SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-      DAYS: ${{ github.event.inputs.days || '365' }}
+      DAYS: ${{ github.event.inputs.days || '30' }}
       USE_AI: ${{ github.event.inputs.ai || 'true' }}
       REPLACE: ${{ github.event.inputs.replace || 'true' }}
     steps:
@@ -52,8 +55,9 @@ jobs:
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then t="${{ github.event.inputs.task }}";
           elif [ "${{ github.event_name }}" = "push" ]; then t="$(head -n1 ops/tarea.txt | tr -d '[:space:]')";
-          else t="comprobar-reservas"; fi
+          else t="rutina-mensual"; fi
           echo "TASK=$t" >> "$GITHUB_ENV"; echo "Tarea: $t"
+          if [ "$t" = "generar-retos" ] || [ "$t" = "rutina-mensual" ]; then echo "GEN=true" >> "$GITHUB_ENV"; else echo "GEN=false" >> "$GITHUB_ENV"; fi
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -66,7 +70,7 @@ jobs:
           key: wikidata-${{ github.run_id }}
           restore-keys: wikidata-
       - name: Recuperar emojis ya generados
-        if: env.TASK == 'generar-retos'
+        if: env.GEN == 'true'
         continue-on-error: true
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -102,7 +106,7 @@ jobs:
             2>&1 | tee ../generacion.log
 
       - name: Guardar resultados (preguntas, descartes, revisión)
-        if: always() && env.TASK == 'generar-retos'
+        if: always() && env.GEN == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: preguntas
@@ -112,7 +116,7 @@ jobs:
             pipeline/data/music.json
 
       - name: Guardar caché de datos
-        if: always() && env.TASK == 'generar-retos'
+        if: always() && env.GEN == 'true'
         continue-on-error: true
         uses: actions/cache/save@v4
         with:
@@ -120,7 +124,7 @@ jobs:
           key: wikidata-${{ github.run_id }}
 
       - name: Publicar el registro (rama ci-questions)
-        if: always() && env.TASK == 'generar-retos'
+        if: always() && env.GEN == 'true'
         run: |
           tmp=$(mktemp -d); tail -n 400 generacion.log > "$tmp/generacion.log" 2>/dev/null || echo "sin registro" > "$tmp/generacion.log"
           echo "run: ${{ github.run_id }} commit: ${{ github.sha }}" > "$tmp/SUMMARY.txt"
@@ -128,6 +132,45 @@ jobs:
           git -c user.name=ci -c user.email=ci@users.noreply.github.com add -A
           git -c user.name=ci -c user.email=ci@users.noreply.github.com commit -qm "registro ${{ github.run_id }}"
           git push -qf "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" ci-questions
+
+      - name: Rutina mensual (genera el mes siguiente si hace falta)
+        if: env.TASK == 'rutina-mensual'
+        working-directory: pipeline
+        env:
+          PYTHONUNBUFFERED: "1"
+        run: |
+          set -o pipefail
+          python -m didacquiz_pipeline monthly --min-days 15 --days 30 \
+            $( [ -n "$ANTHROPIC_API_KEY" ] && echo --ai ) 2>&1 | tee ../generacion.log
+
+      - name: Avisar de que se ha generado un mes nuevo
+        if: env.TASK == 'rutina-mensual' && success()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python3 - <<'PY' > aviso.md
+          import json, pathlib
+          p = pathlib.Path("pipeline/out/mensual.json")
+          d = json.loads(p.read_text()) if p.exists() else {}
+          if not d.get("generated"):
+              raise SystemExit(0)
+          print(f"Se han programado {d['days']} retos nuevos: del {d['from']} al {d['to']}.")
+          print()
+          print(f"Quedaban {d['left_before']} días de reserva. Tipos de reto: {d['kinds']}.")
+          print()
+          print("Todo es automático; este aviso es solo informativo.")
+          PY
+          if [ -s aviso.md ]; then
+            gh issue create --repo "${{ github.repository }}" --title "DidacCine Quiz: mes nuevo de retos generado" --body-file aviso.md
+          fi
+
+      - name: Avisar si la rutina mensual ha fallado
+        if: env.TASK == 'rutina-mensual' && failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh issue create --repo "${{ github.repository }}" --title "DidacCine Quiz: la generación mensual de retos ha fallado" \
+            --body "Revisa la ejecución: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}. Si quedan pocos días de retos, lánzala a mano desde Actions (tarea rutina-mensual)."
 
       - name: Informe de retos
         if: env.TASK == 'informe-retos'

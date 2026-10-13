@@ -1,6 +1,6 @@
 """Ajusta el proyecto Android que genera `flutter create` (se ejecuta en CI).
 
-- Nombre visible "Didac-Quiz" e identificador com.didacquiz.app
+- Nombre visible "DidacCine Quiz" e identificador com.didacquiz.app
 - Permiso de Internet
 - ID de aplicación de AdMob (por defecto, el de pruebas de Google)
 - Enlace de vuelta para el inicio de sesión con Google/Apple
@@ -24,7 +24,7 @@ m = manifest.read_text(encoding="utf-8")
 if "android.permission.INTERNET" not in m:
     m = m.replace("<application", '<uses-permission android:name="android.permission.INTERNET"/>\n    <application', 1)
 
-m = re.sub(r'android:label="[^"]*"', 'android:label="Didac-Quiz"', m, count=1)
+m = re.sub(r'android:label="[^"]*"', 'android:label="DidacCine Quiz"', m, count=1)
 
 if "com.google.android.gms.ads.APPLICATION_ID" not in m:
     m = re.sub(
@@ -48,7 +48,7 @@ if "login-callback" not in m:
 
 manifest.write_text(m, encoding="utf-8")
 
-PROGUARD = """# Didac-Quiz: evitar que R8 elimine clases generadas por Room/WorkManager
+PROGUARD = """# DidacCine Quiz: evitar que R8 elimine clases generadas por Room/WorkManager
 -keep class androidx.work.** { *; }
 -keep class * extends androidx.room.RoomDatabase { <init>(); }
 -keep class androidx.room.** { *; }
