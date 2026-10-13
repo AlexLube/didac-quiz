@@ -63,6 +63,7 @@ class Film:
     duration: int | None = None                            # minutos
     filming_countries: list[str] = field(default_factory=list)
     location_photos: list[dict] = field(default_factory=list)  # fotos libres de lugares de rodaje
+    locations: list[dict] = field(default_factory=list)   # lugares de rodaje con coordenadas
     still: dict | None = None             # imagen de dominio público (solo cine antiguo)
 
     @staticmethod
@@ -226,6 +227,21 @@ SELECT ?film ?loc ?lEs ?lEn ?img WHERE {{
   OPTIONAL {{ ?loc rdfs:label ?lEn FILTER(LANG(?lEn) = "en") }}
 }}
 """
+
+LOCATION_COORD_QUERY = """
+SELECT ?film ?loc ?lEs ?lEn ?coord ?type WHERE {{
+  VALUES ?film {{ {values} }}
+  ?film wdt:P915 ?loc .
+  ?loc wdt:P625 ?coord .
+  OPTIONAL {{ ?loc wdt:P31 ?type }}
+  OPTIONAL {{ ?loc rdfs:label ?lEs FILTER(LANG(?lEs) = "es") }}
+  OPTIONAL {{ ?loc rdfs:label ?lEn FILTER(LANG(?lEn) = "en") }}
+}}
+"""
+
+# Lugares demasiado grandes para situarlos en un mapa (países, continentes, estados...)
+_BIG_PLACE_TYPES = {"Q6256", "Q3624078", "Q5107", "Q35657", "Q107390", "Q10864048", "Q112099", "Q15617994",
+                    "Q1048835", "Q82794", "Q3336843", "Q123705", "Q15642541", "Q4130"}
 
 STILL_QUERY = """
 SELECT ?film ?img WHERE {{
@@ -447,6 +463,26 @@ def fetch_media(films: dict[str, "Film"], verbose: bool = True) -> None:
                                               "artist": info["artist"], "mime": info["mime"]})
     if verbose:
         print(f"  fotos de lugares de rodaje: {sum(len(f.location_photos) for f in films.values())}")
+
+    # 1b) Lugares de rodaje con coordenadas (para las preguntas de mapa)
+    coords: dict[str, dict[str, dict]] = {}
+    big: set[str] = set()
+    for chunk in _chunks(known):
+        for b in _sparql_chunked(LOCATION_COORD_QUERY, chunk):
+            fq, lq = _qid(_val(b, "film")), _qid(_val(b, "loc"))
+            if _val(b, "type") and _qid(_val(b, "type")) in _BIG_PLACE_TYPES:
+                big.add(lq)
+            m = re.match(r"Point\(([-\d.eE]+) ([-\d.eE]+)\)", _val(b, "coord") or "")
+            name_en = _val(b, "lEn") or _val(b, "lEs")
+            if not m or not name_en:
+                continue
+            coords.setdefault(fq, {})[lq] = {"qid": lq, "name_es": _val(b, "lEs") or name_en,
+                                              "name_en": name_en,
+                                              "lat": round(float(m.group(2)), 4), "lon": round(float(m.group(1)), 4)}
+    for fq, places in coords.items():
+        films[fq].locations = [p for lq, p in places.items() if lq not in big]
+    if verbose:
+        print(f"  lugares de rodaje con coordenadas: {sum(len(f.locations) for f in films.values())}")
 
     # 2) Cine antiguo en dominio público en la UE: autores fallecidos hace más de 70 años
     limit_year = time.gmtime().tm_year - 71

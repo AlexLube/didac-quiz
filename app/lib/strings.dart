@@ -23,8 +23,8 @@ class Strings {
     'see_result': {'es': 'Ver mi resultado', 'en': 'See my result'},
     'questions_points': {'es': '10 preguntas · hasta {max} puntos', 'en': '10 questions · up to {max} points'},
     'rules_short': {
-      'es': 'Fáciles 1 punto, medias 2, difíciles 3. 20 segundos por pregunta. Una partida al día.',
-      'en': 'Easy 1 point, medium 2, hard 3. 20 seconds per question. One game a day.'
+      'es': 'Cada pregunta da de 0 a 3 puntos, a veces parciales. 20 segundos por pregunta. Una partida al día.',
+      'en': 'Each question gives 0 to 3 points, sometimes partial. 20 seconds per question. One game a day.'
     },
     'streak': {'es': 'Racha', 'en': 'Streak'},
     'days': {'es': 'días', 'en': 'days'},
@@ -35,6 +35,19 @@ class Strings {
       'es': 'Estás jugando como invitado. Crea una cuenta para entrar en los rankings.',
       'en': "You're playing as a guest. Create an account to join the rankings."
     },
+    // Formatos nuevos
+    'photo': {'es': 'Foto', 'en': 'Photo'},
+    'confirm': {'es': 'Confirmar', 'en': 'Confirm'},
+    'slider_hint': {'es': 'Desliza para elegir el año', 'en': 'Slide to pick the year'},
+    'map_hint': {'es': 'Toca el mapa para colocar el marcador. Pellizca para ampliar.', 'en': 'Tap the map to drop the pin. Pinch to zoom.'},
+    'match_drop': {'es': 'Suelta aquí', 'en': 'Drop here'},
+    'match_hint': {'es': 'Arrastra cada opción a su pareja (o tócala y toca el hueco).', 'en': 'Drag each item to its pair (or tap it, then tap the slot).'},
+    'true_short': {'es': 'V', 'en': 'T'},
+    'false_short': {'es': 'F', 'en': 'F'},
+    'type_title': {'es': 'Escribe el título…', 'en': 'Type the title…'},
+    'worth_now': {'es': 'Ahora vale {n} pts', 'en': 'Worth {n} pts now'},
+    'almost': {'es': '¡Casi!', 'en': 'Almost!'},
+    'pick_two_hint': {'es': 'Elige exactamente dos', 'en': 'Pick exactly two'},
     // Juego
     'question_n': {'es': 'Pregunta {n} de 10', 'en': 'Question {n} of 10'},
     'easy': {'es': 'Fácil', 'en': 'Easy'},

@@ -73,12 +73,9 @@ class _SolutionCard extends StatelessWidget {
     final answer = q['answer'];
     final myCorrect = q['my_correct'] as bool?;
     final accuracy = q['accuracy'];
-    String answerText;
-    if (answer is List) {
-      answerText = answer.map((i) => Strings.pick(options[asInt(i)])).join('  →  ');
-    } else {
-      answerText = Strings.pick(options[asInt(answer)]);
-    }
+    final answerText = _answerText(q, options, answer);
+    final maxPts = asInt(q['max_points'], asInt(q['difficulty'], 1));
+    final myPoints = q['my_points'];
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -90,8 +87,14 @@ class _SolutionCard extends StatelessWidget {
                 Text('${asInt(q['position']) + 1}.',
                     style: const TextStyle(fontWeight: FontWeight.w900, color: AppColors.amber)),
                 const SizedBox(width: 8),
-                DifficultyBadge(asInt(q['difficulty'], 1)),
+                DifficultyBadge(asInt(q['difficulty'], 1), points: maxPts),
                 const Spacer(),
+                if (myPoints != null)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: Text('$myPoints/$maxPts',
+                        style: const TextStyle(fontWeight: FontWeight.w800, color: AppColors.textMuted)),
+                  ),
                 if (myCorrect != null)
                   Icon(myCorrect ? Icons.check_circle_rounded : Icons.cancel_rounded,
                       color: myCorrect ? AppColors.success : AppColors.error),
@@ -118,7 +121,8 @@ class _SolutionCard extends StatelessWidget {
             Text(Strings.pick(q['prompt']),
                 style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700)),
             const SizedBox(height: 8),
-            Text('✔ $answerText',
+            if (answerText.isNotEmpty)
+              Text('✔ $answerText',
                 style: const TextStyle(color: AppColors.success, fontWeight: FontWeight.w700)),
             if (q['explanation'] != null) ...[
               const SizedBox(height: 8),
@@ -134,5 +138,36 @@ class _SolutionCard extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+String _answerText(Map<String, dynamic> q, List options, dynamic answer) {
+  final extra = asMap(q['extra']);
+  switch (q['format']) {
+    case 'year_slider':
+      return '${asMap(answer)['year']}';
+    case 'map':
+      return '';
+    case 'typed_title':
+      return ((asMap(answer)['accept'] as List?) ?? const []).map((e) => '$e').join(' / ');
+    case 'match':
+      final rights = (extra['right'] as List?) ?? const [];
+      return [
+        for (var i = 0; i < options.length; i++)
+          '${Strings.pick(options[i])} → ${Strings.pick(rights[asInt((answer as List)[i])])}'
+      ].join('\n   ');
+    case 'burst':
+      return [
+        for (var i = 0; i < options.length; i++)
+          '${(answer as List)[i] == true ? '✔' : '✘'} ${Strings.pick(options[i])}'
+      ].join('\n   ');
+    case 'pick_two':
+      return (answer as List).map((i) => Strings.pick(options[asInt(i)])).join('  +  ');
+    case 'odd_images':
+      return '${tr('photo')} ${asInt(answer) + 1}';
+    case 'order':
+      return (answer as List).map((i) => Strings.pick(options[asInt(i)])).join('  →  ');
+    default:
+      return Strings.pick(options[asInt(answer)]);
   }
 }

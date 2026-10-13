@@ -47,6 +47,8 @@ class Profile {
 class AnswerSummary {
   final int position;
   final int difficulty;
+  final int maxPoints;
+  final String format;
   final bool? correct;
   final int points;
   final int elapsedMs;
@@ -55,6 +57,8 @@ class AnswerSummary {
   AnswerSummary.fromJson(Map<String, dynamic> j)
       : position = asInt(j['position']),
         difficulty = asInt(j['difficulty'], 1),
+        maxPoints = asInt(j['max_points'], asInt(j['difficulty'], 1)),
+        format = (j['format'] ?? 'choice') as String,
         correct = j['correct'] as bool?,
         points = asInt(j['points']),
         elapsedMs = asInt(j['elapsed_ms']),
@@ -85,6 +89,8 @@ class TodayInfo {
   final bool available;
   final String kind;
   final dynamic title;
+  final String? theme;
+  final int maxPoints;
   final String status; // not_started | in_progress | finished
   final GameSummary? game;
   final int jokersLeft;
@@ -95,6 +101,8 @@ class TodayInfo {
         available = j['available'] == true,
         kind = (j['kind'] ?? 'general') as String,
         title = j['title'],
+        theme = j['theme'] as String?,
+        maxPoints = asInt(j['max_points'], 0),
         status = (j['status'] ?? 'not_started') as String,
         game = j['game'] == null ? null : GameSummary.fromJson(asMap(j['game'])),
         jokersLeft = asInt(j['jokers_left']),
@@ -106,6 +114,8 @@ class Question {
   final int id;
   final String format;
   final int difficulty;
+  final int maxPoints;
+  final Map<String, dynamic> extra;
   final dynamic prompt;
   final List<dynamic> options;
   final String? imageUrl;
@@ -122,6 +132,8 @@ class Question {
         id = asInt(j['id']),
         format = j['format'] as String,
         difficulty = asInt(j['difficulty'], 1),
+        maxPoints = asInt(j['max_points'], asInt(j['difficulty'], 1)),
+        extra = asMap(j['extra']),
         prompt = j['prompt'],
         options = List<dynamic>.from(j['options'] as List),
         imageUrl = j['image_url'] as String?,
@@ -134,16 +146,23 @@ class Question {
         removedOptions = ((j['removed_options'] ?? []) as List).map((e) => asInt(e)).toList();
 
   bool get isOrder => format == 'order';
+  bool get speed => extra['speed'] == true;
+  List<dynamic> get clues => (extra['clues'] as List?) ?? const [];
+  String get revealMode => (extra['mode'] ?? 'blur') as String;
   bool get jokerAllowed =>
       options.length == 4 &&
-      const ['choice', 'intruder', 'decade', 'clues', 'emoji', 'image_choice', 'image_reveal', 'audio']
+      const ['choice', 'intruder', 'decade', 'clues', 'emoji', 'image_choice', 'image_reveal', 'audio', 'odd_images']
           .contains(format);
 
   /// Emojis de la pregunta (primera línea del enunciado en el formato 'emoji').
   String? get emojiLine {
-    if (format != 'emoji') return null;
+    if (format != 'emoji' && format != 'typed_title') return null;
     final text = (prompt is Map ? (prompt['es'] ?? '') : '$prompt').toString();
-    return text.split('\n').first.trim();
+    final first = text.split('\n').first.trim();
+    if (format == 'typed_title' && (text.split('\n').length < 2 || RegExp(r'[A-Za-z]').hasMatch(first))) {
+      return null;
+    }
+    return first;
   }
 }
 

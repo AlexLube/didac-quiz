@@ -428,3 +428,115 @@ def test_media_questions(db):
     assert q["image_attribution"].startswith("Foto")
     with pytest.raises(psycopg.errors.CheckViolation):
         db.execute("update questions set format = 'video' where id = %s", (qids[3],))
+
+
+# ---------------------------------------------------------------------------
+# Variedad: formatos nuevos y puntuación variable
+# ---------------------------------------------------------------------------
+def _q(conn, ext, fmt, difficulty, options, answer, extra=None, max_points=None):
+    row = conn.execute(
+        """insert into questions (external_id, format, difficulty, max_points, prompt, options, answer, extra)
+           values (%s,%s,%s,%s,%s,%s,%s,%s) returning id""",
+        (ext, fmt, difficulty, max_points, json.dumps({"es": ext, "en": ext}), json.dumps(options),
+         json.dumps(answer), json.dumps(extra or {}))).fetchone()
+    return row[0]
+
+
+def _score(conn, qid, given, elapsed=1000, limit=20000):
+    return conn.execute("select _score_answer(q, %s, %s, %s) from questions q where id = %s",
+                        (json.dumps(given), elapsed, limit, qid)).fetchone()[0]
+
+
+def test_score_year_slider_and_map(db):
+    s = _q(db, "v-slider", "year_slider", 3, [], {"year": 1994}, {"min": 1920, "max": 2025})
+    assert _score(db, s, 1994)["points"] == 3
+    assert _score(db, s, 1995)["points"] == 3
+    assert _score(db, s, 1997)["points"] == 2
+    assert _score(db, s, 2001)["points"] == 1
+    assert _score(db, s, 2010)["points"] == 0
+    assert _score(db, s, "abc")["points"] == 0
+    assert _score(db, s, None)["points"] == 0
+    m = _q(db, "v-map", "map", 3, [], {"lat": 48.8566, "lon": 2.3522}, max_points=3)
+    assert _score(db, m, {"lat": 48.9, "lon": 2.4})["points"] == 3          # ~5 km
+    assert _score(db, m, {"lat": 51.5, "lon": -0.12})["points"] == 2        # Londres ~340 km
+    assert _score(db, m, {"lat": 40.4, "lon": -3.7})["points"] == 1         # Madrid ~1050 km
+    assert _score(db, m, {"lat": 35.7, "lon": 139.7})["points"] == 0        # Tokio
+    assert _score(db, m, {"lat": "x"})["points"] == 0
+    m2 = _q(db, "v-map2", "map", 3, [], {"lat": 48.8566, "lon": 2.3522, "alts": [{"lat": 35.7, "lon": 139.7}]}, max_points=3)
+    assert _score(db, m2, {"lat": 35.69, "lon": 139.69})["points"] == 3      # vale un lugar alternativo
+
+
+def test_score_match_burst_pick_two_typed(db):
+    mt = _q(db, "v-match", "match", 3, [{"es": "a", "en": "a"}] * 4, [2, 0, 3, 1],
+            {"right": ["w", "x", "y", "z"]}, max_points=3)
+    assert _score(db, mt, [2, 0, 3, 1]) == {"points": 3, "correct": True, "partial": False}
+    r = _score(db, mt, [2, 0, 1, 3])
+    assert r["points"] == 1 and r["partial"] is True and r["correct"] is False
+    assert _score(db, mt, [2, 0, 3])["points"] == 0                          # longitud errónea
+    bu = _q(db, "v-burst", "burst", 2, [{"es": str(i), "en": str(i)} for i in range(5)],
+            [True, False, True, True, False], max_points=3)
+    assert _score(db, bu, [True, False, True, True, False])["points"] == 3
+    assert _score(db, bu, [True, False, True, True, True])["points"] == 2    # 4 de 5 -> 12/5 = 2
+    p2 = _q(db, "v-pick2", "pick_two", 3, [{"es": str(i), "en": str(i)} for i in range(5)], [1, 4])
+    assert _score(db, p2, [4, 1])["points"] == 3
+    assert _score(db, p2, [1, 2])["points"] == 1
+    assert _score(db, p2, [0, 2])["points"] == 0
+    assert _score(db, p2, [1, 1])["points"] == 0
+    ty = _q(db, "v-typed", "typed_title", 2, [], {"accept": ["El Padrino", "The Godfather"]})
+    assert _score(db, ty, "padrino  ")["points"] == 2   # el artículo inicial es opcional
+    assert _score(db, ty, "padrinos")["points"] == 0
+    assert _score(db, ty, "el  padrino!")["points"] == 2
+    assert _score(db, ty, "The godfather")["points"] == 2
+    assert _score(db, ty, 5)["points"] == 0
+
+
+def test_speed_scoring(db):
+    c = _q(db, "v-speed", "clues", 3, [{"es": str(i), "en": str(i)} for i in range(4)], 1,
+           {"speed": True, "clues": ["a", "b", "c"]})
+    assert _score(db, c, 1, elapsed=2000)["points"] == 3
+    assert _score(db, c, 1, elapsed=10000)["points"] == 2
+    assert _score(db, c, 1, elapsed=19000)["points"] == 1
+    assert _score(db, c, 0, elapsed=1000)["points"] == 0
+
+
+def test_variable_game_and_titles(db):
+    qs = [
+        _q(db, "g1", "choice", 1, [{"es": "A", "en": "A"}] * 4, 2),
+        _q(db, "g2", "year_slider", 3, [], {"year": 2000}, max_points=3),
+        _q(db, "g3", "versus", 1, [{"es": "A", "en": "A"}, {"es": "B", "en": "B"}], 1),
+        _q(db, "g4", "match", 3, [{"es": "a", "en": "a"}] * 3, [1, 0, 2], {"right": ["x", "y", "z"]}, max_points=2),
+        _q(db, "g5", "map", 3, [], {"lat": 0, "lon": 0}, max_points=3),
+        _q(db, "g6", "burst", 2, [{"es": str(i), "en": str(i)} for i in range(5)], [True] * 5, max_points=2),
+        _q(db, "g7", "typed_title", 2, [], {"accept": ["Alien"]}),
+        _q(db, "g8", "odd_images", 1, [{"image": "u", "es": "a", "en": "a"}] * 4, 3),
+        _q(db, "g9", "pick_two", 3, [{"es": str(i), "en": str(i)} for i in range(5)], [0, 1], max_points=2),
+        _q(db, "g10", "choice", 2, [{"es": "A", "en": "A"}] * 4, 0),
+    ]
+    db.execute("update questions set time_limit_ms = 30000 where external_id = 'g6'")
+    make_challenge(db, "2027-03-02", qs)
+    db.execute("update challenges set theme = 'Terror' where challenge_date = '2027-03-02'")
+    p = Player(db)
+    p.register("variado")
+    t = p.call("select get_today()", today="2027-03-02")
+    assert t["game"] is None and t["theme"] == "Terror"
+    answers = [2, 1999, 0, [1, 0, 2], {"lat": 0.1, "lon": 0.1}, [True] * 5, "alien", 3, [0, 1], 0]
+    seen = []
+    for pos in range(10):
+        q = p.call("select next_question()", today="2027-03-02")["question"]
+        assert "answer" not in q
+        seen.append((q["format"], q["max_points"], q["time_limit_ms"]))
+        p.call("select submit_answer(%s, %s)", (pos, json.dumps(answers[pos])), today="2027-03-02")
+    assert seen[5][2] == 30000 and seen[1][1] == 3 and seen[3][1] == 2
+    s = p.call("select get_game_summary(%s)", ("2027-03-02",), today="2027-03-02")
+    # g1:1 g2:3 g3(versus, answer 1, enviado 0):0 g4:2 g5:3 g6:2 g7:2 g8:1 g9:2 g10:2
+    assert s["total_points"] == 1 + 3 + 0 + 2 + 3 + 2 + 2 + 1 + 2 + 2
+    assert s["max_points"] == 1 + 3 + 1 + 2 + 3 + 2 + 2 + 1 + 2 + 2
+
+    # Autocompletado
+    db.execute("""insert into film_titles (qid, title, norm, year, popularity) values
+        ('Q1','Alien, el octavo pasajero','alien el octavo pasajero',1979,90),
+        ('Q2','Aliens','aliens',1986,80), ('Q3','El Padrino','padrino',1972,95)""")
+    found = p.call("select search_titles('ali')")
+    assert [f["title"] for f in found][:2] == ["Alien, el octavo pasajero", "Aliens"]
+    assert p.call("select search_titles('el padrino')")[0]["title"] == "El Padrino"
+    assert p.call("select search_titles('a')") == []

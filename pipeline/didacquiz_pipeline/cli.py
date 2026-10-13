@@ -17,7 +17,7 @@ from collections import Counter
 from pathlib import Path
 
 from . import ai
-from .generate import Generator
+from .generate import Generator, film_title_rows
 from .schedule import plan
 from .validate import validate_all
 from .wikidata import fetch_films, load_films, resolve_music, save_films
@@ -31,9 +31,13 @@ def _write(path: Path, obj) -> None:
     path.write_text(json.dumps(obj, ensure_ascii=False, indent=1), encoding="utf-8")
 
 
+DATA_VERSION = "2"   # sube el número cuando cambie qué datos se descargan (invalida la caché)
+
+
 def cmd_fetch(args) -> None:
     cached = DATA / "films.json"
-    if cached.exists() and (dt.datetime.now().timestamp() - cached.stat().st_mtime) < 6 * 86400 \
+    version = DATA / "VERSION"
+    if cached.exists() and version.exists() and version.read_text().strip() == DATA_VERSION and (dt.datetime.now().timestamp() - cached.stat().st_mtime) < 6 * 86400 \
             and (DATA / "music.json").exists():
         print("Usando los datos de Wikidata descargados hace menos de 6 días (caché).")
         return
@@ -42,6 +46,7 @@ def cmd_fetch(args) -> None:
     save_films(films, DATA / "films.json")
     print(f"{len(films)} películas guardadas en {DATA / 'films.json'}")
     _write(DATA / "music.json", resolve_music(films))
+    version.write_text(DATA_VERSION)
 
 
 def cmd_build(args) -> None:
@@ -61,6 +66,7 @@ def cmd_build(args) -> None:
         ok, flagged = ai.enrich(ok)
         review = [{"question": q, "reason": r} for q, r in flagged]
     _write(OUT / "questions.json", ok)
+    _write(OUT / "titles.json", film_title_rows(films))
     _write(OUT / "rejected.json", [{"question": q, "errors": e} for q, e in rejected])
     _write(OUT / "review.json", review)
     by_diff = Counter(q["difficulty"] for q in ok)
@@ -107,6 +113,9 @@ def cmd_upload(args) -> None:
     ids = sb.upsert_questions(to_upload)
     sb.insert_challenges(calendar, ids)
     print(f"Subidas {len(ids)} preguntas y {len(calendar)} retos.")
+    titles = OUT / "titles.json"
+    if titles.exists():
+        print(f"Títulos para el autocompletado: {sb.upsert_titles(json.loads(titles.read_text(encoding='utf-8')))}")
 
 
 def cmd_media(args) -> None:

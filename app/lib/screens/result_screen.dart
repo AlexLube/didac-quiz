@@ -191,7 +191,7 @@ class _AnswerGrid extends StatelessWidget {
             decoration: BoxDecoration(
               color: switch (byPos[i]?.correct) {
                 true => AppColors.success,
-                false => AppColors.error,
+                false => (byPos[i]?.points ?? 0) > 0 ? AppColors.amber : AppColors.error,
                 null => Colors.black26,
               },
               borderRadius: BorderRadius.circular(12),

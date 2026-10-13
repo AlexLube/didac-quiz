@@ -221,7 +221,7 @@ class _ChallengeCard extends StatelessWidget {
           if (!today.available)
             Text(tr('no_challenge'), style: const TextStyle(color: Colors.white))
           else ...[
-            Text(tr('questions_points', {'max': today.game?.maxPoints ?? 18}),
+            Text(tr('questions_points', {'max': today.maxPoints > 0 ? today.maxPoints : (today.game?.maxPoints ?? 18)}),
                 style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
             const SizedBox(height: 4),
             Text(tr('rules_short'), style: const TextStyle(color: Colors.white70)),

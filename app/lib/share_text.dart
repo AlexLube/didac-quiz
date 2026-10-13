@@ -8,7 +8,8 @@ import 'models.dart';
 String buildShareText(GameSummary g, {int streak = 0, String lang = 'es'}) {
   String cell(AnswerSummary? a) {
     if (a == null || a.correct == null) return '⬛';
-    return a.correct! ? '🟩' : '🟥';
+    if (a.correct!) return '🟩';
+    return a.points > 0 ? '🟨' : '🟥';
   }
 
   final byPos = {for (final a in g.answers) a.position: a};

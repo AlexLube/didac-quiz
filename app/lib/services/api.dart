@@ -65,6 +65,9 @@ class Api {
     return r == null ? null : asMap(r);
   }
 
+  Future<List<Map<String, dynamic>>> searchTitles(String query) async =>
+      asMapList(await _rpc('search_titles', {'p_query': query}));
+
   Future<void> reportQuestion(int questionId, String reason) =>
       _rpc('report_question', {'p_question_id': questionId, 'p_reason': reason});
 

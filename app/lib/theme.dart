@@ -7,6 +7,8 @@ class AppColors {
   static const surfaceHigh = Color(0xFF252530);
   static const amber = Color(0xFFFFB300);
   static const curtain = Color(0xFFE5394D);
+  static const accent = Color(0xFFFF8A3D);
+  static const border = Color(0xFF4A3F8F);
   static const success = Color(0xFF2ECC71);
   static const error = Color(0xFFE74C3C);
   static const text = Color(0xFFF5F5F7);

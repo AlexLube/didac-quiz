@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
 
@@ -10,6 +9,7 @@ import '../strings.dart';
 import '../theme.dart';
 import '../widgets/audio_clip.dart';
 import '../widgets/common.dart';
+import '../widgets/formats.dart';
 import 'result_screen.dart';
 
 class PlayScreen extends StatefulWidget {
@@ -21,7 +21,7 @@ class PlayScreen extends StatefulWidget {
   State<PlayScreen> createState() => _PlayScreenState();
 }
 
-enum _Feedback { none, correct, wrong, timeout }
+enum _Feedback { none, correct, partial, wrong, timeout }
 
 class _PlayScreenState extends State<PlayScreen> {
   final _api = AppState.instance.api;
@@ -41,6 +41,7 @@ class _PlayScreenState extends State<PlayScreen> {
   List<int> _order = [];
   List<int> _removed = [];
   _Feedback _feedback = _Feedback.none;
+  int _lastPoints = 0;
 
   @override
   void initState() {
@@ -108,9 +109,12 @@ class _PlayScreenState extends State<PlayScreen> {
       if (!mounted) return;
       _totalPoints = asInt(r['total_points'], _totalPoints);
       setState(() {
+        _lastPoints = asInt(r['points']);
         _feedback = r['timeout'] == true || answer == null
             ? _Feedback.timeout
-            : (r['correct'] == true ? _Feedback.correct : _Feedback.wrong);
+            : (r['correct'] == true
+                ? _Feedback.correct
+                : (r['partial'] == true ? _Feedback.partial : _Feedback.wrong));
       });
       await Future<void>.delayed(const Duration(milliseconds: 1100));
       if (!mounted) return;
@@ -247,7 +251,11 @@ class _PlayScreenState extends State<PlayScreen> {
             const SizedBox(height: 18),
             Row(
               children: [
-                DifficultyBadge(q.difficulty),
+                DifficultyBadge(q.difficulty, points: q.maxPoints),
+                if (q.speed) ...[
+                  const SizedBox(width: 8),
+                  SpeedChip(q: q, remainingMs: _remainingMs),
+                ],
                 const Spacer(),
                 if (q.jokerAllowed)
                   TextButton.icon(
@@ -261,6 +269,7 @@ class _PlayScreenState extends State<PlayScreen> {
             ),
             const SizedBox(height: 14),
             if (q.imageUrl != null) _QuestionImage(q: q, fraction: fraction),
+            if (q.clues.isNotEmpty) ProgressiveClues(q: q, remainingMs: _remainingMs),
             if (q.audioUrl != null)
               AudioClip(
                 key: ValueKey('audio-${q.id}'),
@@ -292,7 +301,7 @@ class _PlayScreenState extends State<PlayScreen> {
                 style: const TextStyle(fontSize: 23, fontWeight: FontWeight.w800, height: 1.25),
               ),
             const SizedBox(height: 22),
-            if (q.isOrder) _orderOptions(q) else _choiceOptions(q),
+            _answerArea(q),
             if (_error != null)
               Padding(
                 padding: const EdgeInsets.only(top: 12),
@@ -300,9 +309,65 @@ class _PlayScreenState extends State<PlayScreen> {
               ),
           ],
         ),
-        if (_feedback != _Feedback.none) _FeedbackOverlay(_feedback),
+        if (_feedback != _Feedback.none) _FeedbackOverlay(_feedback, _lastPoints),
       ],
     );
+  }
+
+  Verdict get _verdict => switch (_feedback) {
+        _Feedback.correct => Verdict.correct,
+        _Feedback.partial => Verdict.partial,
+        _Feedback.wrong || _Feedback.timeout => Verdict.wrong,
+        _Feedback.none => Verdict.none,
+      };
+
+  Widget _answerArea(Question q) {
+    final locked = _feedback != _Feedback.none || _busy;
+    void submit(Object a) => _submit(a);
+    final key = ValueKey('q-${q.id}');
+    switch (q.format) {
+      case 'order':
+        return _orderOptions(q);
+      case 'year_slider':
+        return YearSliderAnswer(key: key, q: q, locked: locked, onSubmit: submit);
+      case 'map':
+        return MapAnswer(key: key, q: q, locked: locked, onSubmit: submit);
+      case 'match':
+        return MatchAnswer(key: key, q: q, locked: locked, onSubmit: submit);
+      case 'burst':
+        return BurstAnswer(key: key, q: q, locked: locked, onSubmit: submit);
+      case 'typed_title':
+        return TypedTitleAnswer(key: key, q: q, locked: locked, onSubmit: submit);
+      case 'pick_two':
+        return PickTwoAnswer(key: key, q: q, locked: locked, onSubmit: submit);
+      case 'versus':
+        return VersusAnswer(
+          key: key,
+          q: q,
+          selected: _selected,
+          verdict: _verdict,
+          locked: locked,
+          onTap: (i) {
+            setState(() => _selected = i);
+            _submit(i);
+          },
+        );
+      case 'odd_images':
+        return OddImagesAnswer(
+          key: key,
+          q: q,
+          selected: _selected,
+          verdict: _verdict,
+          removed: _removed,
+          locked: locked,
+          onTap: (i) {
+            setState(() => _selected = i);
+            _submit(i);
+          },
+        );
+      default:
+        return _choiceOptions(q);
+    }
   }
 
   Widget _choiceOptions(Question q) {
@@ -318,7 +383,7 @@ class _PlayScreenState extends State<PlayScreen> {
                 : _selected == i
                     ? switch (_feedback) {
                         _Feedback.correct => OptionState.correct,
-                        _Feedback.wrong || _Feedback.timeout => OptionState.wrong,
+                        _Feedback.partial || _Feedback.wrong || _Feedback.timeout => OptionState.wrong,
                         _Feedback.none => OptionState.selected,
                       }
                     : (_selected != null || _busy ? OptionState.disabled : OptionState.idle),
@@ -335,6 +400,7 @@ class _PlayScreenState extends State<PlayScreen> {
     final locked = _feedback != _Feedback.none || _busy;
     final border = switch (_feedback) {
       _Feedback.correct => AppColors.success,
+      _Feedback.partial => AppColors.amber,
       _Feedback.wrong || _Feedback.timeout => AppColors.error,
       _Feedback.none => AppColors.surfaceHigh,
     };
@@ -419,24 +485,21 @@ class _QuestionImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Widget img = Image.network(
-      q.imageUrl!,
-      height: 200,
-      width: double.infinity,
-      fit: BoxFit.cover,
-      errorBuilder: (context, error, stack) => const SizedBox.shrink(),
-    );
-    if (q.format == 'image_reveal') {
-      // La imagen se va aclarando a medida que pasa el tiempo.
-      final sigma = 14.0 * fraction.clamp(0.0, 1.0);
-      img = ImageFiltered(imageFilter: ImageFilter.blur(sigmaX: sigma, sigmaY: sigma), child: img);
-    }
+    final Widget img = q.format == 'image_reveal'
+        ? RevealImage(url: q.imageUrl!, mode: q.revealMode, fraction: fraction)
+        : Image.network(
+            q.imageUrl!,
+            height: 220,
+            width: double.infinity,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stack) => const SizedBox.shrink(),
+          );
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          ClipRRect(borderRadius: BorderRadius.circular(18), child: img),
+          ClipRRect(borderRadius: BorderRadius.circular(22), child: img),
           if (q.imageAttribution != null)
             Padding(
               padding: const EdgeInsets.only(top: 4),
@@ -451,12 +514,14 @@ class _QuestionImage extends StatelessWidget {
 
 class _FeedbackOverlay extends StatelessWidget {
   final _Feedback feedback;
-  const _FeedbackOverlay(this.feedback);
+  final int points;
+  const _FeedbackOverlay(this.feedback, this.points);
 
   @override
   Widget build(BuildContext context) {
     final (text, color, icon) = switch (feedback) {
-      _Feedback.correct => (tr('correct'), AppColors.success, Icons.check_circle_rounded),
+      _Feedback.correct => ('${tr('correct')} +$points', AppColors.success, Icons.check_circle_rounded),
+      _Feedback.partial => ('${tr('almost')} +$points', AppColors.amber, Icons.star_half_rounded),
       _Feedback.timeout => (tr('timeout'), AppColors.amber, Icons.timer_off_rounded),
       _ => (tr('wrong'), AppColors.error, Icons.cancel_rounded),
     };

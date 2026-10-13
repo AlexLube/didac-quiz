@@ -32,6 +32,28 @@ def title_key(title: str) -> str:
     return _ARTICLES.sub("", t).strip()
 
 
+_ACCENTS = str.maketrans("áàäâãåéèëêíìïîóòöôõøúùüûñçß", "aaaaaaeeeeiiiioooooouuuunc" + "s")
+_TITLE_ARTICLES = re.compile(r"^(el|la|los|las|un|una|the|a|an|le|les|il|lo|der|die|das|l) ")
+
+
+def norm_title(title: str) -> str:
+    """Igual que public._norm_title en SQL: para comparar y autocompletar títulos."""
+    t = re.sub(r"[^a-z0-9]+", " ", (title or "").lower().translate(_ACCENTS)).strip()
+    return _TITLE_ARTICLES.sub("", t)
+
+
+def film_title_rows(films: list[Film]) -> list[dict]:
+    rows, seen = [], set()
+    for f in films:
+        for title in {f.title_es, f.title_en}:
+            n = norm_title(title)
+            if n and (f.qid, n) not in seen:
+                seen.add((f.qid, n))
+                rows.append({"qid": f.qid, "title": title, "norm": n, "year": f.year,
+                             "popularity": f.popularity})
+    return rows
+
+
 def _opt(es: str, en: str | None = None) -> dict:
     return {"es": es, "en": en if en is not None else es}
 
@@ -831,5 +853,18 @@ class Generator:
             q = self.q_longest(self._pick(timed[i : i + 8], 4))
             if q:
                 out.append(q)
+        from . import variety
+        out += variety.generate(self)
+        by_qid = {f.qid: f for f in self.films}
+        for q in out:
+            q.setdefault("extra", {})
+            q.setdefault("max_points", q["difficulty"])
+            if "_tags" not in q:
+                tags: list[str] = []
+                for x in q.get("entity_ids", [])[:2]:
+                    if x in by_qid:
+                        tags = variety.film_tags(by_qid[x])
+                        break
+                q["_tags"] = tags
         uniq = {q["external_id"]: q for q in out}
         return list(uniq.values())

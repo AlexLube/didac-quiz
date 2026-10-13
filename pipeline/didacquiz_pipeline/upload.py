@@ -30,7 +30,7 @@ class Supabase:
     def upsert_questions(self, questions: list[dict]) -> dict[str, int]:
         cols = ("external_id", "format", "difficulty", "topic", "entity_ids", "prompt", "options",
                 "answer", "explanation", "image_url", "image_attribution", "audio_url",
-                "audio_attribution", "media_start_ms", "source")
+                "audio_attribution", "media_start_ms", "source", "max_points", "extra", "time_limit_ms")
         questions = self.mirror_media(questions)
         ids: dict[str, int] = {}
         for i in range(0, len(questions), 500):
@@ -38,13 +38,22 @@ class Supabase:
             for row in rows:  # columnas NOT NULL con valor por defecto
                 row["media_start_ms"] = row.get("media_start_ms") or 0
                 row["entity_ids"] = row.get("entity_ids") or []
+                row["extra"] = row.get("extra") or {}
+                row["max_points"] = row.get("max_points") or row.get("difficulty") or 1
             for row in self._post("questions", rows, "external_id", returning=True):
                 ids[row["external_id"]] = row["id"]
         return ids
 
+    def upsert_titles(self, rows: list[dict]) -> int:
+        """Títulos de películas para el autocompletado de «escribe el título»."""
+        for i in range(0, len(rows), 1000):
+            self._post("film_titles", rows[i : i + 1000], "qid,norm", returning=False)
+        return len(rows)
+
     def mirror_media(self, questions: list[dict]) -> list[dict]:
         """Copia imágenes y audios de Commons a Supabase Storage (y recorta los audios)."""
-        needs = [q for q in questions if q.get("image_url") or q.get("audio_url")]
+        needs = [q for q in questions if q.get("image_url") or q.get("audio_url")
+                 or any(o.get("image") for o in q.get("options") or [])]
         if not needs:
             return questions
         from .media import MediaStore
@@ -55,6 +64,10 @@ class Supabase:
             try:
                 if q.get("image_url") and "supabase" not in q["image_url"]:
                     q["image_url"] = store.mirror_image(q["image_url"])
+                if any(o.get("image") for o in q.get("options") or []):
+                    q["options"] = [dict(o, image=store.mirror_image(o["image"]))
+                                    if o.get("image") and "supabase" not in o["image"] else o
+                                    for o in q["options"]]
                 if q.get("audio_url") and "supabase" not in q["audio_url"]:
                     q["audio_url"] = store.mirror_clip(q["audio_url"], q.get("_audio_start_s", 0))
                     q["media_start_ms"] = 0
@@ -93,7 +106,7 @@ class Supabase:
         return rows[0]["challenge_date"] if rows else None
 
     def insert_challenges(self, calendar: list[dict], ids: dict[str, int]) -> None:
-        rows = [{"challenge_date": c["date"], "kind": c["kind"], "title": c["title"],
+        rows = [{"challenge_date": c["date"], "kind": c["kind"], "title": c["title"], "theme": c.get("theme"),
                  "question_ids": [ids[x] for x in c["external_ids"]]} for c in calendar]
         for i in range(0, len(rows), 200):
             self._post("challenges", rows[i : i + 200], "challenge_date", returning=False)

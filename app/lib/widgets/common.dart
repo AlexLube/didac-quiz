@@ -9,10 +9,12 @@ import '../theme.dart';
 
 class DifficultyBadge extends StatelessWidget {
   final int difficulty;
-  const DifficultyBadge(this.difficulty, {super.key});
+  final int? points; // puntos máximos de la pregunta (por defecto, la dificultad)
+  const DifficultyBadge(this.difficulty, {super.key, this.points});
 
   @override
   Widget build(BuildContext context) {
+    final pts = points ?? difficulty;
     final label = [tr('easy'), tr('medium'), tr('hard')][difficulty.clamp(1, 3) - 1];
     final color = AppColors.forDifficulty(difficulty);
     return Container(
@@ -23,7 +25,7 @@ class DifficultyBadge extends StatelessWidget {
         border: Border.all(color: color, width: 1.5),
       ),
       child: Text(
-        '$label · $difficulty ${difficulty == 1 ? tr('pt') : tr('pts')}',
+        '$label · $pts ${pts == 1 ? tr('pt') : tr('pts')}',
         style: TextStyle(color: color, fontWeight: FontWeight.w700, fontSize: 13),
       ),
     );
