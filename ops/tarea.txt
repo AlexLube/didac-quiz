@@ -1,2 +1,2 @@
 generar-retos
-# Editar este archivo lanza la tarea indicada en la primera línea.
+# Editar este archivo lanza la tarea indicada en la primera línea. (reintento 2)

@@ -127,7 +127,7 @@ SELECT ?film ?es ?en ?date ?links ?dir ?dirEs ?dirEn ?dirLinks ?iso WHERE {{
         wikibase:sitelinks ?links ;
         wdt:P577 ?date ;
         wdt:P57 ?dir .
-  FILTER(?links >= {min_links})
+  FILTER(?links >= {min_links} && ?links < {max_links})
   FILTER(YEAR(?date) >= {y0} && YEAR(?date) < {y1})
   ?dir wikibase:sitelinks ?dirLinks .
   OPTIONAL {{ ?film rdfs:label ?es FILTER(LANG(?es) = "es") }}
@@ -272,16 +272,21 @@ SELECT ?award WHERE { ?award rdfs:label "Goya Award for Best Film"@en } LIMIT 1
 def fetch_films(min_links: int = 20, cast_per_film: int = 4, verbose: bool = True) -> list[Film]:
     films: dict[str, Film] = {}
     decades = [(1895, 1930)] + [(y, y + 10) for y in range(1930, 2030, 10)]
-    def _range(y0: int, y1: int) -> list[dict]:
-        """Si Wikidata no puede con una década, se pide en tramos más cortos."""
+    def _range(y0: int, y1: int, lo: int = min_links, hi: int = 100000) -> list[dict]:
+        """Si Wikidata no puede con una década, se pide en tramos más cortos
+        (primero por años y, para un solo año, por número de enlaces)."""
         try:
-            return _sparql(FILMS_QUERY.format(min_links=min_links, y0=y0, y1=y1), retries=3)
+            return _sparql(FILMS_QUERY.format(min_links=lo, max_links=hi, y0=y0, y1=y1), retries=3)
         except RuntimeError:
-            if y1 - y0 <= 1:
-                raise
-            mid = (y0 + y1) // 2
-            print(f"  Wikidata lento en {y0}-{y1}: se divide en dos tramos")
-            return _range(y0, mid) + _range(mid, y1)
+            if y1 - y0 > 1:
+                mid = (y0 + y1) // 2
+                print(f"  Wikidata lento en {y0}-{y1}: se divide en dos tramos")
+                return _range(y0, mid, lo, hi) + _range(mid, y1, lo, hi)
+            if hi - lo > 1:
+                mid = lo + max(1, (min(hi, 400) - lo) // 2) if hi > 400 else (lo + hi) // 2
+                print(f"  Wikidata lento en {y0} con enlaces {lo}-{hi}: se divide por popularidad")
+                return _range(y0, y1, lo, mid) + _range(y0, y1, mid, hi)
+            raise
 
     for y0, y1 in decades:
         rows = _range(y0, y1)
