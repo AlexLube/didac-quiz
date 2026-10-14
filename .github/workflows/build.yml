@@ -101,6 +101,20 @@ jobs:
             ${{ vars.ADMOB_REWARDED_ID && format('--dart-define=ADMOB_REWARDED_ID={0}', vars.ADMOB_REWARDED_ID) || '' }} \
             2>&1 | tail -40 | tee ../ci-logs/apk.log
 
+      - name: Inspeccionar APK
+        if: steps.apk.outcome == 'success'
+        continue-on-error: true
+        run: |
+          BT=$(ls -d $ANDROID_HOME/build-tools/* | sort -V | tail -1)
+          APK=app/build/app/outputs/flutter-apk/app-release.apk
+          {
+            echo "== badging =="; $BT/aapt2 dump badging $APK | grep -E "^package|sdkVersion|targetSdk|native-code|uses-feature|application-label:" 
+            echo "== firma =="; $BT/apksigner verify --verbose --print-certs $APK 2>&1 | head -20
+            echo "== librerias =="; unzip -l $APK | grep -E "lib/|classes" | awk '{print $4, $1}' | head -40
+            echo "== permisos =="; $BT/aapt2 dump permissions $APK
+            ls -l $APK
+          } > ci-logs/apk-info.log 2>&1
+
       - name: Guardar APK
         if: steps.apk.outcome == 'success'
         uses: actions/upload-artifact@v4
