@@ -56,9 +56,9 @@ jobs:
           script: |
             adb logcat -c
             adb install -r app/build/app/outputs/flutter-apk/app-release.apk
-            adb shell monkey -p com.didacquiz.app -c android.intent.category.LAUNCHER 1
+            adb shell monkey -p app.didaccine.quiz -c android.intent.category.LAUNCHER 1
             sleep 40
-            adb shell pidof com.didacquiz.app > ci-logs/pid.txt || echo "PROCESO MUERTO" > ci-logs/pid.txt
+            adb shell pidof app.didaccine.quiz > ci-logs/pid.txt || echo "PROCESO MUERTO" > ci-logs/pid.txt
             adb exec-out screencap -p > ci-logs/screen1.png
             adb logcat -d > ci-logs/logcat-full.txt
             adb logcat -d -s flutter AndroidRuntime DEBUG ActivityManager:I Ads:* > ci-logs/logcat.txt || true

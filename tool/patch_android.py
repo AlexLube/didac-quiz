@@ -1,6 +1,6 @@
 """Ajusta el proyecto Android que genera `flutter create` (se ejecuta en CI).
 
-- Nombre visible "DidacCine Quiz" e identificador com.didacquiz.app
+- Nombre visible "DidacCine Quiz" e identificador app.didaccine.quiz
 - Permiso de Internet
 - ID de aplicación de AdMob (por defecto, el de pruebas de Google)
 - Enlace de vuelta para el inicio de sesión con Google/Apple
@@ -64,7 +64,7 @@ for name in ("build.gradle.kts", "build.gradle"):
     if not gradle.exists():
         continue
     g = gradle.read_text(encoding="utf-8")
-    g = re.sub(r'applicationId\s*=?\s*"[^"]+"', 'applicationId = "com.didacquiz.app"', g)
+    g = re.sub(r'applicationId\s*=?\s*"[^"]+"', 'applicationId = "app.didaccine.quiz"', g)
     g = re.sub(r"minSdk(Version)?\s*=?\s*flutter\.minSdkVersion", "minSdk = 23", g)
     if "proguard-rules.pro" not in g:
         if name.endswith(".kts"):
