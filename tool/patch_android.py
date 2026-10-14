@@ -12,10 +12,12 @@ from __future__ import annotations
 
 import os
 import re
+import shutil
 import sys
 from pathlib import Path
 
 APP = Path(sys.argv[1] if len(sys.argv) > 1 else "app")
+ROOT = Path(__file__).resolve().parent.parent
 ADMOB_APP_ID = os.environ.get("ADMOB_APP_ID") or "ca-app-pub-3940256099942544~3347511713"
 
 manifest = APP / "android/app/src/main/AndroidManifest.xml"
@@ -71,6 +73,31 @@ for name in ("build.gradle.kts", "build.gradle"):
         else:
             rule = "proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'"
         g = re.sub(r"(release\s*\{)", r"\1\n            " + rule, g, count=1)
+    # Firma estable: sin ella cada compilación usa una clave distinta y Android
+    # rechaza instalar una versión nueva sobre la anterior.
+    if "ci-debug.keystore" not in g:
+        shutil.copy(ROOT / "tool/didac-quiz-debug.keystore", APP / "android/app/ci-debug.keystore")
+        if name.endswith(".kts"):
+            block = """signingConfigs {
+        getByName("debug") {
+            storeFile = file("ci-debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
+    }
+    buildTypes {"""
+        else:
+            block = """signingConfigs {
+        debug {
+            storeFile file('ci-debug.keystore')
+            storePassword 'android'
+            keyAlias 'androiddebugkey'
+            keyPassword 'android'
+        }
+    }
+    buildTypes {"""
+        g = re.sub(r"buildTypes\s*\{", lambda m_: block, g, count=1)
     gradle.write_text(g, encoding="utf-8")
     print(f"Ajustado {gradle}")
 
