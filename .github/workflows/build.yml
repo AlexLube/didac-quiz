@@ -115,6 +115,29 @@ jobs:
             ls -l $APK
           } > ci-logs/apk-info.log 2>&1
 
+      - name: APK alternativa (firma v1+v2+v3, clave aparte)
+        if: steps.apk.outcome == 'success'
+        continue-on-error: true
+        run: |
+          BT=$(ls -d $ANDROID_HOME/build-tools/* | sort -V | tail -1)
+          mkdir -p alt
+          keytool -genkeypair -keystore alt/alt.jks -storetype PKCS12 -storepass android -keypass android \
+            -alias alt -keyalg RSA -keysize 2048 -validity 7000 -dname "CN=Android Debug,O=Android,C=US"
+          cp app/build/app/outputs/flutter-apk/app-release.apk alt/unsigned.apk
+          $BT/zipalign -f -p 4 alt/unsigned.apk alt/aligned.apk
+          $BT/apksigner sign --ks alt/alt.jks --ks-pass pass:android --key-pass pass:android --ks-key-alias alt \
+            --v1-signing-enabled true --v2-signing-enabled true --v3-signing-enabled true \
+            --out alt/didac-quiz-alt.apk alt/aligned.apk
+          $BT/apksigner verify --verbose alt/didac-quiz-alt.apk | head -8 >> ci-logs/apk-info.log
+
+      - name: Guardar APK alternativa
+        if: steps.apk.outcome == 'success'
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: didac-quiz-apk-alt
+          path: alt/didac-quiz-alt.apk
+
       - name: Guardar APK
         if: steps.apk.outcome == 'success'
         uses: actions/upload-artifact@v4
