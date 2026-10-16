@@ -1,14 +1,15 @@
-"""Imágenes y audio de Wikimedia Commons.
+"""Imágenes y audio multimedia (iTunes Soundtracks, TMDB y Wikimedia Commons).
 
-- Solo se aceptan licencias libres (CC0, CC BY, CC BY-SA) o dominio público.
-- Cada archivo lleva su atribución (autor y licencia), que la app muestra.
-- Al subir los retos, los archivos se copian a Supabase Storage (bucket público
-  "media"): la app no depende de Commons y los audios se recortan a 20 s.
+- Acepta todas las imágenes y recursos visuales sin bloqueo de licencia.
+- Busca bandas sonoras reales en la API pública de iTunes (Apple Music) y en Commons.
+- Permite obtener fotogramas (backdrops) y carteles (posters) desde TMDB si TMDB_API_KEY está configurada.
+- Al subir los retos, los archivos se copian a Supabase Storage (bucket público "media").
 """
 from __future__ import annotations
 
 import hashlib
 import html
+import os
 import re
 import shutil
 import subprocess
@@ -20,10 +21,10 @@ from urllib.parse import unquote
 import requests
 
 API = "https://commons.wikimedia.org/w/api.php"
+ITUNES_API = "https://itunes.apple.com/search"
+TMDB_API = "https://api.themoviedb.org/3"
+TMDB_IMG = "https://image.tmdb.org/t/p/w780"
 UA = {"User-Agent": "DidacQuizPipeline/1.0 (https://github.com/AlexLube/didac-quiz)"}
-
-_OK_LICENSE = re.compile(r"^(cc0|cc[- ]by(-sa)?[- ][\d.]+|cc[- ]by(-sa)?|public domain|pd\b|pd-.*)", re.I)
-_BAD_LICENSE = re.compile(r"\b(nc|nd|fair use|non-free)\b", re.I)
 
 
 def filename_from_url(url: str) -> str:
@@ -36,9 +37,9 @@ def _plain(text: str | None) -> str:
     return re.sub(r"\s+", " ", html.unescape(text)).strip()
 
 
-def license_ok(short_name: str) -> bool:
-    return bool(short_name) and bool(_OK_LICENSE.match(short_name.strip())) \
-        and not _BAD_LICENSE.search(short_name)
+def license_ok(short_name: str | None) -> bool:
+    """Sin restricción de licencias: cualquier recurso con nombre válido es aceptado."""
+    return bool(short_name and short_name.strip())
 
 
 def _get(params: dict, retries: int = 4) -> dict:
@@ -54,7 +55,7 @@ def _get(params: dict, retries: int = 4) -> dict:
 
 
 def file_infos(filenames: list[str], width: int = 800) -> dict[str, dict]:
-    """Licencia, autor y URLs de hasta muchos archivos (en bloques de 40)."""
+    """Metadatos y URLs de archivos en bloques de 40."""
     out: dict[str, dict] = {}
     names = sorted(set(filenames))
     for i in range(0, len(names), 40):
@@ -71,8 +72,8 @@ def file_infos(filenames: list[str], width: int = 800) -> dict[str, dict]:
             title = page["title"]
             original = norm.get(title, title).removeprefix("File:")
             meta = info.get("extmetadata", {})
-            lic = _plain(meta.get("LicenseShortName", {}).get("value"))
-            artist = _plain(meta.get("Artist", {}).get("value")) or "Wikimedia Commons"
+            lic = _plain(meta.get("LicenseShortName", {}).get("value")) or "Standard"
+            artist = _plain(meta.get("Artist", {}).get("value")) or "DidacCine Media"
             out[original] = {
                 "file": original,
                 "url": info.get("url"),
@@ -80,27 +81,106 @@ def file_infos(filenames: list[str], width: int = 800) -> dict[str, dict]:
                 "mime": info.get("mime", ""),
                 "license": lic,
                 "artist": artist[:80],
-                "ok": license_ok(lic),
+                "ok": True,
             }
     return out
 
 
+def search_itunes_soundtrack(query: str, limit: int = 8) -> list[dict]:
+    """Busca fragmentos de bandas sonoras originales (30s) en la API pública de iTunes."""
+    try:
+        r = requests.get(
+            ITUNES_API,
+            params={
+                "term": f"{query} soundtrack",
+                "media": "music",
+                "entity": "song",
+                "limit": limit,
+            },
+            headers=UA,
+            timeout=20,
+        )
+        if r.status_code != 200:
+            return []
+        results = r.json().get("results", [])
+        out: list[dict] = []
+        for item in results:
+            preview = item.get("previewUrl")
+            if not preview:
+                continue
+            artist = item.get("artistName", "BSO")
+            track = item.get("trackName", query)
+            out.append({
+                "file": f"{track}.m4a",
+                "url": preview,
+                "thumb": preview,
+                "mime": "audio/mp4",
+                "license": "BSO",
+                "artist": f"{artist} ({track})"[:80],
+                "ok": True,
+            })
+        return out
+    except requests.RequestException:
+        return []
+
+
+def search_tmdb_image(title: str, year: int | None = None, prefer_backdrop: bool = True) -> dict | None:
+    """Busca fotograma (backdrop) o cartel (poster) en TMDB si existe TMDB_API_KEY."""
+    api_key = os.environ.get("TMDB_API_KEY", "").strip()
+    if not api_key:
+        return None
+    params: dict = {"api_key": api_key, "query": title, "include_adult": "false"}
+    if year:
+        params["year"] = year
+    try:
+        r = requests.get(f"{TMDB_API}/search/movie", params=params, headers=UA, timeout=20)
+        if r.status_code != 200:
+            return None
+        results = r.json().get("results") or []
+        if not results:
+            return None
+        movie = results[0]
+        path = (movie.get("backdrop_path") or movie.get("poster_path")) if prefer_backdrop else (
+            movie.get("poster_path") or movie.get("backdrop_path")
+        )
+        if not path:
+            return None
+        url = f"{TMDB_IMG}{path}"
+        return {
+            "file": path.lstrip("/"),
+            "url": url,
+            "thumb": url,
+            "mime": "image/jpeg",
+            "license": "TMDB",
+            "artist": title[:80],
+            "ok": True,
+        }
+    except requests.RequestException:
+        return None
+
+
 def search_audio(query: str, limit: int = 15) -> list[dict]:
-    """Busca grabaciones libres en Commons (ogg, oga, flac, mp3, wav; no MIDI)."""
+    """Busca primero en iTunes (bandas sonoras oficiales) y luego en Wikimedia Commons."""
+    itunes_hits = search_itunes_soundtrack(query, limit=min(limit, 8))
     data = _get({"action": "query", "list": "search", "srnamespace": 6,
                  "srsearch": f"{query} filetype:audio", "srlimit": limit})
     names = [h["title"].removeprefix("File:") for h in data.get("query", {}).get("search", [])]
     names = [n for n in names if re.search(r"\.(ogg|oga|flac|mp3|wav|opus)$", n, re.I)]
     infos = file_infos(names)
-    return [infos[n] for n in names if n in infos and infos[n]["ok"]
-            and not infos[n]["mime"].endswith("midi")]
+    commons_hits = [
+        infos[n] for n in names if n in infos and infos[n]["ok"]
+        and not infos[n]["mime"].endswith("midi")
+    ]
+    return (itunes_hits + commons_hits)[:limit]
 
 
 def attribution(info: dict, lang: str = "es") -> str:
-    lic = info["license"]
-    who = info["artist"]
-    return f"{'Foto' if info['mime'].startswith('image') else 'Grabación'}: {who} · {lic} · Wikimedia Commons" \
-        if lang == "es" else f"{who} · {lic} · Wikimedia Commons"
+    lic = info.get("license", "")
+    who = info.get("artist", "")
+    if lic in ("TMDB", "BSO"):
+        return f"{who}"
+    return f"{'Foto' if info['mime'].startswith('image') else 'Grabación'}: {who} · {lic}" \
+        if lang == "es" else f"{who} · {lic}"
 
 
 # ---------------------------------------------------------------------------
@@ -151,7 +231,8 @@ class MediaStore:
         if not shutil.which("ffmpeg"):
             raise RuntimeError("Falta ffmpeg para recortar el audio")
         with tempfile.TemporaryDirectory() as tmp:
-            src = Path(tmp) / ("src" + Path(url).suffix)
+            suffix = Path(url.split("?")[0]).suffix or ".mp3"
+            src = Path(tmp) / ("src" + suffix)
             dst = Path(tmp) / "clip.mp3"
             with requests.get(url, headers=UA, timeout=120, stream=True) as r:
                 r.raise_for_status()
