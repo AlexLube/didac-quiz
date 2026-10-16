@@ -135,6 +135,16 @@ class ProfileScreen extends StatelessWidget {
                             MaterialPageRoute(builder: (_) => const AccountScreen(startWithLogin: true))),
                       ),
                     ),
+                  Card(
+  child: ListTile(
+    leading: const Icon(Icons.military_tech_rounded, color: AppColors.accent),
+    title: const Text('Logros y Trofeos', style: TextStyle(fontWeight: FontWeight.w700)),
+    trailing: const Icon(Icons.chevron_right_rounded, color: AppColors.textMuted),
+    onTap: () => Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const AchievementsScreen()),
+    ),
+  ),
+),
                   const SizedBox(height: 16),
                   Text(tr('legal_notice'),
                       style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
