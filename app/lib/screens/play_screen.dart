@@ -33,12 +33,10 @@ class _PlayScreenState extends State<PlayScreen> {
   bool _busy = false;
   Object? _error;
 
-  // Temporizador visual
   Timer? _ticker;
   DateTime? _deadline;
   int _remainingMs = 0;
 
-  // Respuesta en curso
   int? _selected;
   List<int> _order = [];
   List<int> _removed = [];
@@ -570,7 +568,7 @@ class _FeedbackOverlay extends StatelessWidget {
               ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }
