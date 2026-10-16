@@ -1,4 +1,4 @@
-name: Pruebas y APK
+name: Pruebas, APK y Web
 
 on:
   push:
@@ -62,7 +62,7 @@ jobs:
           channel: stable
           cache: true
 
-      - name: Preparar proyecto Android
+      - name: Preparar proyecto Android y Web
         id: prepare
         continue-on-error: true
         working-directory: app
@@ -71,7 +71,7 @@ jobs:
         run: |
           set -o pipefail
           flutter --version 2>&1 | tee ../ci-logs/flutter-version.log
-          flutter create --platforms=android --org com.didacquiz --project-name didac_quiz . 2>&1 | tail -5 | tee ../ci-logs/create.log
+          flutter create --platforms=android,web --org com.didacquiz --project-name didac_quiz . 2>&1 | tail -5 | tee ../ci-logs/create.log
           rm -f test/widget_test.dart
           python ../tool/patch_android.py . 2>&1 | tee -a ../ci-logs/create.log
           flutter pub get 2>&1 | tee ../ci-logs/pub.log
@@ -100,6 +100,41 @@ jobs:
             ${{ vars.ADMOB_INTERSTITIAL_ID && format('--dart-define=ADMOB_INTERSTITIAL_ID={0}', vars.ADMOB_INTERSTITIAL_ID) || '' }} \
             ${{ vars.ADMOB_REWARDED_ID && format('--dart-define=ADMOB_REWARDED_ID={0}', vars.ADMOB_REWARDED_ID) || '' }} \
             2>&1 | tail -40 | tee ../ci-logs/apk.log
+
+      - name: Compilar Web
+        id: web
+        continue-on-error: true
+        working-directory: app
+        run: |
+          set -o pipefail
+          flutter build web --release --base-href "/didac-quiz/" \
+            --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_URL }} \
+            --dart-define=SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }} \
+            --dart-define=ENABLE_GOOGLE_LOGIN=${{ vars.ENABLE_GOOGLE_LOGIN || 'false' }} \
+            --dart-define=ENABLE_APPLE_LOGIN=${{ vars.ENABLE_APPLE_LOGIN || 'false' }} \
+            2>&1 | tail -40 | tee ../ci-logs/web.log
+
+      - name: Publicar Web en GitHub Pages
+        if: steps.web.outcome == 'success' && github.ref == 'refs/heads/main'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          tmp=$(mktemp -d)
+          cp -r app/build/web/. "$tmp"/
+          touch "$tmp"/.nojekyll
+          cd "$tmp"
+          git init -q && git checkout -q -b gh-pages
+          git -c user.name=ci -c user.email=ci@users.noreply.github.com add -A
+          git -c user.name=ci -c user.email=ci@users.noreply.github.com commit -qm "Web ${{ github.sha }}"
+          git push -qf "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" gh-pages
+
+      - name: Guardar Web como descargable
+        if: steps.web.outcome == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: didac-quiz-web
+          path: app/build/web
 
       - name: Inspeccionar APK
         if: steps.apk.outcome == 'success'
@@ -145,7 +180,6 @@ jobs:
           name: didac-quiz-apk
           path: app/build/app/outputs/flutter-apk/app-release.apk
 
-      # Resumen legible también desde fuera de GitHub (rama ci-status)
       - name: Publicar resumen
         if: always()
         env:
@@ -159,6 +193,7 @@ jobs:
             echo "prepare: ${{ steps.prepare.outcome }}"
             echo "analyze_test: ${{ steps.analyze.outcome }}"
             echo "apk: ${{ steps.apk.outcome }}"
+            echo "web: ${{ steps.web.outcome }}"
           } > ci-logs/SUMMARY.txt
           cat ci-logs/SUMMARY.txt
           tmp=$(mktemp -d); cp -r ci-logs/. "$tmp"/; cd "$tmp"
@@ -173,3 +208,4 @@ jobs:
           test "${{ steps.backend.outcome }}" = success
           test "${{ steps.analyze.outcome }}" = success
           test "${{ steps.apk.outcome }}" = success
+          test "${{ steps.web.outcome }}" = success
