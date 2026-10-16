@@ -140,6 +140,8 @@ def country_name(iso: str, lang: str) -> str:
 
 
 def _media_credit(info: dict, kind: str) -> str:
+    if info.get("license") in ("TMDB", "BSO"):
+        return f"{info['artist']}"
     return f"{kind}: {info['artist']} · {info['license']} · Wikimedia Commons"
 
 
@@ -226,7 +228,6 @@ class Generator:
             for d in f.directors:
                 if d.qid not in own and d.name != correct.name:
                     pool[d.qid] = d
-        # Distractores de popularidad parecida para que sean plausibles
         cands = sorted(pool.values(), key=lambda p: abs(p.popularity - correct.popularity))[:12]
         wrong = self._pick(cands, 3)
         if not wrong or len({p.name for p in wrong}) < 3:
@@ -251,9 +252,8 @@ class Generator:
         wrong = self._pick(sorted(others, key=lambda d: abs(d - dec))[:5], 3)
         if not wrong:
             return None
-        lab = lambda d: _opt(f"Años {str(d)[2:]} ({d})", f"{d}s")  # noqa: E731
+        lab = lambda d: _opt(f"Años {str(d)[2:]} ({d})", f"{d}s")
         opts, idx = _shuffle_with_answer(self.rng, lab(dec), [lab(d) for d in wrong])
-        # orden cronológico de las opciones: más natural para décadas
         order = sorted(range(4), key=lambda i: opts[i]["en"])
         opts = [opts[i] for i in order]
         idx = order.index(idx)
@@ -289,7 +289,7 @@ class Generator:
     def q_true_false_oscar(self, film: Film) -> Question | None:
         truth = "oscar_best_picture" in film.awards
         if not truth and film_tier(film) > 0:
-            return None  # solo afirmaciones falsas sobre películas muy conocidas
+            return None
         return {
             "external_id": _xid("tf_oscar", film.qid),
             "format": "true_false",
@@ -415,10 +415,7 @@ class Generator:
             "explanation": _explanation(film),
         }
 
-
-    # -- tipos nuevos -----------------------------------------------------
     def q_character(self, film: Film) -> Question | None:
-        """¿A quién interpreta X en la película?"""
         if not film.roles:
             return None
         role = film.roles[0]
@@ -442,7 +439,6 @@ class Generator:
                           key=role.actor_qid)
 
     def q_actor_by_character(self, film: Film) -> Question | None:
-        """¿Qué actor interpreta a <personaje>?"""
         if not film.roles:
             return None
         role = film.roles[-1] if len(film.roles) > 1 else film.roles[0]
@@ -487,7 +483,6 @@ class Generator:
             (f"La música de {_t(film, 'es')} es de {{n}}.", f"The score of {_t(film, 'en')} is by {{n}}."))
 
     def q_writer(self, film: Film) -> Question | None:
-        # Si el guionista es también el director, la pregunta es demasiado obvia
         writers = [w for w in film.writers if w.qid not in {d.qid for d in film.directors}]
         if not writers or len(writers) != len(film.writers):
             return None
@@ -498,7 +493,6 @@ class Generator:
             (f"El guion de {_t(film, 'es')} es de {{n}}.", f"The screenplay of {_t(film, 'en')} is by {{n}}."))
 
     def q_book_author(self, film: Film) -> Question | None:
-        """¿Quién escribió la obra en la que se basa la película?"""
         if len(film.based_on) != 1:
             return None
         work = film.based_on[0]
@@ -519,21 +513,20 @@ class Generator:
                            "en": f"It is based on \u201c{work.title_en}\u201d by {correct.name}."})
 
     def q_based_on(self, film: Film) -> Question | None:
-        """¿En qué obra se basa la película?"""
         if len(film.based_on) != 1:
             return None
         work = film.based_on[0]
         if titles_overlap(work, film):
-            return None  # título parecido al de la película: sería regalada
+            return None
         pool = {w.qid: w for f in self._era_films(film, 25) if f.qid != film.qid for w in f.based_on
                 if title_key(w.title_es) != title_key(work.title_es)}
         wrong = self._pick(sorted(pool.values(), key=lambda w: w.qid), 3)
         if len({title_key(w.title_es) for w in wrong}) < 3:
             return None
-        lab = lambda w: _opt(f"«{w.title_es}»", f"\u201c{w.title_en}\u201d")  # noqa: E731
+        lab = lambda w: _opt(f"«{w.title_es}»", f"\u201c{w.title_en}\u201d")
         opts, idx = _shuffle_with_answer(self.rng, lab(work), [lab(w) for w in wrong])
         return self._base("based_on", film, "choice", 2 + film_tier(film), "based_on",
-                          [film.qid, work.qid], 
+                          [film.qid, work.qid],
                           {"es": f"¿En qué obra literaria se basa {_t(film, 'es')} ({film.year})?",
                            "en": f"Which literary work is {_t(film, 'en')} ({film.year}) based on?"},
                           opts, idx,
@@ -581,13 +574,13 @@ class Generator:
         film, nxt = saga[i], saga[i + 1]
         others = [f for f in saga if f.qid not in (film.qid, nxt.qid)]
         wrong = self._pick(others, min(3, len(others)))
-        if len(wrong) < 3:  # sagas cortas: se completa con películas de la misma época
+        if len(wrong) < 3:
             fill = [f for f in self._era_films(nxt, 5) if f.series != film.series
                     and title_key(f.title_es) not in {title_key(x.title_es) for x in saga}]
             wrong += self._pick(fill, 3 - len(wrong)) if len(fill) >= 3 - len(wrong) else []
         if len(wrong) < 3:
             return None
-        lab = lambda f: _opt(_t(f, "es"), _t(f, "en"))  # noqa: E731
+        lab = lambda f: _opt(_t(f, "es"), _t(f, "en"))
         opts, idx = _shuffle_with_answer(self.rng, lab(nxt), [lab(f) for f in wrong])
         return {
             "external_id": _xid("saga_next", sq, film.qid),
@@ -609,7 +602,7 @@ class Generator:
             return None
         iso = film.countries[0]
         if iso == "US" and self.rng.random() < 0.8:
-            return None  # evitar que casi siempre la respuesta sea EE. UU.
+            return None
         wrong = [c for c in self.rng.sample(COMMON_COUNTRIES, len(COMMON_COUNTRIES)) if c != iso][:3]
         opts, idx = _shuffle_with_answer(self.rng, _opt(country_name(iso, "es"), country_name(iso, "en")),
                                          [_opt(country_name(c, "es"), country_name(c, "en")) for c in wrong])
@@ -640,7 +633,7 @@ class Generator:
             return None
         durs = sorted(f.duration for f in films)
         if durs[-1] - durs[-2] < 12:
-            return None  # diferencia clara
+            return None
         longest = max(films, key=lambda f: f.duration)
         shown = films[:]
         self.rng.shuffle(shown)
@@ -683,7 +676,6 @@ class Generator:
                            "en": f"{_t(film, 'en')} stars {', '.join(p.name for p in members)}."})
 
     def q_clues(self, film: Film) -> Question | None:
-        """Adivina la película con tres pistas (año, director y protagonista)."""
         if not film.cast or film.qid in self.ambiguous:
             return None
         d, star = film.directors[0], film.cast[0]
@@ -694,7 +686,7 @@ class Generator:
         wrong = self._pick(others[:12], 3)
         if not wrong:
             return None
-        lab = lambda f: _opt(_t(f, "es"), _t(f, "en"))  # noqa: E731
+        lab = lambda f: _opt(_t(f, "es"), _t(f, "en"))
         opts, idx = _shuffle_with_answer(self.rng, lab(film), [lab(f) for f in wrong])
         return self._base("clues", film, "clues", 1 + film_tier(film), "clues",
                           [film.qid, d.qid, star.qid],
@@ -712,7 +704,7 @@ class Generator:
         wrong = self._pick(others[:12], 3)
         if len({title_key(f.title_es) for f in wrong}) < 3:
             return None
-        lab = lambda f: _opt(_t(f, "es"), _t(f, "en"))  # noqa: E731
+        lab = lambda f: _opt(_t(f, "es"), _t(f, "en"))
         return _shuffle_with_answer(self.rng, lab(film), [lab(f) for f in wrong])
 
     def q_location_photo(self, film: Film, index: int = 0) -> Question | None:
@@ -737,7 +729,6 @@ class Generator:
         return q
 
     def q_location_photos(self, film: Film) -> list[Question]:
-        """Una pregunta por cada lugar de rodaje con foto (hasta 3)."""
         out = []
         for i in range(min(3, len(film.location_photos))):
             q = self.q_location_photo(film, i)
@@ -746,8 +737,16 @@ class Generator:
         return out
 
     def q_still(self, film: Film) -> Question | None:
-        if not film.still:
+        from . import media
+        # Soporta tanto imágenes de dominio público en Wikidata como carteles/fotogramas de TMDB si está configurado
+        img_info = film.still
+        if not img_info:
+            tmdb_img = media.search_tmdb_image(film.title_en, film.year)
+            if tmdb_img:
+                img_info = tmdb_img
+        if not img_info:
             return None
+
         res = self._film_options(film, {film.qid}, span=8)
         if not res:
             return None
@@ -757,8 +756,8 @@ class Generator:
                        {"es": "🎞️ ¿A qué película pertenece esta imagen?",
                         "en": "🎞️ Which film is this image from?"},
                        opts, idx)
-        q["image_url"] = film.still["url"]
-        q["image_attribution"] = _media_credit(film.still, "Imagen") + " · Dominio público"
+        q["image_url"] = img_info["url"]
+        q["image_attribution"] = _media_credit(img_info, "Imagen")
         return q
 
     def q_emoji(self, film: Film) -> Question | None:
@@ -796,7 +795,7 @@ class Generator:
             others = [m for m in self.music if m is not it and m["composer"] != it["composer"]]
             wrong = self._pick(others, 3)
             if len(wrong) == 3:
-                lab = lambda m: _opt(f"{m['piece_es']} ({m['composer']})", f"{m['piece_en']} ({m['composer']})")  # noqa: E731
+                lab = lambda m: _opt(f"{m['piece_es']} ({m['composer']})", f"{m['piece_en']} ({m['composer']})")
                 opts, idx = _shuffle_with_answer(self.rng, lab(it), [lab(m) for m in wrong])
                 q = self._base("music_piece", film, "audio", 2, "music_piece", ["music:" + it["search"]],
                                {"es": f"🎵 Suena en {_t(film, 'es')}. ¿Qué pieza es?",
@@ -806,7 +805,6 @@ class Generator:
                 out.append(q)
         return out
 
-    # -- generación masiva ------------------------------------------------
     def generate_all(self) -> list[Question]:
         out: list[Question] = []
         per_film: list[Callable[[Film], Question | None]] = [
@@ -832,7 +830,6 @@ class Generator:
                 if q:
                     q["source"] = f"wikidata:{dq}"
                     out.append(q)
-        # Preguntas de ordenar: grupos de 4 películas conocidas de épocas distintas
         known = [f for f in self.films if film_tier(f) <= 1]
         for _ in range(max(1, len(known) // 4)):
             q = self.q_order(self._pick(known, 4))
@@ -847,7 +844,6 @@ class Generator:
                 q = fn(sq)
                 if q:
                     out.append(q)
-        # ¿Cuál dura más?: grupos de 4 películas conocidas de la misma época
         timed = [f for f in self._by_year if f.duration and film_tier(f) <= 1]
         for i in range(0, len(timed) - 8, 3):
             q = self.q_longest(self._pick(timed[i : i + 8], 4))
