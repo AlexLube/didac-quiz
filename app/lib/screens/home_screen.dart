@@ -299,7 +299,7 @@ class _ChallengeCard extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.Workspace_premium_rounded, color: AppColors.gold, size: 20),
+                    const Icon(Icons.workspace_premium_rounded, color: AppColors.gold, size: 20),
                     const SizedBox(width: 8),
                     Text(
                       tr('points_of', {'p': today.game!.totalPoints, 'max': today.game!.maxPoints}),
