@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../app_state.dart';
 import '../models.dart';
@@ -105,11 +106,22 @@ class _PlayScreenState extends State<PlayScreen> {
     final q = _q;
     if (q == null || _busy || _feedback != _Feedback.none) return;
     _ticker?.cancel();
+    HapticFeedback.selectionClick();
     setState(() => _busy = true);
     try {
       final r = await _api.submitAnswer(q.position, answer);
       if (!mounted) return;
       _totalPoints = asInt(r['total_points'], _totalPoints);
+      final fb = r['timeout'] == true || answer == null
+          ? _Feedback.timeout
+          : (r['correct'] == true
+              ? _Feedback.correct
+              : (r['partial'] == true ? _Feedback.partial : _Feedback.wrong));
+      if (fb == _Feedback.correct) {
+        HapticFeedback.lightImpact();
+      } else {
+        HapticFeedback.heavyImpact();
+      }
       setState(() {
         _lastPoints = asInt(r['points']);
         _results.add(AnswerSummary.fromJson({
@@ -117,11 +129,7 @@ class _PlayScreenState extends State<PlayScreen> {
           'correct': r['correct'],
           'points': r['points'],
         }));
-        _feedback = r['timeout'] == true || answer == null
-            ? _Feedback.timeout
-            : (r['correct'] == true
-                ? _Feedback.correct
-                : (r['partial'] == true ? _Feedback.partial : _Feedback.wrong));
+        _feedback = fb;
       });
       await Future<void>.delayed(const Duration(milliseconds: 1100));
       if (!mounted) return;
@@ -144,6 +152,7 @@ class _PlayScreenState extends State<PlayScreen> {
   Future<void> _useJoker() async {
     final q = _q;
     if (q == null || _busy) return;
+    HapticFeedback.mediumImpact();
     try {
       final r = await _api.useJoker(q.position);
       if (!mounted) return;
@@ -223,15 +232,21 @@ class _PlayScreenState extends State<PlayScreen> {
           title: Text(q == null ? tr('loading') : tr('question_n', {'n': q.position + 1})),
           actions: [
             Center(
-              child: Padding(
-                padding: const EdgeInsets.only(right: 8),
+              child: Container(
+                margin: const EdgeInsets.only(right: 6),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.accent.withValues(alpha: 0.14),
+                  borderRadius: BorderRadius.circular(99),
+                ),
                 child: Text('$_totalPoints ${tr('pts')}',
-                    style: const TextStyle(fontWeight: FontWeight.w800, color: AppColors.amber)),
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w800, fontSize: 13, color: AppColors.amber)),
               ),
             ),
             IconButton(
               tooltip: tr('report'),
-              icon: const Icon(Icons.flag_outlined),
+              icon: const Icon(Icons.flag_outlined, size: 20, color: AppColors.textMuted),
               onPressed: q == null ? null : _report,
             ),
           ],
@@ -250,12 +265,12 @@ class _PlayScreenState extends State<PlayScreen> {
     return Stack(
       children: [
         ListView(
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+          padding: const EdgeInsets.fromLTRB(20, 6, 20, 28),
           children: [
             FilmStrip(current: q.position, answers: _results),
-            const SizedBox(height: 14),
+            const SizedBox(height: 12),
             TimerBar(fraction),
-            const SizedBox(height: 18),
+            const SizedBox(height: 16),
             Row(
               children: [
                 DifficultyBadge(q.difficulty, points: q.maxPoints),
@@ -269,7 +284,7 @@ class _PlayScreenState extends State<PlayScreen> {
                     onPressed: _jokersLeft > 0 && _removed.isEmpty && _feedback == _Feedback.none
                         ? _useJoker
                         : null,
-                    icon: const Icon(Icons.contrast_rounded),
+                    icon: const Icon(Icons.contrast_rounded, size: 18),
                     label: Text('${tr('joker')} ($_jokersLeft)'),
                   ),
               ],
@@ -288,26 +303,29 @@ class _PlayScreenState extends State<PlayScreen> {
             if (q.emojiLine != null) ...[
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 22),
+                padding: const EdgeInsets.symmetric(vertical: 20),
                 margin: const EdgeInsets.only(bottom: 14),
                 decoration: BoxDecoration(
                   color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(22),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppColors.border),
                 ),
                 child: Text(q.emojiLine!,
                     textAlign: TextAlign.center,
-                    style: const TextStyle(fontSize: 54, letterSpacing: 6)),
+                    style: const TextStyle(fontSize: 48, letterSpacing: 6)),
               ),
               Text(
                 Strings.pick(q.prompt).split('\n').skip(1).join('\n'),
-                style: const TextStyle(fontSize: 23, fontWeight: FontWeight.w800, height: 1.25),
+                style: const TextStyle(
+                    fontSize: 21, fontWeight: FontWeight.w800, height: 1.3, letterSpacing: -0.2),
               ),
             ] else
               Text(
                 Strings.pick(q.prompt),
-                style: const TextStyle(fontSize: 23, fontWeight: FontWeight.w800, height: 1.25),
+                style: const TextStyle(
+                    fontSize: 21, fontWeight: FontWeight.w800, height: 1.3, letterSpacing: -0.2),
               ),
-            const SizedBox(height: 22),
+            const SizedBox(height: 20),
             _answerArea(q),
             if (_error != null)
               Padding(
@@ -390,7 +408,10 @@ class _PlayScreenState extends State<PlayScreen> {
                 : _selected == i
                     ? switch (_feedback) {
                         _Feedback.correct => OptionState.correct,
-                        _Feedback.partial || _Feedback.wrong || _Feedback.timeout => OptionState.wrong,
+                        _Feedback.partial ||
+                        _Feedback.wrong ||
+                        _Feedback.timeout =>
+                          OptionState.wrong,
                         _Feedback.none => OptionState.selected,
                       }
                     : (_selected != null || _busy ? OptionState.disabled : OptionState.idle),
@@ -409,7 +430,7 @@ class _PlayScreenState extends State<PlayScreen> {
       _Feedback.correct => AppColors.success,
       _Feedback.partial => AppColors.amber,
       _Feedback.wrong || _Feedback.timeout => AppColors.error,
-      _Feedback.none => AppColors.surfaceHigh,
+      _Feedback.none => AppColors.border,
     };
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -435,7 +456,7 @@ class _PlayScreenState extends State<PlayScreen> {
                 decoration: BoxDecoration(
                   color: AppColors.surface,
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: border, width: 2),
+                  border: Border.all(color: border, width: 1.5),
                 ),
                 child: ListTile(
                   leading: CircleAvatar(
@@ -468,20 +489,30 @@ class _QuestionImage extends StatelessWidget {
   Widget build(BuildContext context) {
     final Widget img = q.format == 'image_reveal'
         ? RevealImage(url: q.imageUrl!, mode: q.revealMode, fraction: fraction)
-        : Image.network(
-            q.imageUrl!,
-            height: 220,
-            width: double.infinity,
-            fit: BoxFit.cover,
-            errorBuilder: (context, error, stack) => const SizedBox.shrink(),
+        : ConstrainedBox(
+            constraints: const BoxConstraints(maxHeight: 260),
+            child: Image.network(
+              q.imageUrl!,
+              width: double.infinity,
+              fit: BoxFit.contain,
+              errorBuilder: (context, error, stack) => const SizedBox.shrink(),
+            ),
           );
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          ClipRRect(borderRadius: BorderRadius.circular(22), child: img),
-          if (q.imageAttribution != null)
+          Container(
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: const Color(0xFF07090D),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: ClipRRect(borderRadius: BorderRadius.circular(15), child: img),
+          ),
+          if (q.imageAttribution != null && q.imageAttribution!.isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(top: 4),
               child: Text(q.imageAttribution!,
@@ -510,27 +541,36 @@ class _FeedbackOverlay extends StatelessWidget {
       child: Align(
         alignment: Alignment.center,
         child: TweenAnimationBuilder<double>(
-          tween: Tween(begin: 0.6, end: 1),
-          duration: const Duration(milliseconds: 350),
-          curve: Curves.elasticOut,
+          tween: Tween(begin: 0.85, end: 1),
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOutBack,
           builder: (context, scale, child) => Transform.scale(scale: scale, child: child),
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 20),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
             decoration: BoxDecoration(
-              color: AppColors.background.withValues(alpha: 0.92),
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: color, width: 3),
+              color: AppColors.surface.withValues(alpha: 0.96),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: color, width: 2),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.5),
+                  blurRadius: 24,
+                  offset: const Offset(0, 8),
+                ),
+              ],
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(icon, color: color, size: 36),
-                const SizedBox(width: 12),
-                Text(text, style: TextStyle(color: color, fontSize: 26, fontWeight: FontWeight.w900)),
+                Icon(icon, color: color, size: 30),
+                const SizedBox(width: 10),
+                Text(text,
+                    style: TextStyle(
+                        color: color, fontSize: 22, fontWeight: FontWeight.w800, letterSpacing: -0.3)),
               ],
             ),
           ),
-        ),
+        ],
       ),
     );
   }
