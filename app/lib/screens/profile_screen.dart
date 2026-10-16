@@ -13,6 +13,7 @@ import '../widgets/cinema.dart';
 import '../widgets/common.dart';
 import 'admin_screen.dart';
 import 'auth_screens.dart';
+import 'achievements_screen.dart'; // <-- Aquí está la importación añadida
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -50,6 +51,18 @@ class ProfileScreen extends StatelessWidget {
                     Text(tr('badges'), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
                     const SizedBox(height: 10),
                     BadgeRow(bestStreak: p.streakBest),
+                    const SizedBox(height: 14),
+                    // Tarjeta de Logros y Trofeos añadida aquí
+                    Card(
+                      child: ListTile(
+                        leading: const Icon(Icons.military_tech_rounded, color: AppColors.accent),
+                        title: const Text('Logros y Trofeos', style: TextStyle(fontWeight: FontWeight.w700)),
+                        trailing: const Icon(Icons.chevron_right_rounded, color: AppColors.textMuted),
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute(builder: (_) => const AchievementsScreen()),
+                        ),
+                      ),
+                    ),
                     const SizedBox(height: 18),
                     Card(
                       child: ListTile(
@@ -135,16 +148,6 @@ class ProfileScreen extends StatelessWidget {
                             MaterialPageRoute(builder: (_) => const AccountScreen(startWithLogin: true))),
                       ),
                     ),
-                  Card(
-  child: ListTile(
-    leading: const Icon(Icons.military_tech_rounded, color: AppColors.accent),
-    title: const Text('Logros y Trofeos', style: TextStyle(fontWeight: FontWeight.w700)),
-    trailing: const Icon(Icons.chevron_right_rounded, color: AppColors.textMuted),
-    onTap: () => Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const AchievementsScreen()),
-    ),
-  ),
-),
                   const SizedBox(height: 16),
                   Text(tr('legal_notice'),
                       style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
