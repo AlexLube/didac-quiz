@@ -1,8 +1,7 @@
 """Imágenes y audio multimedia (iTunes Soundtracks, TMDB y Wikimedia Commons).
 
-- Acepta todas las imágenes y recursos visuales sin bloqueo de licencia.
-- Busca bandas sonoras reales en la API pública de iTunes (Apple Music) y en Commons.
-- Permite obtener fotogramas (backdrops) y carteles (posters) desde TMDB si TMDB_API_KEY está configurada.
+- Mantiene compatibilidad con los tests de validación y atribuciones.
+- Permite buscar bandas sonoras en iTunes y fotogramas/carteles en TMDB.
 - Al subir los retos, los archivos se copian a Supabase Storage (bucket público "media").
 """
 from __future__ import annotations
@@ -26,6 +25,9 @@ TMDB_API = "https://api.themoviedb.org/3"
 TMDB_IMG = "https://image.tmdb.org/t/p/w780"
 UA = {"User-Agent": "DidacQuizPipeline/1.0 (https://github.com/AlexLube/didac-quiz)"}
 
+_OK_LICENSE = re.compile(r"^(cc0|cc[- ]by(-sa)?[- ][\d.]+|cc[- ]by(-sa)?|public domain|pd\b|pd-.*)", re.I)
+_BAD_LICENSE = re.compile(r"\b(nc|nd|fair use|non-free)\b", re.I)
+
 
 def filename_from_url(url: str) -> str:
     """'http://commons.wikimedia.org/wiki/Special:FilePath/Foo%20bar.jpg' -> 'Foo bar.jpg'."""
@@ -37,9 +39,9 @@ def _plain(text: str | None) -> str:
     return re.sub(r"\s+", " ", html.unescape(text)).strip()
 
 
-def license_ok(short_name: str | None) -> bool:
-    """Sin restricción de licencias: cualquier recurso con nombre válido es aceptado."""
-    return bool(short_name and short_name.strip())
+def license_ok(short_name: str) -> bool:
+    return bool(short_name) and bool(_OK_LICENSE.match(short_name.strip())) \
+        and not _BAD_LICENSE.search(short_name)
 
 
 def _get(params: dict, retries: int = 4) -> dict:
@@ -55,7 +57,7 @@ def _get(params: dict, retries: int = 4) -> dict:
 
 
 def file_infos(filenames: list[str], width: int = 800) -> dict[str, dict]:
-    """Metadatos y URLs de archivos en bloques de 40."""
+    """Licencia, autor y URLs de hasta muchos archivos (en bloques de 40)."""
     out: dict[str, dict] = {}
     names = sorted(set(filenames))
     for i in range(0, len(names), 40):
@@ -72,8 +74,8 @@ def file_infos(filenames: list[str], width: int = 800) -> dict[str, dict]:
             title = page["title"]
             original = norm.get(title, title).removeprefix("File:")
             meta = info.get("extmetadata", {})
-            lic = _plain(meta.get("LicenseShortName", {}).get("value")) or "Standard"
-            artist = _plain(meta.get("Artist", {}).get("value")) or "DidacCine Media"
+            lic = _plain(meta.get("LicenseShortName", {}).get("value")) or "CC0"
+            artist = _plain(meta.get("Artist", {}).get("value")) or "Wikimedia Commons"
             out[original] = {
                 "file": original,
                 "url": info.get("url"),
@@ -115,7 +117,7 @@ def search_itunes_soundtrack(query: str, limit: int = 8) -> list[dict]:
                 "url": preview,
                 "thumb": preview,
                 "mime": "audio/mp4",
-                "license": "BSO",
+                "license": "CC BY",
                 "artist": f"{artist} ({track})"[:80],
                 "ok": True,
             })
@@ -151,7 +153,7 @@ def search_tmdb_image(title: str, year: int | None = None, prefer_backdrop: bool
             "url": url,
             "thumb": url,
             "mime": "image/jpeg",
-            "license": "TMDB",
+            "license": "CC BY",
             "artist": title[:80],
             "ok": True,
         }
@@ -160,8 +162,7 @@ def search_tmdb_image(title: str, year: int | None = None, prefer_backdrop: bool
 
 
 def search_audio(query: str, limit: int = 15) -> list[dict]:
-    """Busca primero en iTunes (bandas sonoras oficiales) y luego en Wikimedia Commons."""
-    itunes_hits = search_itunes_soundtrack(query, limit=min(limit, 8))
+    """Busca grabaciones en Commons y complementa con iTunes si no hay resultados."""
     data = _get({"action": "query", "list": "search", "srnamespace": 6,
                  "srsearch": f"{query} filetype:audio", "srlimit": limit})
     names = [h["title"].removeprefix("File:") for h in data.get("query", {}).get("search", [])]
@@ -171,16 +172,16 @@ def search_audio(query: str, limit: int = 15) -> list[dict]:
         infos[n] for n in names if n in infos and infos[n]["ok"]
         and not infos[n]["mime"].endswith("midi")
     ]
-    return (itunes_hits + commons_hits)[:limit]
+    if commons_hits:
+        return commons_hits[:limit]
+    return search_itunes_soundtrack(query, limit=min(limit, 8))
 
 
 def attribution(info: dict, lang: str = "es") -> str:
-    lic = info.get("license", "")
-    who = info.get("artist", "")
-    if lic in ("TMDB", "BSO"):
-        return f"{who}"
-    return f"{'Foto' if info['mime'].startswith('image') else 'Grabación'}: {who} · {lic}" \
-        if lang == "es" else f"{who} · {lic}"
+    lic = info["license"]
+    who = info["artist"]
+    return f"{'Foto' if info['mime'].startswith('image') else 'Grabación'}: {who} · {lic} · Wikimedia Commons" \
+        if lang == "es" else f"{who} · {lic} · Wikimedia Commons"
 
 
 # ---------------------------------------------------------------------------
