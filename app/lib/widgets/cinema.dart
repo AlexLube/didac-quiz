@@ -7,8 +7,7 @@ import '../share_text.dart';
 import '../strings.dart';
 import '../theme.dart';
 
-/// Barra de progreso en forma de tira de película: 10 fotogramas con perforaciones.
-/// Los fotogramas ya jugados se colorean según los puntos obtenidos.
+/// Barra de progreso minimalista de 10 pasos (estilo moderno).
 class FilmStrip extends StatelessWidget {
   final int current;
   final List<AnswerSummary> answers;
@@ -25,52 +24,33 @@ class FilmStrip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Widget holes() => Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            for (var i = 0; i < 24; i++)
-              Container(
-                width: 5,
-                height: 4,
-                decoration: BoxDecoration(
-                    color: AppColors.background.withValues(alpha: 0.9), borderRadius: BorderRadius.circular(1)),
-              ),
-          ],
-        );
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-      decoration: BoxDecoration(
-        color: const Color(0xFF0B0620),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppColors.border.withValues(alpha: 0.6)),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
         children: [
-          holes(),
-          const SizedBox(height: 4),
-          Row(
-            children: [
-              for (var i = 0; i < 10; i++)
-                Expanded(
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 300),
-                    height: 16,
-                    margin: const EdgeInsets.symmetric(horizontal: 2),
-                    decoration: BoxDecoration(color: _frame(i), borderRadius: BorderRadius.circular(3)),
-                  ),
+          for (var i = 0; i < 10; i++)
+            Expanded(
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 250),
+                curve: Curves.easeOut,
+                height: i == current ? 8 : 6,
+                margin: const EdgeInsets.symmetric(horizontal: 2.5),
+                decoration: BoxDecoration(
+                  color: _frame(i),
+                  borderRadius: BorderRadius.circular(99),
+                  boxShadow: i == current
+                      ? [BoxShadow(color: AppColors.accent.withValues(alpha: 0.4), blurRadius: 6)]
+                      : null,
                 ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          holes(),
+              ),
+            ),
         ],
       ),
     );
   }
 }
 
-/// Entrada de cine con muescas y línea de corte: el resultado del día.
+/// Tarjeta de resultados minimalista con estética de pase VIP de cine.
 class TicketCard extends StatelessWidget {
   final GameSummary game;
   final int streak;
@@ -82,72 +62,97 @@ class TicketCard extends StatelessWidget {
     final d = game.date;
     final date =
         '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
-    return ClipPath(
-      clipper: _TicketClipper(),
-      child: Container(
-        decoration: const BoxDecoration(gradient: AppColors.heroGradient),
-        padding: const EdgeInsets.fromLTRB(24, 22, 24, 22),
-        child: Column(
-          children: [
-            Row(
-              children: [
-                const Icon(Icons.movie_creation_rounded, color: Colors.white, size: 22),
-                const SizedBox(width: 8),
-                const Text('DIDACCINE QUIZ',
-                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, letterSpacing: 1.4)),
-                const Spacer(),
-                Text(date, style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.w700)),
-              ],
-            ),
-            if (title != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 6),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(title!, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800)),
-                ),
+    return Container(
+      decoration: BoxDecoration(
+        gradient: AppColors.heroGradient,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: AppColors.accent.withValues(alpha: 0.35), width: 1.2),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.35),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.fromLTRB(24, 22, 24, 22),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.local_movies_rounded, color: AppColors.accent, size: 20),
+              const SizedBox(width: 8),
+              const Text('DIDACCINE QUIZ',
+                  style: TextStyle(
+                      color: AppColors.text,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 1.6)),
+              const Spacer(),
+              Text(date,
+                  style: const TextStyle(
+                      color: AppColors.textMuted, fontSize: 13, fontWeight: FontWeight.w600)),
+            ],
+          ),
+          if (title != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 6),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(title!,
+                    style: const TextStyle(color: AppColors.text, fontWeight: FontWeight.w700)),
               ),
-            const SizedBox(height: 14),
-            TweenAnimationBuilder<int>(
-              tween: IntTween(begin: 0, end: game.totalPoints),
-              duration: const Duration(milliseconds: 1200),
-              curve: Curves.easeOutCubic,
-              builder: (context, v, _) => Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.baseline,
-                textBaseline: TextBaseline.alphabetic,
-                children: [
-                  Text('$v',
-                      style: const TextStyle(fontSize: 84, fontWeight: FontWeight.w900, color: Colors.white)),
-                  Text(' / ${game.maxPoints}',
-                      style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: Colors.white70)),
-                ],
-              ),
             ),
-            Text(tr('points_word'),
-                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, letterSpacing: 2)),
-            const SizedBox(height: 16),
-            _DashedLine(),
-            const SizedBox(height: 16),
-            _Grid(game),
-            const SizedBox(height: 14),
-            Row(
+          const SizedBox(height: 18),
+          TweenAnimationBuilder<int>(
+            tween: IntTween(begin: 0, end: game.totalPoints),
+            duration: const Duration(milliseconds: 1000),
+            curve: Curves.easeOutCubic,
+            builder: (context, v, _) => Row(
               mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.baseline,
+              textBaseline: TextBaseline.alphabetic,
               children: [
-                const Icon(Icons.timer_outlined, color: Colors.white70, size: 18),
-                const SizedBox(width: 4),
-                Text(formatDuration(game.totalMs),
-                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800)),
-                if (streak > 1) ...[
-                  const SizedBox(width: 16),
-                  const Icon(Icons.local_fire_department_rounded, color: Colors.white, size: 20),
-                  const SizedBox(width: 2),
-                  Text('$streak', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800)),
-                ],
+                Text('$v',
+                    style: const TextStyle(
+                        fontSize: 72,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: -2,
+                        color: AppColors.text)),
+                Text(' / ${game.maxPoints}',
+                    style: const TextStyle(
+                        fontSize: 24, fontWeight: FontWeight.w700, color: AppColors.textMuted)),
               ],
             ),
-          ],
-        ),
+          ),
+          Text(tr('points_word').toUpperCase(),
+              style: const TextStyle(
+                  color: AppColors.accent,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 2.5)),
+          const SizedBox(height: 20),
+          Divider(color: AppColors.border.withValues(alpha: 0.8), height: 1),
+          const SizedBox(height: 20),
+          _Grid(game),
+          const SizedBox(height: 18),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.timer_outlined, color: AppColors.textMuted, size: 17),
+              const SizedBox(width: 5),
+              Text(formatDuration(game.totalMs),
+                  style: const TextStyle(color: AppColors.text, fontWeight: FontWeight.w700)),
+              if (streak > 1) ...[
+                const SizedBox(width: 18),
+                const Icon(Icons.local_fire_department_rounded, color: AppColors.accent, size: 19),
+                const SizedBox(width: 3),
+                Text('$streak',
+                    style: const TextStyle(color: AppColors.text, fontWeight: FontWeight.w800)),
+              ],
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -167,63 +172,42 @@ class _Grid extends StatelessWidget {
       children: [
         for (var i = 0; i < 10; i++)
           Container(
-            width: 44,
-            height: 44,
+            width: 42,
+            height: 42,
             alignment: Alignment.center,
             decoration: BoxDecoration(
               color: switch (byPos[i]?.correct) {
-                true => AppColors.success,
-                false => (byPos[i]?.points ?? 0) > 0 ? AppColors.gold : AppColors.curtain,
-                null => Colors.black26,
+                true => AppColors.success.withValues(alpha: 0.2),
+                false => (byPos[i]?.points ?? 0) > 0
+                    ? AppColors.gold.withValues(alpha: 0.2)
+                    : AppColors.curtain.withValues(alpha: 0.2),
+                null => AppColors.surfaceHigh,
               },
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: Colors.white24, width: 1.5),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: switch (byPos[i]?.correct) {
+                  true => AppColors.success,
+                  false => (byPos[i]?.points ?? 0) > 0 ? AppColors.gold : AppColors.curtain,
+                  null => AppColors.border,
+                },
+                width: 1.5,
+              ),
             ),
             child: Text('${byPos[i]?.points ?? 0}',
                 style: TextStyle(
-                    fontWeight: FontWeight.w900,
-                    color: (byPos[i]?.correct == false && (byPos[i]?.points ?? 0) > 0)
-                        ? Colors.black
-                        : Colors.white)),
+                    fontWeight: FontWeight.w800,
+                    color: switch (byPos[i]?.correct) {
+                      true => AppColors.success,
+                      false => (byPos[i]?.points ?? 0) > 0 ? AppColors.gold : AppColors.curtain,
+                      null => AppColors.textMuted,
+                    })),
           ),
       ],
     );
   }
 }
 
-class _DashedLine extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(builder: (context, c) {
-      final n = (c.maxWidth / 12).floor();
-      return Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          for (var i = 0; i < n; i++) Container(width: 6, height: 2, color: Colors.white38),
-        ],
-      );
-    });
-  }
-}
-
-class _TicketClipper extends CustomClipper<Path> {
-  @override
-  Path getClip(Size size) {
-    const r = 16.0;
-    final y = size.height * 0.40;
-    final path = Path()
-      ..addRRect(RRect.fromRectAndRadius(Offset.zero & size, const Radius.circular(26)));
-    final notches = Path()
-      ..addOval(Rect.fromCircle(center: Offset(0, y), radius: r))
-      ..addOval(Rect.fromCircle(center: Offset(size.width, y), radius: r));
-    return Path.combine(PathOperation.difference, path, notches);
-  }
-
-  @override
-  bool shouldReclip(covariant CustomClipper<Path> oldClipper) => false;
-}
-
-/// Confeti sencillo para los buenos resultados.
+/// Confeti sutil para los buenos resultados.
 class ConfettiBurst extends StatefulWidget {
   const ConfettiBurst({super.key});
 
@@ -235,7 +219,7 @@ class _ConfettiBurstState extends State<ConfettiBurst> with SingleTickerProvider
   late final AnimationController _c =
       AnimationController(vsync: this, duration: const Duration(milliseconds: 3200))..forward();
   final _rng = math.Random(7);
-  late final List<_Piece> _pieces = List.generate(70, (_) => _Piece(_rng));
+  late final List<_Piece> _pieces = List.generate(55, (_) => _Piece(_rng));
 
   @override
   void dispose() {
@@ -248,7 +232,8 @@ class _ConfettiBurstState extends State<ConfettiBurst> with SingleTickerProvider
     return IgnorePointer(
       child: AnimatedBuilder(
         animation: _c,
-        builder: (context, _) => CustomPaint(painter: _ConfettiPainter(_pieces, _c.value), size: Size.infinite),
+        builder: (context, _) =>
+            CustomPaint(painter: _ConfettiPainter(_pieces, _c.value), size: Size.infinite),
       ),
     );
   }
@@ -261,15 +246,14 @@ class _Piece {
       : x = r.nextDouble(),
         speed = 0.5 + r.nextDouble() * 0.7,
         drift = (r.nextDouble() - 0.5) * 0.25,
-        size = 5 + r.nextDouble() * 6,
+        size = 5 + r.nextDouble() * 5,
         phase = r.nextDouble() * 6.28,
         color = const [
           AppColors.accent,
           AppColors.gold,
-          AppColors.curtain,
+          AppColors.success,
           Colors.white,
-          Color(0xFF8E6BFF),
-        ][r.nextInt(5)];
+        ][r.nextInt(4)];
 }
 
 class _ConfettiPainter extends CustomPainter {
@@ -286,7 +270,8 @@ class _ConfettiPainter extends CustomPainter {
       canvas.save();
       canvas.translate(x, y);
       canvas.rotate(t * 8 + p.phase);
-      canvas.drawRect(Rect.fromCenter(center: Offset.zero, width: p.size, height: p.size * 0.6),
+      canvas.drawRect(
+          Rect.fromCenter(center: Offset.zero, width: p.size, height: p.size * 0.6),
           Paint()..color = p.color.withValues(alpha: (1 - t).clamp(0.2, 1.0)));
       canvas.restore();
     }
@@ -296,7 +281,7 @@ class _ConfettiPainter extends CustomPainter {
   bool shouldRepaint(covariant _ConfettiPainter old) => old.t != t;
 }
 
-/// Insignias ilustradas por rachas.
+/// Insignias minimalistas por rachas.
 class BadgeRow extends StatelessWidget {
   final int bestStreak;
   const BadgeRow({super.key, required this.bestStreak});
@@ -317,23 +302,27 @@ class BadgeRow extends StatelessWidget {
             child: Column(
               children: [
                 Container(
-                  width: 62,
-                  height: 62,
+                  width: 56,
+                  height: 56,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    gradient: bestStreak >= days ? AppColors.heroGradient : null,
-                    color: bestStreak >= days ? null : AppColors.surfaceHigh,
+                    color: bestStreak >= days
+                        ? AppColors.accent.withValues(alpha: 0.15)
+                        : AppColors.surface,
                     border: Border.all(
-                        color: bestStreak >= days ? AppColors.gold : AppColors.border, width: 2.5),
+                        color: bestStreak >= days ? AppColors.accent : AppColors.border,
+                        width: 1.5),
                   ),
-                  child: Icon(icon, size: 30, color: bestStreak >= days ? Colors.white : AppColors.textMuted),
+                  child: Icon(icon,
+                      size: 26,
+                      color: bestStreak >= days ? AppColors.accent : AppColors.textMuted),
                 ),
                 const SizedBox(height: 6),
                 Text(tr(key),
                     textAlign: TextAlign.center,
                     style: TextStyle(
                         fontSize: 11,
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w600,
                         color: bestStreak >= days ? AppColors.text : AppColors.textMuted)),
               ],
             ),
