@@ -38,10 +38,18 @@ class _HomeShellState extends State<HomeShell> {
         selectedIndex: _tab,
         onDestinationSelected: (i) => setState(() => _tab = i),
         destinations: [
-          NavigationDestination(icon: const Icon(Icons.movie_rounded), label: tr('tab_today')),
           NavigationDestination(
-              icon: const Icon(Icons.emoji_events_rounded), label: tr('tab_rankings')),
-          NavigationDestination(icon: const Icon(Icons.person_rounded), label: tr('tab_profile')),
+              icon: const Icon(Icons.local_movies_outlined),
+              selectedIcon: const Icon(Icons.local_movies_rounded),
+              label: tr('tab_today')),
+          NavigationDestination(
+              icon: const Icon(Icons.emoji_events_outlined),
+              selectedIcon: const Icon(Icons.emoji_events_rounded),
+              label: tr('tab_rankings')),
+          NavigationDestination(
+              icon: const Icon(Icons.person_outline_rounded),
+              selectedIcon: const Icon(Icons.person_rounded),
+              label: tr('tab_profile')),
         ],
       ),
     );
@@ -68,7 +76,6 @@ class _TodayTabState extends State<TodayTab> {
     _load();
     _clock = Timer.periodic(const Duration(seconds: 30), (_) {
       if (!mounted) return;
-      // Pasada la medianoche UTC, hay reto nuevo.
       final t = _today;
       final nowUtc = DateTime.now().toUtc();
       if (t != null && DateTime.utc(nowUtc.year, nowUtc.month, nowUtc.day).isAfter(t.date)) {
@@ -127,20 +134,29 @@ class _TodayTabState extends State<TodayTab> {
     return RefreshIndicator(
       onRefresh: _load,
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
         children: [
           Row(
             children: [
-              const Icon(Icons.movie_creation_rounded, color: AppColors.accent, size: 34),
-              const SizedBox(width: 10),
-              Text(tr('app_name'), style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900)),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.accent.withValues(alpha: 0.14),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.local_movies_rounded, color: AppColors.accent, size: 24),
+              ),
+              const SizedBox(width: 12),
+              Text(tr('app_name'),
+                  style: const TextStyle(
+                      fontSize: 22, fontWeight: FontWeight.w800, letterSpacing: -0.4)),
               const Spacer(),
               if (profile != null) _StreakChip(profile.streakCurrent),
             ],
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 22),
           _ChallengeCard(today: t, onPlay: t.available ? _play : null),
-          const SizedBox(height: 16),
+          const SizedBox(height: 14),
           Row(
             children: [
               Expanded(
@@ -160,13 +176,15 @@ class _TodayTabState extends State<TodayTab> {
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 14),
           if (state.isGuest)
             Card(
               child: ListTile(
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                 leading: const Icon(Icons.person_add_alt_1_rounded, color: AppColors.amber),
-                title: Text(tr('guest_banner')),
-                trailing: const Icon(Icons.chevron_right_rounded),
+                title: Text(tr('guest_banner'),
+                    style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                trailing: const Icon(Icons.chevron_right_rounded, color: AppColors.textMuted),
                 onTap: () async {
                   await Navigator.of(context)
                       .push(MaterialPageRoute(builder: (_) => const AccountScreen()));
@@ -176,9 +194,11 @@ class _TodayTabState extends State<TodayTab> {
             ),
           Card(
             child: ListTile(
-              leading: const Icon(Icons.lightbulb_rounded, color: AppColors.amber),
-              title: Text(tr('yesterday_solutions')),
-              trailing: const Icon(Icons.chevron_right_rounded),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              leading: const Icon(Icons.lightbulb_outline_rounded, color: AppColors.amber),
+              title: Text(tr('yesterday_solutions'),
+                  style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+              trailing: const Icon(Icons.chevron_right_rounded, color: AppColors.textMuted),
               onTap: () => Navigator.of(context)
                   .push(MaterialPageRoute(builder: (_) => const SolutionsScreen())),
             ),
@@ -204,49 +224,99 @@ class _ChallengeCard extends StatelessWidget {
       _ => tr('play'),
     };
     return Container(
-      padding: const EdgeInsets.all(22),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         gradient: AppColors.heroGradient,
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: Colors.white24, width: 1.5),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: AppColors.accent.withValues(alpha: 0.3), width: 1.2),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.3),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (today.available && today.kind != 'general')
-            Container(
-              margin: const EdgeInsets.only(bottom: 10),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-              decoration: BoxDecoration(color: Colors.black38, borderRadius: BorderRadius.circular(20)),
-              child: Text(today.kind == 'special' ? tr('special_day') : tr('spotlight_day'),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.accent.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  today.available && today.kind != 'general'
+                      ? (today.kind == 'special' ? tr('special_day') : tr('spotlight_day'))
+                      : 'DIDACCINE',
                   style: const TextStyle(
-                      color: AppColors.gold, fontWeight: FontWeight.w900, fontSize: 12, letterSpacing: 1.2)),
-            ),
-          Text('${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}',
-              style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.w600)),
-          const SizedBox(height: 6),
-          Text(title,
-              style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w900, color: Colors.white)),
-          const SizedBox(height: 8),
-          if (!today.available)
-            Text(tr('no_challenge'), style: const TextStyle(color: Colors.white))
-          else ...[
-            Text(tr('questions_points', {'max': today.maxPoints > 0 ? today.maxPoints : (today.game?.maxPoints ?? 18)}),
-                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
-            const SizedBox(height: 4),
-            Text(tr('rules_short'), style: const TextStyle(color: Colors.white70)),
-            if (today.game != null && today.status == 'finished') ...[
-              const SizedBox(height: 12),
+                      color: AppColors.accent,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 11,
+                      letterSpacing: 1.2),
+                ),
+              ),
+              const Spacer(),
               Text(
-                tr('points_of', {'p': today.game!.totalPoints, 'max': today.game!.maxPoints}),
-                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: Colors.white),
+                '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}',
+                style: const TextStyle(
+                    color: AppColors.textMuted, fontSize: 13, fontWeight: FontWeight.w600),
               ),
             ],
-            const SizedBox(height: 18),
-            FilledButton(
-              style: FilledButton.styleFrom(backgroundColor: Colors.black, foregroundColor: Colors.white),
+          ),
+          const SizedBox(height: 14),
+          Text(title,
+              style: const TextStyle(
+                  fontSize: 26,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: -0.5,
+                  color: AppColors.text)),
+          const SizedBox(height: 8),
+          if (!today.available)
+            Text(tr('no_challenge'), style: const TextStyle(color: AppColors.textMuted))
+          else ...[
+            Text(
+                tr('questions_points', {
+                  'max': today.maxPoints > 0 ? today.maxPoints : (today.game?.maxPoints ?? 18)
+                }),
+                style: const TextStyle(
+                    color: AppColors.text, fontWeight: FontWeight.w700, fontSize: 14)),
+            const SizedBox(height: 4),
+            Text(tr('rules_short'),
+                style: const TextStyle(color: AppColors.textMuted, fontSize: 13, height: 1.35)),
+            if (today.game != null && today.status == 'finished') ...[
+              const SizedBox(height: 14),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                decoration: BoxDecoration(
+                  color: AppColors.background.withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.Workspace_premium_rounded, color: AppColors.gold, size: 20),
+                    const SizedBox(width: 8),
+                    Text(
+                      tr('points_of', {'p': today.game!.totalPoints, 'max': today.game!.maxPoints}),
+                      style: const TextStyle(
+                          fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.text),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+            const SizedBox(height: 20),
+            FilledButton.icon(
+              icon: Icon(today.status == 'finished'
+                  ? Icons.bar_chart_rounded
+                  : Icons.play_arrow_rounded),
               onPressed: onPlay,
-              child: Text(buttonLabel),
+              label: Text(buttonLabel),
             ),
           ],
         ],
@@ -265,15 +335,15 @@ class _StreakChip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.border, width: 1.5),
+        borderRadius: BorderRadius.circular(99),
+        border: Border.all(color: AppColors.border, width: 1),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.local_fire_department_rounded, color: AppColors.curtain, size: 20),
+          const Icon(Icons.local_fire_department_rounded, color: AppColors.accent, size: 18),
           const SizedBox(width: 4),
-          Text('$streak', style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+          Text('$streak', style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14)),
         ],
       ),
     );
@@ -292,14 +362,17 @@ class _InfoTile extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
           color: AppColors.surface,
-          borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: AppColors.border, width: 1.5)),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.border, width: 1)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: AppColors.amber),
-          const SizedBox(height: 8),
-          Text(value, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
+          Icon(icon, color: AppColors.amber, size: 20),
+          const SizedBox(height: 10),
+          Text(value,
+              style: const TextStyle(
+                  fontSize: 20, fontWeight: FontWeight.w800, letterSpacing: -0.3)),
+          const SizedBox(height: 2),
           Text(label, style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
         ],
       ),
