@@ -96,6 +96,7 @@ jobs:
             --dart-define=SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }} \
             --dart-define=ENABLE_GOOGLE_LOGIN=${{ vars.ENABLE_GOOGLE_LOGIN || 'false' }} \
             --dart-define=ENABLE_APPLE_LOGIN=${{ vars.ENABLE_APPLE_LOGIN || 'false' }} \
+            --dart-define=ENABLE_EMAIL_LOGIN=${{ vars.ENABLE_EMAIL_LOGIN || 'false' }} \
             ${{ vars.ADMOB_BANNER_ID && format('--dart-define=ADMOB_BANNER_ID={0}', vars.ADMOB_BANNER_ID) || '' }} \
             ${{ vars.ADMOB_INTERSTITIAL_ID && format('--dart-define=ADMOB_INTERSTITIAL_ID={0}', vars.ADMOB_INTERSTITIAL_ID) || '' }} \
             ${{ vars.ADMOB_REWARDED_ID && format('--dart-define=ADMOB_REWARDED_ID={0}', vars.ADMOB_REWARDED_ID) || '' }} \
@@ -112,6 +113,7 @@ jobs:
             --dart-define=SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }} \
             --dart-define=ENABLE_GOOGLE_LOGIN=${{ vars.ENABLE_GOOGLE_LOGIN || 'false' }} \
             --dart-define=ENABLE_APPLE_LOGIN=${{ vars.ENABLE_APPLE_LOGIN || 'false' }} \
+            --dart-define=ENABLE_EMAIL_LOGIN=${{ vars.ENABLE_EMAIL_LOGIN || 'false' }} \
             2>&1 | tail -40 | tee ../ci-logs/web.log
 
       - name: Publicar Web en GitHub Pages

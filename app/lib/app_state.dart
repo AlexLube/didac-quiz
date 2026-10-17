@@ -128,7 +128,11 @@ class AppState extends ChangeNotifier {
     required int cityId,
     required int birthYear,
   }) async {
-    final provider = user?.appMetadata['provider'] == 'apple' ? 'apple' : 'google';
+    final provider = switch (user?.appMetadata['provider']) {
+      'apple' => 'apple',
+      'email' => 'email',
+      _ => 'google',
+    };
     await api.registerProfile(
       alias: alias,
       country: country,
@@ -153,7 +157,15 @@ class AppState extends ChangeNotifier {
   Future<void> loginWithProvider(OAuthProvider provider) async {
     await Supabase.instance.client.auth.signInWithOAuth(
       provider,
-      redirectTo: Config.oauthRedirect,
+      redirectTo: Config.authRedirect,
+    );
+  }
+
+  /// Envía un enlace de acceso al correo: sin contraseña, y la cuenta se crea sola.
+  Future<void> loginWithEmail(String email) async {
+    await Supabase.instance.client.auth.signInWithOtp(
+      email: email.trim(),
+      emailRedirectTo: Config.authRedirect,
     );
   }
 

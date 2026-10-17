@@ -9,8 +9,9 @@ import '../services/api.dart';
 import '../strings.dart';
 import '../theme.dart';
 import '../widgets/common.dart';
+import '../widgets/marquee.dart';
 
-/// Crear cuenta o iniciar sesión (usuario+contraseña, Google o Apple).
+/// Crear cuenta o iniciar sesión (Google, Apple, enlace por correo o alias+contraseña).
 class AccountScreen extends StatefulWidget {
   final bool startWithLogin;
   const AccountScreen({super.key, this.startWithLogin = false});
@@ -24,6 +25,8 @@ class _AccountScreenState extends State<AccountScreen> {
   bool _busy = false;
   bool _manualFlow = false;
 
+  final _email = TextEditingController();
+  bool _emailSent = false;
   final _alias = TextEditingController();
   final _password = TextEditingController();
   final _year = TextEditingController();
@@ -39,6 +42,7 @@ class _AccountScreenState extends State<AccountScreen> {
   @override
   void dispose() {
     AppState.instance.removeListener(_onAuthChanged);
+    _email.dispose();
     _alias.dispose();
     _password.dispose();
     _year.dispose();
@@ -112,6 +116,23 @@ class _AccountScreenState extends State<AccountScreen> {
     }
   }
 
+  Future<void> _sendEmailLink() async {
+    final email = _email.text.trim();
+    if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email)) {
+      showSnack(context, tr('err_email_invalid'));
+      return;
+    }
+    setState(() => _busy = true);
+    try {
+      await AppState.instance.loginWithEmail(email);
+      if (mounted) setState(() => _emailSent = true);
+    } catch (_) {
+      if (mounted) showSnack(context, tr('err_email_send'));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
   Future<void> _oauth(OAuthProvider provider) async {
     try {
       await AppState.instance.loginWithProvider(provider);
@@ -151,14 +172,53 @@ class _AccountScreenState extends State<AccountScreen> {
                 label: Text(tr('continue_apple')),
               ),
             ],
-            if (Config.enableGoogleLogin || Config.enableAppleLogin)
+            if (Config.enableEmailLogin) ...[
+              const SizedBox(height: 10),
+              if (_emailSent)
+                GlassCard(
+                  child: Row(children: [
+                    const Icon(Icons.mark_email_read_rounded, color: AppColors.accent, size: 30),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(tr('email_sent', {'email': _email.text.trim()}),
+                          style: const TextStyle(height: 1.4)),
+                    ),
+                  ]),
+                )
+              else ...[
+                TextField(
+                  controller: _email,
+                  autocorrect: false,
+                  keyboardType: TextInputType.emailAddress,
+                  autofillHints: const [AutofillHints.email],
+                  decoration: InputDecoration(
+                    labelText: tr('email'),
+                    prefixIcon: const Icon(Icons.alternate_email_rounded),
+                  ),
+                  onSubmitted: (_) => _sendEmailLink(),
+                ),
+                const SizedBox(height: 8),
+                OutlinedButton.icon(
+                  onPressed: _busy ? null : _sendEmailLink,
+                  icon: const Icon(Icons.mail_outline_rounded),
+                  label: Text(tr('email_send_link')),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 6),
+                  child: Text(tr('email_link_note'),
+                      style: const TextStyle(color: AppColors.textMuted, fontSize: 12.5)),
+                ),
+              ],
+            ],
+            if (Config.enableGoogleLogin || Config.enableAppleLogin || Config.enableEmailLogin)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 child: Row(children: [
                   const Expanded(child: Divider()),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: Text(tr('or'), style: const TextStyle(color: AppColors.textMuted)),
+                    child: Text(Config.enableEmailLogin ? tr('or_alias') : tr('or'),
+                        style: const TextStyle(color: AppColors.textMuted)),
                   ),
                   const Expanded(child: Divider()),
                 ]),
@@ -221,7 +281,7 @@ class _AccountScreenState extends State<AccountScreen> {
   }
 }
 
-/// Perfil para cuentas de Google o Apple (sin contraseña).
+/// Perfil para cuentas de Google, Apple o correo (sin contraseña).
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
 
