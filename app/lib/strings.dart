@@ -156,6 +156,22 @@ class Strings {
     'continue_google': {'es': 'Continuar con Google', 'en': 'Continue with Google'},
     'continue_apple': {'es': 'Continuar con Apple', 'en': 'Continue with Apple'},
     'or': {'es': 'o', 'en': 'or'},
+    'or_alias': {'es': 'o con alias y contraseña', 'en': 'or with username and password'},
+    'email': {'es': 'Tu correo', 'en': 'Your email'},
+    'email_send_link': {'es': 'Enviarme un enlace para entrar', 'en': 'Email me a sign-in link'},
+    'email_link_note': {
+      'es': 'Sin contraseña. Es la misma cuenta de DidacCine en la web y en la app Aula.',
+      'en': 'No password. The same DidacCine account works on the website and the Aula app.'
+    },
+    'email_sent': {
+      'es': 'Te hemos enviado un enlace a {email}. Ábrelo en este dispositivo para entrar.',
+      'en': 'We sent a link to {email}. Open it on this device to sign in.'
+    },
+    'err_email_invalid': {'es': 'Escribe un correo válido.', 'en': 'Enter a valid email.'},
+    'err_email_send': {
+      'es': 'No hemos podido enviar el enlace. Inténtalo de nuevo en unos minutos.',
+      'en': 'We could not send the link. Try again in a few minutes.'
+    },
     'no_email_note': {
       'es': 'Sin email ni teléfono. Solo un alias y una contraseña.',
       'en': 'No email or phone. Just a username and a password.'
