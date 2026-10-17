@@ -621,3 +621,17 @@ def test_achievements_and_hall_of_fame(db):
     make_challenge(db, "2026-11-05", make_questions(db, start=2100))
     guest = Player(db, anonymous=True)
     assert guest.play("2026-11-05", PERFECT)[-1]["finished"] is True
+
+
+def test_achievement_progress_rpc(db):
+    make_challenge(db, "2026-11-09", make_questions(db, start=2200))
+    p = Player(db)
+    p.register("progreso", today="2026-11-09")
+    p.play("2026-11-09", PERFECT)
+    prog = p.call("select my_achievement_progress()", today="2026-11-09")
+    assert prog["games"] == 1 and prog["points"] == 18 and prog["master"] == 1 and prog["streak_best"] == 1
+    assert "games_1" in prog["unlocked"] and prog["bonus_points"] >= 20
+    rows = p.call("select count(*) from achievements")
+    assert rows == 100
+    with pytest.raises(psycopg.errors.InsufficientPrivilege):
+        p.call("select evaluate_player_progress(%s)", (p.id,))

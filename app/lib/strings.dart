@@ -192,6 +192,46 @@ class Strings {
     'save': {'es': 'Guardar', 'en': 'Save'},
     'guest': {'es': 'Invitado', 'en': 'Guest'},
     'achievements_title': {'es': 'Logros ({count})', 'en': 'Achievements ({count})'},
+    // Diseño nuevo, logros y Hall of Fame
+    'tab_achievements': {'es': 'Logros', 'en': 'Achievements'},
+    'see_all': {'es': 'Ver todos', 'en': 'See all'},
+    'now_showing': {'es': 'En cartelera hoy', 'en': 'Now showing'},
+    'ten_questions': {'es': '10 preguntas', 'en': '10 questions'},
+    'up_to_points': {'es': 'Hasta {max} pts', 'en': 'Up to {max} pts'},
+    'with_media': {'es': 'Fotos, música y tráileres', 'en': 'Stills, music and trailers'},
+    'ach_next': {'es': 'Siguiente logro', 'en': 'Next achievement'},
+    'special_today': {'es': '¡Hoy es día especial! +{p} puntos extra', 'en': 'Special day today! +{p} bonus points'},
+    'special_soon': {'es': 'Día especial dentro de {d} días', 'en': 'Special day in {d} days'},
+    'ach_guest': {
+      'es': 'Estos son los logros que te esperan. Crea una cuenta gratis para empezar a conseguirlos.',
+      'en': 'These are the achievements waiting for you. Create a free account to start unlocking them.'
+    },
+    'ach_all': {'es': 'Todos', 'en': 'All'},
+    'ach_unlocked_label': {'es': 'logros conseguidos', 'en': 'achievements unlocked'},
+    'ach_points_hint': {
+      'es': 'Cada logro suma puntos extra a tu ranking mensual.',
+      'en': 'Every achievement adds bonus points to your monthly ranking.'
+    },
+    'ach_got': {'es': 'Conseguido · +{p} pts', 'en': 'Unlocked · +{p} pts'},
+    'ach_reward': {'es': 'Recompensa: +{p} pts', 'en': 'Reward: +{p} pts'},
+    'ach_new': {'es': '¡Nuevo logro!', 'en': 'New achievement!'},
+    'ach_family_streak': {'es': 'Rachas', 'en': 'Streaks'},
+    'ach_family_games': {'es': 'Partidas', 'en': 'Games'},
+    'ach_family_master': {'es': 'Críticas', 'en': 'Reviews'},
+    'ach_family_points': {'es': 'Taquilla', 'en': 'Box office'},
+    'ach_family_clean': {'es': 'Velocidad', 'en': 'Speed'},
+    'hall_title': {'es': 'Hall of Fame', 'en': 'Hall of Fame'},
+    'hall_empty': {
+      'es': 'Aún no hay campeones. El primer podio llega al cerrar este mes.',
+      'en': 'No champions yet. The first podium arrives when this month ends.'
+    },
+    'hall_hint': {
+      'es': 'Los tres mejores de cada mes se quedan aquí para siempre.',
+      'en': 'The top three of every month stay here forever.'
+    },
+    'close': {'es': 'Cerrar', 'en': 'Close'},
+    'next': {'es': 'Siguiente', 'en': 'Next'},
+    'great': {'es': '¡Genial!', 'en': 'Great!'},
     // Errores del servidor
     'err_alias_invalid': {'es': 'El alias no es válido.', 'en': 'Invalid username.'},
     'err_alias_taken': {'es': 'Ese alias ya existe.', 'en': 'That username is taken.'},

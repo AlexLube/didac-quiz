@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:share_plus/share_plus.dart';
@@ -8,12 +9,14 @@ import 'package:share_plus/share_plus.dart';
 import '../app_state.dart';
 import '../models.dart';
 import '../services/ads.dart';
+import '../services/achievements.dart';
 import '../services/api.dart';
 import '../share_text.dart';
 import '../strings.dart';
 import '../theme.dart';
 import '../widgets/cinema.dart';
 import '../widgets/common.dart';
+import '../widgets/unlock_dialog.dart';
 import 'auth_screens.dart';
 
 class ResultScreen extends StatefulWidget {
@@ -44,6 +47,13 @@ class _ResultScreenState extends State<ResultScreen> {
       final g = await AppState.instance.api.gameSummary();
       await AppState.instance.refreshProfile();
       if (mounted) setState(() => _game = g);
+      if (widget.justFinished && !AppState.instance.isGuest) {
+        final fresh = await Achievements.instance.takeNew();
+        if (mounted && fresh.isNotEmpty) {
+          await Future<void>.delayed(const Duration(milliseconds: 700));
+          if (mounted) await showAchievementsUnlocked(context, fresh);
+        }
+      }
     } catch (e) {
       if (mounted) setState(() => _error = e);
     }
@@ -53,6 +63,10 @@ class _ResultScreenState extends State<ResultScreen> {
     final g = _game;
     if (g == null) return;
     final text = buildShareText(g, streak: AppState.instance.profile?.streakCurrent ?? 0);
+    if (kIsWeb) {
+      await SharePlus.instance.share(ShareParams(text: text));
+      return;
+    }
     try {
       final boundary = _ticketKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
       if (boundary != null) {
@@ -93,7 +107,7 @@ class _ResultScreenState extends State<ResultScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(tr('your_result'))),
+      appBar: AppBar(title: Text(tr('your_result').toUpperCase())),
       body: SafeArea(child: _body()),
     );
   }

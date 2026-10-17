@@ -16,6 +16,7 @@ dependencies:
   url_launcher: ^6.3.0
   image_picker: ^1.1.2
   audioplayers: ">=6.0.0 <100.0.0"
+  youtube_player_iframe: ^6.0.2
 
 dev_dependencies:
   flutter_test:
@@ -26,3 +27,21 @@ flutter:
   uses-material-design: true
   assets:
     - assets/world_map.png
+  fonts:
+    - family: Bebas
+      fonts:
+        - asset: assets/fonts/BebasNeue-Regular.ttf
+    - family: Outfit
+      fonts:
+        - asset: assets/fonts/Outfit-400.ttf
+          weight: 400
+        - asset: assets/fonts/Outfit-500.ttf
+          weight: 500
+        - asset: assets/fonts/Outfit-600.ttf
+          weight: 600
+        - asset: assets/fonts/Outfit-700.ttf
+          weight: 700
+        - asset: assets/fonts/Outfit-800.ttf
+          weight: 800
+        - asset: assets/fonts/Outfit-800.ttf
+          weight: 900
