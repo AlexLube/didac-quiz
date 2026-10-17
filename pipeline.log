@@ -1,0 +1,359 @@
+Descargando películas de Wikidata…
+  1895-1930: 147 películas acumuladas
+  1930-1940: 391 películas acumuladas
+  1940-1950: 679 películas acumuladas
+  1950-1960: 1137 películas acumuladas
+  1960-1970: 1680 películas acumuladas
+  1970-1980: 2289 películas acumuladas
+  1980-1990: 3119 películas acumuladas
+  1990-2000: 4386 películas acumuladas
+  2000-2010: 6437 películas acumuladas
+  2010-2020: 8559 películas acumuladas
+  2020-2030: 9408 películas acumuladas
+  detalles: 100/9408
+  detalles: 2100/9408
+  detalles: 4100/9408
+  detalles: 6100/9408
+  detalles: 8100/9408
+  fotos de lugares de rodaje: 1157
+  lugares de rodaje con coordenadas: 2463
+  imágenes de dominio público: 9
+9401 películas guardadas en data/films.json
+  música: 26 piezas con grabación libre
+  multimedia: TMDB en 0 películas, bandas sonoras en 0 (sin TMDB_TOKEN: no hay fotogramas ni tráileres)
+Válidas: 123786 · descartadas: 198 · para revisar a mano: 0
+Por dificultad: {1: 10496, 2: 38183, 3: 75107} · por formato: {'choice': 45269, 'decade': 9401, 'true_false': 10596, 'intruder': 10448, 'clues': 15889, 'image_reveal': 597, 'order': 865, 'image_choice': 717, 'audio': 52, 'year_slider': 9395, 'typed_title': 3055, 'pick_two': 8592, 'match': 2608, 'map': 694, 'versus': 2510, 'burst': 2957, 'odd_images': 141}
+
+== Muestra de preguntas ==
+Counter({'year': 19498, 'director': 11204, 'year_slider': 9395, 'cast': 8836, 'cast_intruder': 8645, 'composer': 8627, 'clues': 7948, 'clues_prog': 7941, 'pick2_cast': 7871, 'writer': 4801, 'typed_clues': 3055, 'actor_by_character': 3003, 'character': 2853, 'country': 2479, 'book_author': 2296, 'burst_actor': 2120, 'match_cast': 1775, 'filmed_in': 1616, 'versus_year': 1539, 'awards': 1298, 'location_photo': 1296, 'versus_duration': 971, 'match_dir': 833, 'burst_director': 742, 'longest': 726, 'pick2_director': 721, 'map': 694, 'based_on': 445, 'saga_order': 169, 'odd_images': 141, 'burst_oscar': 86, 'saga_next': 83, 'music_film': 26, 'music_piece': 26, 'still': 18, 'burst_spanish': 9})
+[actor_by_character d3] ¿Quién da vida a Adèle Hugo en «Diario íntimo de Adèle H.»?
+   Maria Meneghini Callas | Ian McKellen | Isabelle Adjani | Robert Duvall
+   -> 2
+[actor_by_character d2] ¿Quién da vida a Jeff Gillooly en «Yo, Tonya»?
+   Seth Rogen | Sebastian Stan | Jared Padalecki | Rebecca Hall
+   -> 1
+[actor_by_character d3] ¿Quién da vida a гостья en «Noche de carnaval»?
+   James Hong | John Saxon | Larisa Shepitko | Vasili Livánov
+   -> 2
+[awards d1] «Misery» ganó el Oscar a la mejor película.
+   Verdadero | Falso
+   -> 1
+[awards d1] «Tarde de perros» ganó el Oscar a la mejor película.
+   Verdadero | Falso
+   -> 1
+[awards d1] «The Amazing Spider-Man 2: Rise of Electro» ganó el Oscar a la mejor película.
+   Verdadero | Falso
+   -> 1
+[based_on d3] ¿En qué obra literaria se basa «The Informer» (2019)?
+   «Todos ustedes, zombies» | «El zorro y el sabueso» | «Miedo y asco en Las Vegas» | «Three Seconds»
+   -> 3
+[based_on d3] ¿En qué obra literaria se basa «El hombre de la máscara de hierro» (1998)?
+   «El vizconde de Bragelonne» | «Catch Me If You Can» | «Vive y deja morir» | «El nombre de la rosa»
+   -> 0
+[based_on d3] ¿En qué obra literaria se basa «Cruel Intentions» (1999)?
+   «Las amistades peligrosas» | «Time After Time» | «La habitación de los reptiles» | «Dersu Uzala»
+   -> 0
+[book_author d3] «Along Came a Spider» (2001) adapta una obra literaria. ¿Quién la escribió?
+   Maurice Sendak | Annie Proulx | James Patterson | Irvine Welsh
+   -> 2
+[book_author d3] «El beso de la mujer araña» (1985) adapta una obra literaria. ¿Quién la escribió?
+   Paul Bowles | Alex Garland | Len Deighton | Manuel Puig
+   -> 3
+[book_author d3] «El infierno del odio» (1963) adapta una obra literaria. ¿Quién la escribió?
+   Len Deighton | James Hilton | Ed McBain | Bill Finger
+   -> 2
+[burst_actor d2] Verdadero o falso: ¿sale Isla Fisher en cada una de estas películas?
+   «Animales nocturnos» (2016) | «Scooby-Doo» (2002) | «I Still Know What You Did Last Summer» (1998) | «Rescate» (1996) | «Confessions of a Shopaholic» (2009)
+   -> [True, True, False, False, True]
+[burst_actor d2] Verdadero o falso: ¿sale Bing Crosby en cada una de estas películas?
+   «Zorba el griego» (1964) | «Las uvas de la ira» (1940) | «Rope» (1948) | «El mayor espectáculo del mundo» (1952) | «Siguiendo mi camino» (1944)
+   -> [False, False, False, True, True]
+[burst_actor d2] Verdadero o falso: ¿sale Michael Sheen en cada una de estas películas?
+   «Cadena de favores» (2000) | «Tron: Legacy» (2010) | «Underworld: Awakening» (2012) | «Trois couleurs: Blanc» (1994) | «Underworld: Rise of the Lycans» (2009)
+   -> [False, True, True, False, True]
+[burst_director d2] Verdadero o falso: ¿dirigió Jay Roach cada una de estas películas?
+   «Austin Powers in Goldmember» (2002) | «An american tail» (1986) | «Tiburón, la venganza» (1987) | «Heartbreak Ridge» (1986) | «Bombshell» (2019)
+   -> [True, False, False, False, True]
+[burst_director d2] Verdadero o falso: ¿dirigió Joe Wright cada una de estas películas?
+   «Orgullo y prejuicio» (2005) | «Atonement» (2007) | «Snatch» (2000) | «American Pie» (1999) | «Hanna» (2011)
+   -> [True, True, False, False, True]
+[burst_director d2] Verdadero o falso: ¿dirigió Alfred Hitchcock cada una de estas películas?
+   «Operación "Y" y otras aventuras de Shúrik» (1965) | «Lifeboat» (1944) | «Umberto D.» (1952) | «Cortina rasgada» (1966) | «Rope» (1948)
+   -> [False, True, False, True, True]
+[burst_oscar d2] Verdadero o falso: ¿ganó el Oscar a la mejor película?
+   «My Fair Lady» (1964) | «La melodía de Broadway» (1929) | «La ventana indiscreta» (1954) | «12 Angry Men» (1957) | «Oppenheimer» (2023)
+   -> [True, True, False, False, True]
+[burst_oscar d2] Verdadero o falso: ¿ganó el Oscar a la mejor película?
+   «El mayor espectáculo del mundo» (1952) | «El acorazado Potemkin» (1925) | «La melodía de Broadway» (1929) | «La diligencia» (1939) | «Sonrisas y Lágrimas» (1965)
+   -> [True, False, True, False, True]
+[burst_oscar d2] Verdadero o falso: ¿ganó el Oscar a la mejor película?
+   «Snow White and the Seven Dwarfs» (1937) | «La señora Miniver» (1942) | «Los infiltrados» (2006) | «Saludos amigos» (1942) | «Qué bello es vivir» (1946)
+   -> [False, True, True, False, False]
+[burst_spanish d2] Verdadero o falso: ¿es una película española?
+   «El hoyo» (2019) | «Agentes 355» (2022) | «Mujeres al borde de un ataque de nervios» (1988) | «Cómo entrenar a tu dragón» (2025) | «Mar adentro» (2004)
+   -> [True, False, True, False, True]
+[burst_spanish d2] Verdadero o falso: ¿es una película española?
+   «Victory» (1981) | «Ágora» (2009) | «Atrapa la bandera» (2015) | «La mala educación» (2004) | «Lawrence de Arabia» (1962)
+   -> [False, True, True, True, False]
+[burst_spanish d2] Verdadero o falso: ¿es una película española?
+   «Klaus» (2019) | «Lo imposible» (2012) | «The Banshees of Inisherin» (2022) | «El laberinto del fauno» (2006) | «Blackhat» (2015)
+   -> [True, True, False, True, False]
+[cast d2] ¿Quién aparece en el reparto de «Adiós a las armas» (1932)?
+   Gary Cooper | Henry Fonda | James Stewart | James Cagney
+   -> 0
+[cast d3] ¿Quién aparece en el reparto de «La tierra tiembla» (1948)?
+   Otto Kruger | John Qualen | Sig Ruman | Antonio Pietrangeli
+   -> 3
+[cast d3] ¿Quién aparece en el reparto de «Alexander's Ragtime Band» (1938)?
+   Ethel Merman | Edward G. Robinson | Dorothy Malone | Walter Brennan
+   -> 0
+[cast_intruder d2] ¿Qué actor o actriz NO aparece en «Scream 4» (2011)?
+   kornie Cox | Emma Roberts | Hayden Panettiere | Tom Hardy
+   -> 3
+[cast_intruder d2] ¿Qué actor o actriz NO aparece en «El informe Pelícano» (1993)?
+   Denzel Washington | Oprah Winfrey | John Lithgow | Julia Roberts
+   -> 1
+[cast_intruder d3] ¿Qué actor o actriz NO aparece en «L'Inconnu du lac» (2013)?
+   Christophe Paou | Patrick d'Assumçao | Ulrich Tukur | Pierre Deladonchamps
+   -> 2
+[character d3] ¿A qué personaje interpreta Burl Ives en «So Dear to My Heart»?
+   Uncle Hiram Douglas | Hunlun | Lord Henry Wotton | Seaman Alexander Smith
+   -> 0
+[character d2] ¿A qué personaje interpreta Isabella Rossellini en «Joy»?
+   Percy Jones | Trudy | Travers Robert Goff | Kong
+   -> 1
+[character d1] ¿A qué personaje interpreta Anthony Hopkins en «La máscara del Zorro»?
+   Jalaluddin Muhammad Akbar | El Zorro | Roy Miller / Matthew Knight | Colonel James Braddock
+   -> 1
+[clues d3] 🎬 2013 · 🎥 Dirigida por Nicole Holofcener · ⭐ Con James Gandolfini. ¿Qué película es?
+   «Step Up Revolution» | «The Crazies» | «Enough Said» | «I Spit on Your Grave»
+   -> 2
+[clues d2] 🎬 1998 · 🎥 Dirigida por F. Gary Gray · ⭐ Con Samuel L. Jackson. ¿Qué película es?
+   «Cop Land» | «George of the jungle» | «Asalto al tren del dinero» | «The Negotiator»
+   -> 3
+[clues d2] 🎬 2025 · 🎥 Dirigida por Joachim Rønning · ⭐ Con Gillian Anderson. ¿Qué película es?
+   «Tron: Ares» | «The Guardians of the Galaxy Holiday Special» | «The Lord of the Rings: The War of the Rohirrim» | «Transformers: Rise of the Beasts»
+   -> 0
+[clues_prog d3] Adivina la película: las pistas van apareciendo. ¡Cuanto antes aciertes, más puntos!
+   «Elling» | «Antitrust» | «Recess: School's Out» | «Guess Who»
+   -> 3
+[clues_prog d3] Adivina la película: las pistas van apareciendo. ¡Cuanto antes aciertes, más puntos!
+   «La vida secreta de las palabras» | «Un golpe de suerte» | «Fanboys» | «Stewie Griffin: La historia jamás contada»
+   -> 2
+[clues_prog d3] Adivina la película: las pistas van apareciendo. ¡Cuanto antes aciertes, más puntos!
+   «La taberna del infierno» | «Futureworld» | «Borsalino y compañía» | «The Song Remains the Same»
+   -> 0
+[composer d3] ¿Quién compuso la banda sonora de «Veronica Guerin» (2003)?
+   David Arnold | Harry Gregson-Williams | Eduard Artémiev | David A. Stewart
+   -> 1
+[composer d3] ¿Quién compuso la banda sonora de «Ricochet» (1991)?
+   Laurie Anderson | Alan Silvestri | Paul Dukas | Ryūichi Sakamoto
+   -> 1
+[composer d3] ¿Quién compuso la banda sonora de «Los visitantes» (1993)?
+   Jay Ferguson | Eric Lévi | Laurence Rosenthal | Serguéi Nikitin
+   -> 1
+[country d3] ¿De qué país es «Elena» (2011)?
+   España | Francia | Irán | Rusia
+   -> 3
+[country d3] ¿De qué país es «Diario de un rebelde» (1995)?
+   India | Brasil | Polonia | Estados Unidos
+   -> 3
+[country d3] ¿De qué país es «La vida privada de Enrique VIII» (1933)?
+   Reino Unido | RAE de Hong Kong (China) | España | Irlanda
+   -> 0
+[director d3] ¿Quién dirigió «Un Chihuahua en Beverly Hills 2» (2011)?
+   Alex Zamm | Victor Cook | Khalid Mohamed | Tuck Tucker
+   -> 0
+[director d3] ¿Quién dirigió «Wolf Man» (2025)?
+   Dax Shepard | Lucrecia Martel | Maren Ade | Leigh Whannell
+   -> 3
+[director d2] ¿Cuál de estas películas NO dirigió Kevin Smith?
+   «V for Vendetta» (2005) | «Zack & Miri Make a Porno» (2008) | «Jay y Bob el Silencioso contraatacan» (2001) | «Jersey Girl» (2004)
+   -> 0
+[filmed_in d3] ¿En cuál de estos países se rodó parte de «Río Lobo» (1970)?
+   Alemania | China | Suecia | México
+   -> 3
+[filmed_in d3] ¿En cuál de estos países se rodó parte de «Tras la pista de la Pantera Rosa» (1982)?
+   Francia | Irlanda | Irán | Suecia
+   -> 0
+[filmed_in d2] ¿En cuál de estos países se rodó parte de «Cincuenta sombras de Grey» (2015)?
+   Canadá | Brasil | Nueva Zelanda | Corea del Sur
+   -> 0
+[location_photo d2] 📍 ¿Qué película se rodó en este lugar?
+   «Harry Potter y las reliquias de la Muerte: parte 2» | «Brave» | «The Princess and the Frog» | «Parásitos»
+   -> 3
+[location_photo d2] 📍 ¿Qué película se rodó en este lugar?
+   «Natural Born Killers» | «Home Alone 3» | «Siete años en el Tíbet» | «Sense and Sensibility»
+   -> 2
+[location_photo d2] 📍 ¿Qué película se rodó en este lugar?
+   «Contagio» | «Don't Look Up» | «Nada es lo que parece» | «Kung Fu Panda 3»
+   -> 1
+[longest d3] ¿Cuál de estas películas dura más?
+   «Source Code» | «Los descendientes» | «Transformers: el lado oscuro de la luna» | «X-Men: primera generación»
+   -> 2
+[longest d2] ¿Cuál de estas películas dura más?
+   «Kurtlar Vadisi» | «Rocky Balboa» | «The Ant Bully» | «Fearless»
+   -> 0
+[longest d3] ¿Cuál de estas películas dura más?
+   «Hall Pass» | «La piel que habito» | «Mr. Popper's Penguins» | «Colombiana»
+   -> 1
+[map d2] 🗺️ Sitúa en el mapa un lugar donde se rodó «Una batalla tras otra» (2025)
+   
+   -> {'lat': 37.9575, 'lon': -121.2925, 'alts': [{'lat': 38.5753, 'lon': -121.4861}, {'lat': 40.8019, 'lon': -124.1636}, {'lat': 33.2472, 'lon': -116.3719}, {'lat': 34.6705, 'lon': -120.4206}, {'lat': 32.5844, 'lon': -116.934}]}
+[map d2] 🗺️ Sitúa en el mapa un lugar donde se rodó «Home Alone 3» (1997)
+   
+   -> {'lat': 41.8819, 'lon': -87.6278, 'alts': []}
+[map d2] 🗺️ Sitúa en el mapa un lugar donde se rodó «Borat: lecciones culturales de Estados Unidos para beneficio de la gloriosa nación de Kazajistán» (2006)
+   
+   -> {'lat': 40.7128, 'lon': -74.0061, 'alts': [{'lat': 34.0522, 'lon': -118.2437}, {'lat': 37.2706, 'lon': -79.9425}, {'lat': 32.7792, 'lon': -96.8089}, {'lat': 33.7544, 'lon': -84.3897}]}
+[match_cast d3] Une cada actor con su personaje en «Breaking the Waves» (1996)
+   Emily Watson | Udo Kier | Stellan Skarsgård | Katrin Cartlidge
+   -> [0, 3, 2, 1]
+[match_cast d3] Une cada actor con su personaje en «Muhammad» (2015)
+   Mahdi Pakdel | Mohsen Tanabandeh | Rana Azadivar | Sareh Bayat
+   -> [1, 0, 2, 3]
+[match_cast d3] Une cada actor con su personaje en «Daredevil» (2003)
+   Ben Affleck | Jennifer Garner | Michael Clarke Duncan
+   -> [1, 0, 2]
+[match_dir d3] Une cada película con su director o directora
+   «2046» (2004) | «Mad Max Beyond Thunderdome» (1985) | «Obsesión» (1943) | «Sinners» (2025)
+   -> [0, 2, 1, 3]
+[match_dir d3] Une cada película con su director o directora
+   «Payback» (1999) | «Top Gun» (1986) | «El gatopardo» (1963) | «Captain Fantastic» (2016)
+   -> [0, 3, 2, 1]
+[match_dir d3] Une cada película con su director o directora
+   «Unstoppable» (2010) | «Malèna» (2000) | «Freedom Writers» (2007) | «Up» (2009)
+   -> [3, 0, 2, 1]
+[music_film d2] 🎵 Escucha: ¿en qué película famosa suena esta pieza?
+   «Charlotte's Web» | «Robin Hood» | «Apocalypse Now» | «2001: A Space Odyssey»
+   -> 3
+[music_film d2] 🎵 Escucha: ¿en qué película famosa suena esta pieza?
+   «Giù la testa» | «The man who would be king» | «Days of Heaven» | «Alphaville»
+   -> 2
+[music_film d2] 🎵 Escucha: ¿en qué película famosa suena esta pieza?
+   «La señora Miniver» | «M» | «Siguiendo mi camino» | «The 39 Steps»
+   -> 1
+[music_piece d2] 🎵 Suena en «Shine». ¿Qué pieza es?
+   El vuelo del moscardón (Nikolái Rimski-Kórsakov) | Concierto para piano n.º 2 (Serguéi Rajmáninov) | O mio babbino caro (Giacomo Puccini) | Réquiem (Lacrimosa) (Wolfgang Amadeus Mozart)
+   -> 0
+[music_piece d2] 🎵 Suena en «Fantasía». ¿Qué pieza es?
+   Ave María de Schubert (Franz Schubert) | Obertura de Guillermo Tell (Gioachino Rossini) | Boléro (Maurice Ravel) | Así habló Zaratustra (Richard Strauss)
+   -> 0
+[music_piece d2] 🎵 Suena en «Muerte en Venecia». ¿Qué pieza es?
+   O mio babbino caro (Giacomo Puccini) | Adagietto de la Quinta sinfonía (Gustav Mahler) | Zarabanda de Händel (Georg Friedrich Händel) | Rapsodia en azul (George Gershwin)
+   -> 1
+[odd_images d3] 📍 Tres de estas fotos son lugares de rodaje de «Jason Bourne» (2016). ¿Cuál NO?
+   Foto 1 | Foto 2 | Foto 3 | Foto 4
+   -> 1
+[odd_images d3] 📍 Tres de estas fotos son lugares de rodaje de «Corre, Lola, corre» (1998). ¿Cuál NO?
+   Foto 1 | Foto 2 | Foto 3 | Foto 4
+   -> 0
+[odd_images d3] 📍 Tres de estas fotos son lugares de rodaje de «Contagio» (2011). ¿Cuál NO?
+   Foto 1 | Foto 2 | Foto 3 | Foto 4
+   -> 0
+[pick2_cast d3] Elige los DOS actores que salen en «Ice Princess» (2005)
+   Hayden Panettiere | Brittany Murphy | Christina Applegate | Michelle Trachtenberg | Thomas Haden Church
+   -> [0, 3]
+[pick2_cast d3] Elige los DOS actores que salen en «Da 5 Bloods» (2020)
+   Sabrina Carpenter | Jean Reno | Jake Gyllenhaal | Chadwick Boseman | Viggo Mortensen
+   -> [1, 3]
+[pick2_cast d2] Elige los DOS actores que salen en «Astérix y Obélix al servicio de su majestad» (2012)
+   Gérard Depardieu | Catherine Deneuve | Daniel Day-Lewis | Susan Sarandon | Reese Witherspoon
+   -> [0, 1]
+[pick2_director d2] Elige las DOS películas dirigidas por Greta Gerwig
+   «Cold Mountain» (2003) | «Lady Bird» (2017) | «Barbie» (2023) | «Kabhi Khushi Kabhie Gham» (2001) | «Blade» (1998)
+   -> [1, 2]
+[pick2_director d2] Elige las DOS películas dirigidas por Julian Schnabel
+   «Mujeres al borde de un ataque de nervios» (1988) | «Contacto sangriento» (1988) | «Antes que anochezca» (2000) | «Le Scaphandre et le Papillon» (2007) | «Adiós, muchachos» (1987)
+   -> [2, 3]
+[pick2_director d2] Elige las DOS películas dirigidas por Richard Fleischer
+   «Viaje alucinante» (1966) | «Los corceles de fuego» (1964) | «El cuchillo en el agua» (1962) | «Red Sonja» (1985) | «Horizontes de grandeza» (1958)
+   -> [0, 3]
+[saga_next d2] En la saga «The Fast and the Furious», ¿qué película llegó justo después de «Furious 7» (2015)?
+   «The Faith of the Furious» | «Fast Five» | «Rapidos X» | «The Fate of the Furious»
+   -> 3
+[saga_next d2] En la saga «Saw», ¿qué película llegó justo después de «Saw» (2003)?
+   «Saw VI» | «Saw III» | «Saw II» | «Spiral»
+   -> 2
+[saga_next d3] En la saga «Películas de Superman», ¿qué película llegó justo después de «Superman IV» (1987)?
+   «El hombre de acero» | «Superman Returns» | «Superman» | «Superman II»
+   -> 1
+[saga_order d2] Saga «Terminator»: ordena estas películas por fecha de estreno.
+   «Terminator Salvation» | «The Terminator» | «Terminator 3: la rebelión de las máquinas» | «Terminator: Genesis»
+   -> [1, 2, 0, 3]
+[saga_order d2] Saga «Three Flavours Cornetto»: ordena estas películas por fecha de estreno.
+   «Hot Fuzz» | «Shaun of the Dead» | «The World's End»
+   -> [1, 0, 2]
+[saga_order d2] Saga «El Señor de los Anillos»: ordena estas películas por fecha de estreno.
+   «El Señor de los Anillos: la Comunidad del Anillo» | «El Señor de los Anillos: las dos torres» | «El Señor de los Anillos: el retorno del Rey» | «The Lord of the Rings: The War of the Rohirrim»
+   -> [0, 1, 2, 3]
+[still d2] 🎞️ ¿A qué película pertenece esta imagen? (la imagen se va aclarando)
+   «Metrópolis» | «La quimera del oro» | «The Jazz Singer» | «Nosferatu, el vampiro»
+   -> 3
+[still d3] 🎞️ ¿A qué película pertenece esta imagen? (la imagen se va aclarando)
+   «El estudiante de Praga (1913)» | «Quo vadis?» | «El padre Sergio» | «A Daughter of the Gods»
+   -> 1
+[still d2] 🎞️ ¿A qué película pertenece esta imagen?
+   «Avaricia» | «Los cuatro jinetes del Apocalipsis» | «Y el mundo marcha» | «Lirios rotos»
+   -> 1
+[typed_clues d3] 🎬 2001 · 🎥 Joe Johnston · ⭐ Sam Neill
+Escribe el título de la película
+   
+   -> {'accept': ['Parque Jurásico III', 'Jurassic Park III']}
+[typed_clues d3] 🎬 1959 · 🎥 François Truffaut · ⭐ Jean-Paul Belmondo
+Escribe el título de la película
+   
+   -> {'accept': ['Los 400 golpes', 'The 400 Blows']}
+[typed_clues d3] 🎬 1994 · 🎥 Nikita Mijalkov · ⭐ Nikita Mijalkov
+Escribe el título de la película
+   
+   -> {'accept': ['Quemado por el sol', 'Burnt by the Sun']}
+[versus_duration d2] ¿Cuál de estas dos películas dura más?
+   «Pierrot el loco» (1965) | «The Wild Bunch» (1969)
+   -> 1
+[versus_duration d2] ¿Cuál de estas dos películas dura más?
+   «Indiana Jones 5» (2023) | «Grown Ups 2» (2013)
+   -> 0
+[versus_duration d2] ¿Cuál de estas dos películas dura más?
+   «The Fantastic Four» (2025) | «Los Picapiedra» (1994)
+   -> 0
+[versus_year d1] ¿Cuál de estas dos películas se estrenó antes?
+   «Sonrisas de una noche de verano» | «Baahubali 2: The Conclusion»
+   -> 0
+[versus_year d1] ¿Cuál de estas dos películas se estrenó antes?
+   «Never Back Down» | «El último deber»
+   -> 1
+[versus_year d2] ¿Cuál de estas dos películas se estrenó antes?
+   «Cliffhanger» | «La brújula dorada»
+   -> 0
+[writer d2] ¿Quién escribió el guion de «RoboCop» (1987)?
+   Aleksander Ścibor-Rylski | Sergio Citti | Seton I. Miller | Edward Neumeier
+   -> 3
+[writer d1] ¿Quién escribió el guion de «Superman II» (1980)?
+   Mario Puzo | Sergio Leone | Nikos Kazantzakis | Terry Gilliam
+   -> 0
+[writer d3] ¿Quién escribió el guion de «Hombres de negro: Internacional» (2019)?
+   Peter S. Seaman | Gustin Nash | Art Marcum | Nick Moorcroft
+   -> 2
+[year d2] ¿En qué década se estrenó «Donnie Brasco»?
+   Años 70 (1970) | Años 80 (1980) | Años 90 (1990) | Años 00 (2000)
+   -> 2
+[year d2] «Bringing Up Baby» se estrenó en 1938.
+   Verdadero | Falso
+   -> 0
+[year d1] «Casino» se estrenó en 1990.
+   Verdadero | Falso
+   -> 1
+[year_slider d3] ¿En qué año se estrenó «Luck»?
+   
+   -> {'year': 2022}
+[year_slider d3] ¿En qué año se estrenó «Descuida, yo te cuido»?
+   
+   -> {'year': 2020}
+[year_slider d3] ¿En qué año se estrenó «The Rugrats Movie»?
+   
+   -> {'year': 1998}
+
+== Motivos de descarte ==
+[('opción vacía (es)', 147), ('opción vacía (en)', 147), ('duplicada', 21), ('opciones repetidas (en)', 13), ('opciones repetidas (es)', 12), ('títulos aceptados incorrectos', 11), ('rango del slider incorrecto', 4), ('otra película comparte título', 1)]
+Calendario: 2027-01-01 → 2027-12-31 (365 retos)
