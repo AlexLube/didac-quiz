@@ -588,3 +588,29 @@ def test_admin_functions(db):
     assert ch["questions"][3]["id"] == qid
     with pytest.raises(pe.Error, match="challenge_already_open"):
         admin.call("select admin_replace_challenge_question('2027-04-10', 3, %s)", (qid,), today="2027-04-10")
+
+
+def test_achievements_and_hall_of_fame(db):
+    import datetime as dt
+    first = dt.date.today().replace(day=1)
+    prev = (first - dt.timedelta(days=1)).replace(day=27)
+    make_challenge(db, prev.isoformat(), make_questions(db, start=2000))
+    p = Player(db)
+    p.register("logros", today=prev.isoformat())
+    res = p.play(prev.isoformat(), PERFECT)
+    assert res[-1]["finished"] is True
+
+    got = {r[0] for r in db.execute(
+        "select achievement_id from user_achievements where user_id = %s", (p.id,)).fetchall()}
+    assert {"games_1", "streak_1", "master_1", "points_15"} <= got
+    bonus = db.execute("select bonus_points from profiles where id = %s", (p.id,)).fetchone()[0]
+    assert bonus >= 4 * 5
+
+    hall = db.execute("select position from hall_of_fame where year_month = %s order by position",
+                      (prev.strftime("%Y-%m"),)).fetchall()
+    assert [r[0] for r in hall] == list(range(1, len(hall) + 1)) and 1 <= len(hall) <= 3
+
+    # Un invitado (sin perfil) también puede terminar la partida
+    make_challenge(db, "2026-11-05", make_questions(db, start=2100))
+    guest = Player(db, anonymous=True)
+    assert guest.play("2026-11-05", PERFECT)[-1]["finished"] is True

@@ -191,7 +191,7 @@ class Strings {
     'delete': {'es': 'Borrar', 'en': 'Delete'},
     'save': {'es': 'Guardar', 'en': 'Save'},
     'guest': {'es': 'Invitado', 'en': 'Guest'},
-    'achievements_title': {'es': 'Logros ({count})', 'en': 'Achievements ({count})'}   
+    'achievements_title': {'es': 'Logros ({count})', 'en': 'Achievements ({count})'},
     // Errores del servidor
     'err_alias_invalid': {'es': 'El alias no es válido.', 'en': 'Invalid username.'},
     'err_alias_taken': {'es': 'Ese alias ya existe.', 'en': 'That username is taken.'},

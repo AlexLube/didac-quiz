@@ -1,2 +1,3 @@
 preparar-base-datos
 # Editar este archivo lanza la tarea indicada en la primera línea.
+# 17-10-2026: aplica la migración 0008 (arreglo de logros y Hall of Fame).
