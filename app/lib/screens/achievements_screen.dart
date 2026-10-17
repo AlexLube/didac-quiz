@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../app_state.dart';
 import '../strings.dart';
 import '../theme.dart';
 import '../widgets/common.dart';
