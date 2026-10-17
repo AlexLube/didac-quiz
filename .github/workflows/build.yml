@@ -108,7 +108,8 @@ jobs:
         working-directory: app
         run: |
           set -o pipefail
-          flutter build web --release --base-href "/didac-quiz/" \
+          # Con dominio propio (variable WEB_DOMAIN) la web vive en la raíz.
+          flutter build web --release --base-href "${{ vars.WEB_DOMAIN && '/' || '/didac-quiz/' }}" \
             --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_URL }} \
             --dart-define=SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }} \
             --dart-define=ENABLE_GOOGLE_LOGIN=${{ vars.ENABLE_GOOGLE_LOGIN || 'false' }} \
@@ -125,6 +126,7 @@ jobs:
           tmp=$(mktemp -d)
           cp -r app/build/web/. "$tmp"/
           touch "$tmp"/.nojekyll
+          if [ -n "${{ vars.WEB_DOMAIN }}" ]; then echo "${{ vars.WEB_DOMAIN }}" > "$tmp"/CNAME; fi
           cd "$tmp"
           git init -q && git checkout -q -b gh-pages
           git -c user.name=ci -c user.email=ci@users.noreply.github.com add -A
