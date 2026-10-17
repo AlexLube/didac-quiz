@@ -18,7 +18,7 @@ from pathlib import Path
 
 from . import ai
 from .generate import Generator, film_title_rows
-from .schedule import plan
+from .schedule import SPOTLIGHT_MEDIA, is_media, plan
 from .validate import validate_all
 from .wikidata import fetch_films, load_films, resolve_music, save_films
 
@@ -108,6 +108,12 @@ def cmd_schedule(args) -> None:
                     recent_entities=recent)
     _write(OUT / "calendar.json", calendar)
     print(f"Calendario: {calendar[0]['date']} → {calendar[-1]['date']} ({len(calendar)} retos)")
+    # Multimedia por día, para comprobar el mínimo (5, y 7 los jueves) en el registro.
+    by_id = {q["external_id"]: q for q in questions}
+    for c in calendar:
+        n = sum(is_media(by_id[i]) for i in c["external_ids"])
+        want = SPOTLIGHT_MEDIA if dt.date.fromisoformat(c["date"]).weekday() == 3 else 5
+        print(f"  {c['date']}  multimedia {n}/10{'' if n >= want else f'  ⚠ menos de {want}'}")
 
 
 def cmd_upload(args) -> None:
