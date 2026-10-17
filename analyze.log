@@ -1,0 +1,9 @@
+Analyzing app...                                                
+
+   info • 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre. Try replacing the use of the deprecated member with the replacement • lib/screens/admin_screen.dart:347:38 • deprecated_member_use
+   info • 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre. Try replacing the use of the deprecated member with the replacement • lib/screens/admin_screen.dart:347:59 • deprecated_member_use
+   info • Constructors for public widgets should have a named 'key' parameter. Try adding a named parameter to the constructor • lib/screens/rankings_screen.dart:175:9 • use_key_in_widget_constructors
+   info • 'tagForUnderAgeOfConsent' is deprecated and shouldn't be used. Use ageRestrictedTreatment instead. Try replacing the use of the deprecated member with the replacement • lib/services/ads.dart:20:11 • deprecated_member_use
+   info • 'TagForUnderAgeOfConsent' is deprecated and shouldn't be used. Use AgeRestrictedTreatment instead. Try replacing the use of the deprecated member with the replacement • lib/services/ads.dart:20:36 • deprecated_member_use
+
+5 issues found. (ran in 10.5s)

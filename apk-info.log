@@ -1,0 +1,60 @@
+== badging ==
+package: name='app.didaccine.quiz' versionCode='1' versionName='0.1.0' platformBuildVersionName='16' platformBuildVersionCode='36' compileSdkVersion='36' compileSdkVersionCodename='16'
+targetSdkVersion:'36'
+application-label:'DidacCine Quiz'
+  uses-feature: name='android.hardware.faketouch'
+native-code: 'arm64-v8a' 'armeabi-v7a' 'x86_64'
+== firma ==
+Verifies
+Verified using v1 scheme (JAR signing): false
+Verified using v2 scheme (APK Signature Scheme v2): true
+Verified using v3 scheme (APK Signature Scheme v3): false
+Verified using v3.1 scheme (APK Signature Scheme v3.1): false
+Verified using v3.2 scheme (APK Signature Scheme v3.2): false
+Verified using v4 scheme (APK Signature Scheme v4): false
+Verified for SourceStamp: false
+Number of signers: 1
+V2 Signer: certificate DN: CN=DidacCine Quiz Debug, O=DidacCine, C=ES
+V2 Signer: certificate SHA-256 digest: ef464abef5f345d0cdf075fedac0644b10b4ddd77d07b91b2052eea8f2f7f5ce
+V2 Signer: certificate SHA-1 digest: c03250b9a78d46a0e23131c236b5336767a77eaa
+V2 Signer: certificate MD5 digest: 929dbb7a269a2baf53ba64b2b2218e5a
+V2 Signer: key algorithm: RSA
+V2 Signer: key size (bits): 2048
+V2 Signer: public key SHA-256 digest: 1c7bae626e57d3ef4e8ffcdbcd41b5b6f7807b9f8dff42139ed66b7f954ec392
+V2 Signer: public key SHA-1 digest: 6aa6eaa648a4357111cfb90e1beafbb90be55d9e
+V2 Signer: public key MD5 digest: 8d00c82096293d3728bee1c3b19aeb60
+== librerias ==
+classes.dex 5306692
+lib/arm64-v8a/libapp.so 8061832
+lib/arm64-v8a/libdartjni.so 131248
+lib/arm64-v8a/libdatastore_shared_counter.so 7112
+lib/arm64-v8a/libflutter.so 11747864
+lib/armeabi-v7a/libapp.so 8847944
+lib/armeabi-v7a/libdartjni.so 81444
+lib/armeabi-v7a/libdatastore_shared_counter.so 4416
+lib/armeabi-v7a/libflutter.so 8615900
+lib/x86_64/libapp.so 8323976
+lib/x86_64/libdartjni.so 116640
+lib/x86_64/libdatastore_shared_counter.so 6224
+lib/x86_64/libflutter.so 13051424
+== permisos ==
+package: app.didaccine.quiz
+uses-permission: name='android.permission.INTERNET'
+uses-permission: name='android.permission.ACCESS_NETWORK_STATE'
+uses-permission: name='com.google.android.gms.permission.AD_ID'
+uses-permission: name='android.permission.ACCESS_ADSERVICES_AD_ID'
+uses-permission: name='android.permission.ACCESS_ADSERVICES_ATTRIBUTION'
+uses-permission: name='android.permission.ACCESS_ADSERVICES_TOPICS'
+uses-permission: name='android.permission.WAKE_LOCK'
+uses-permission: name='android.permission.FOREGROUND_SERVICE'
+permission: app.didaccine.quiz.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION
+uses-permission: name='app.didaccine.quiz.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION'
+-rw-r--r-- 1 runner runner 62704613 Oct 17 16:16 app/build/app/outputs/flutter-apk/app-release.apk
+Verifies
+Verified using v1 scheme (JAR signing): false
+Verified using v2 scheme (APK Signature Scheme v2): true
+Verified using v3 scheme (APK Signature Scheme v3): true
+Verified using v3.1 scheme (APK Signature Scheme v3.1): false
+Verified using v3.2 scheme (APK Signature Scheme v3.2): false
+Verified using v4 scheme (APK Signature Scheme v4): false
+Verified for SourceStamp: false
