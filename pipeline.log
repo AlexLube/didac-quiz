@@ -1,0 +1,724 @@
+Descargando películas de Wikidata…
+  1895-1930: 147 películas acumuladas
+  1930-1940: 391 películas acumuladas
+  1940-1950: 679 películas acumuladas
+  1950-1960: 1137 películas acumuladas
+  1960-1970: 1680 películas acumuladas
+  1970-1980: 2289 películas acumuladas
+  1980-1990: 3119 películas acumuladas
+  1990-2000: 4386 películas acumuladas
+  2000-2010: 6437 películas acumuladas
+  2010-2020: 8559 películas acumuladas
+  2020-2030: 9408 películas acumuladas
+  detalles: 100/9408
+  detalles: 2100/9408
+  detalles: 4100/9408
+  detalles: 6100/9408
+  detalles: 8100/9408
+  fotos de lugares de rodaje: 1157
+  lugares de rodaje con coordenadas: 2463
+  imágenes de dominio público: 9
+9401 películas guardadas en data/films.json
+  música: 26 piezas con grabación libre
+  multimedia: TMDB en 0 películas, bandas sonoras en 0 (sin TMDB_TOKEN: no hay fotogramas ni tráileres)
+Válidas: 123791 · descartadas: 187 · para revisar a mano: 0
+Por dificultad: {1: 10498, 2: 38176, 3: 75117} · por formato: {'choice': 45284, 'decade': 9401, 'true_false': 10596, 'intruder': 10447, 'clues': 15891, 'image_reveal': 597, 'order': 863, 'image_choice': 718, 'audio': 52, 'year_slider': 9395, 'typed_title': 3055, 'pick_two': 8592, 'match': 2613, 'map': 694, 'versus': 2495, 'burst': 2957, 'odd_images': 141}
+
+== Muestra de preguntas ==
+Counter({'year': 19498, 'director': 11202, 'year_slider': 9395, 'cast': 8836, 'cast_intruder': 8645, 'composer': 8627, 'clues': 7948, 'clues_prog': 7943, 'pick2_cast': 7871, 'writer': 4801, 'typed_clues': 3055, 'actor_by_character': 3004, 'character': 2866, 'country': 2484, 'book_author': 2296, 'burst_actor': 2120, 'match_cast': 1775, 'filmed_in': 1616, 'versus_year': 1529, 'awards': 1298, 'location_photo': 1297, 'versus_duration': 966, 'match_dir': 838, 'burst_director': 742, 'longest': 723, 'pick2_director': 721, 'map': 694, 'based_on': 445, 'saga_order': 167, 'odd_images': 141, 'burst_oscar': 86, 'saga_next': 83, 'music_film': 26, 'music_piece': 26, 'still': 18, 'burst_spanish': 9})
+[actor_by_character d3] ¿Quién da vida a Banquo en «Macbeth»?
+   Juliet Berto | Nikolái Burliáyev | Martin Shaw | Riccardo Cucciolla
+   -> 2
+[actor_by_character d3] ¿Quién da vida a Carmen en «Carmen y Lola»?
+   Märt Pius | Rosy Rodríguez | Oleksandr Kobzar | Sharon Percy
+   -> 1
+[actor_by_character d1] ¿Quién da vida a Hombre sin nombre en «Por un puñado de dólares»?
+   Sylvester Stallone | Clint Eastwood | Elizabeth Taylor | Toshirō Mifune
+   -> 1
+[awards d1] «Waterworld» ganó el Oscar a la mejor película.
+   Verdadero | Falso
+   -> 1
+[awards d1] «Todos los hombres del presidente» ganó el Oscar a la mejor película.
+   Verdadero | Falso
+   -> 1
+[awards d1] «Boyhood» ganó el Oscar a la mejor película.
+   Verdadero | Falso
+   -> 1
+[based_on d2] ¿En qué obra literaria se basa «Skyfall» (2012)?
+   «The Secret Service» | «James Bond» | «Los chicos de la Nickel» | «The Flowers of War»
+   -> 1
+[based_on d3] ¿En qué obra literaria se basa «Clueless» (1995)?
+   «Maldad bajo el sol» | «Emma» | «Capote» | «L'Immortel»
+   -> 1
+[based_on d2] ¿En qué obra literaria se basa «GoldenEye» (1995)?
+   «Astérix y los juegos olímpicos» | «I Heard You Paint Houses» | «James Bond» | «The Party»
+   -> 2
+[book_author d3] «Sin control» (2005) adapta una obra literaria. ¿Quién la escribió?
+   James Siegel | Christopher Bram | Peter Viertel | Vera Chapman
+   -> 0
+[book_author d3] «El beso de la mujer araña» (1985) adapta una obra literaria. ¿Quién la escribió?
+   Ilya Ilf | Leon Uris | Alex Garland | Manuel Puig
+   -> 3
+[book_author d3] «El infierno del odio» (1963) adapta una obra literaria. ¿Quién la escribió?
+   Len Deighton | Ed McBain | John W. Campbell | Ross Macdonald
+   -> 1
+[burst_actor d2] Verdadero o falso: ¿sale Alexandra Daddario en cada una de estas películas?
+   «Percy Jackson y el mar de los monstruos» (2013) | «Dark City» (1998) | «Hall Pass» (2011) | «San Andreas» (2015) | «Pi» (1998)
+   -> [True, False, True, True, False]
+[burst_actor d2] Verdadero o falso: ¿sale Bing Crosby en cada una de estas películas?
+   «Jamaica Inn» (1939) | «El mayor espectáculo del mundo» (1952) | «Der ewige Jude» (1940) | «Siguiendo mi camino» (1944) | «La angustia de vivir» (1954)
+   -> [False, True, False, True, True]
+[burst_actor d2] Verdadero o falso: ¿sale Vinnie Jones en cada una de estas películas?
+   «Trois couleurs: Bleu» (1993) | «Ella es el chico» (2006) | «60 segundos» (2000) | «Snatch» (2000) | «Outbreak» (1995)
+   -> [False, True, True, True, False]
+[burst_director d2] Verdadero o falso: ¿dirigió Chris Weitz cada una de estas películas?
+   «La brújula dorada» (2007) | «The Notebook» (2004) | «Open Season» (2006) | «American Pie» (1999) | «About a Boy» (2002)
+   -> [True, False, False, True, True]
+[burst_director d2] Verdadero o falso: ¿dirigió David Frankel cada una de estas películas?
+   «Marley & Me» (2008) | «Collateral Beauty» (2016) | «Space Jam» (1996) | «The Bourne Supremacy» (2004) | «The Devil Wears Prada» (2006)
+   -> [True, True, False, False, True]
+[burst_director d2] Verdadero o falso: ¿dirigió Alfred Hitchcock cada una de estas películas?
+   «Marnie» (1964) | «El manantial de la doncella» (1960) | «Chacal» (1973) | «Anatomía de un asesinato» (1959) | «Stage Fright» (1950)
+   -> [True, False, False, False, True]
+[burst_oscar d2] Verdadero o falso: ¿ganó el Oscar a la mejor película?
+   «Gentleman's Agreement» (1947) | «Chinatown» (1974) | «La conversación» (1974) | «El exorcista» (1973) | «Out of Africa» (1985)
+   -> [True, False, False, False, True]
+[burst_oscar d2] Verdadero o falso: ¿ganó el Oscar a la mejor película?
+   «Toy Story 3» (2010) | «Tom Jones» (1963) | «Scott Pilgrim vs. the World» (2010) | «Everything Everywhere All at Once» (2022) | «Una batalla tras otra» (2025)
+   -> [False, True, False, True, True]
+[burst_oscar d2] Verdadero o falso: ¿ganó el Oscar a la mejor película?
+   «Birdman» (2014) | «Star Wars: Episodio II - El ataque de los clones» (2002) | «Siguiendo mi camino» (1944) | «El golpe» (1973) | «El Señor de los Anillos: las dos torres» (2002)
+   -> [True, False, True, True, False]
+[burst_spanish d2] Verdadero o falso: ¿es una película española?
+   «Avaricia» (1924) | «Lego Ninjago: La Película» (2017) | «Jeder für sich und Gott gegen alle» (1974) | «Mujeres al borde de un ataque de nervios» (1988) | «El laberinto del fauno» (2006)
+   -> [False, False, False, True, True]
+[burst_spanish d2] Verdadero o falso: ¿es una película española?
+   «Holocausto caníbal» (1980) | «Los abrazos rotos» (2009) | «Buried» (2010) | «Companion» (2025) | «Contratiempo» (2016)
+   -> [False, True, True, False, True]
+[burst_spanish d2] Verdadero o falso: ¿es una película española?
+   «El vagabundo» (1951) | «Sicario: Day of the Soldado» (2018) | «The Life of Emile Zola» (1937) | «Contratiempo» (2016) | «REC» (2007)
+   -> [False, False, False, True, True]
+[cast d3] ¿Quién aparece en el reparto de «Sólo los ángeles tienen alas» (1939)?
+   Bette Davis | Mae West | Rita Hayworth | Joan Crawford
+   -> 2
+[cast d3] ¿Quién aparece en el reparto de «Fuego de juventud» (1944)?
+   John Wayne | Bing Crosby | Elizabeth Taylor | Katharine Hepburn
+   -> 2
+[cast d3] ¿Quién aparece en el reparto de «La feria de la vida» (1933)?
+   Béla Lugosi | Jane Wyman | Janet Gaynor | Norma Shearer
+   -> 2
+[cast_intruder d2] ¿Qué actor o actriz NO aparece en «Soy el número cuatro» (2011)?
+   Dianna Agron | Timothy Olyphant | Melissa Leo | Teresa Palmer
+   -> 2
+[cast_intruder d3] ¿Qué actor o actriz NO aparece en «Highlander II: The Quickening» (1991)?
+   Sean Connery | Virginia Madsen | Arnold Schwarzenegger | Christopher Lambert
+   -> 2
+[cast_intruder d1] ¿Qué actor o actriz NO aparece en «El libro de la selva» (2016)?
+   Bill Murray | Ben Kingsley | Steven Spielberg | Scarlett Johansson
+   -> 2
+[character d3] ¿A qué personaje interpreta Gene Tierney en «El fantasma y la señora Muir»?
+   Lucy Muir | Willa Harper | seaman | Richelieu
+   -> 0
+[character d2] ¿A qué personaje interpreta Dakota Fanning en «Ocean's 8»?
+   Elsa | El Pingüino | Penelope Stern | Mr William Collins
+   -> 2
+[character d2] ¿A qué personaje interpreta Bette Midler en «Hocus Pocus»?
+   Adrian Pennino | Vivian Cash | Esme Cordelia Hoggett | Winifred Sanderson
+   -> 3
+[clues d1] 🎬 2014 · 🎥 Dirigida por Michael Bay · ⭐ Con Mark Wahlberg. ¿Qué película es?
+   «The Twilight Saga: Breaking Dawn – Part 1» | «Transformers: La era de la extinción» | «El gato con botas» | «Dallas Buyers Club»
+   -> 1
+[clues d3] 🎬 1998 · 🎥 Dirigida por Mark Steven Johnson · ⭐ Con Jim Carrey. ¿Qué película es?
+   «Sangre y vino» | «Devil in a Blue Dress» | «La llave mágica» | «Simon Birch»
+   -> 3
+[clues d3] 🎬 2023 · 🎥 Dirigida por Michael B. Jordan · ⭐ Con Michael B. Jordan. ¿Qué película es?
+   «Cielo de medianoche» | «Madres paralelas» | «Creed III» | «Greenland»
+   -> 2
+[clues_prog d2] Adivina la película: las pistas van apareciendo. ¡Cuanto antes aciertes, más puntos!
+   «Children of Men» | «Gran Torino» | «Mystic River» | «Sweeney Todd»
+   -> 3
+[clues_prog d3] Adivina la película: las pistas van apareciendo. ¡Cuanto antes aciertes, más puntos!
+   «L'auberge espagnole» | «Fanaa» | «Haute tension» | «Ali G anda suelto»
+   -> 1
+[clues_prog d3] Adivina la película: las pistas van apareciendo. ¡Cuanto antes aciertes, más puntos!
+   «La flauta mágica» | «Blood for Dracula» | «Brannigan» | «La taberna del infierno»
+   -> 3
+[composer d3] ¿Quién compuso la banda sonora de «Doom» (2005)?
+   Zbigniew Preisner | Clint Mansell | John Powell | Per Gessle
+   -> 1
+[composer d3] ¿Quién compuso la banda sonora de «Bowfinger» (1999)?
+   David Newman | Owen Pallett | Luiz Bonfá | Kyle Eastwood
+   -> 0
+[composer d3] ¿Quién compuso la banda sonora de «Delta Force 2» (1990)?
+   Berndt Egerbladh | Frédéric Talgorn | Snuff Garrett | Allen Shawn
+   -> 1
+[country d3] ¿De qué país es «War Witch» (2012)?
+   Canadá | Alemania | Irán | Argentina
+   -> 0
+[country d3] ¿De qué país es «Marea roja» (1995)?
+   Estados Unidos | Argentina | España | Irán
+   -> 0
+[country d3] ¿De qué país es «Amarga victoria» (1939)?
+   España | Irán | Japón | Estados Unidos
+   -> 3
+[director d3] ¿Quién dirigió «The Flowers of War» (2011)?
+   Zach Braff | Kevin Smith | Zhang Yimou | Wolfgang Petersen
+   -> 2
+[director d2] ¿Quién dirigió «Anatomía de una caída» (2023)?
+   Justine Triet | Joe Wright | Jennifer Lee | Tsui Hark
+   -> 0
+[director d2] ¿Cuál de estas películas NO dirigió Kevin Smith?
+   «Yoga Hosers» (2016) | «Mallrats» (1995) | «Clerks» (1994) | «Avatar» (2009)
+   -> 3
+[filmed_in d3] ¿En cuál de estos países se rodó parte de «Río Lobo» (1970)?
+   México | India | Italia | Australia
+   -> 0
+[filmed_in d3] ¿En cuál de estos países se rodó parte de «Tras la pista de la Pantera Rosa» (1982)?
+   Argentina | China | India | Francia
+   -> 3
+[filmed_in d2] ¿En cuál de estos países se rodó parte de «PK» (2014)?
+   México | Reino Unido | Bélgica | China
+   -> 2
+[location_photo d2] 📍 ¿Qué película se rodó en este lugar?
+   «El rey león» | «1917» | «Despicable Me 3» | «El Gran Hotel Budapest»
+   -> 1
+[location_photo d2] 📍 ¿Qué película se rodó en este lugar?
+   «28 Days Later» | «Home Alone 3» | «Blade» | «Siete años en el Tíbet»
+   -> 3
+[location_photo d2] 📍 ¿Qué película se rodó en este lugar?
+   «Cinderella» | «John Wick: Capítulo 2 - Un nuevo día para matar» | «Edge of Tomorrow» | «El Escuadrón Suicida»
+   -> 3
+[longest d2] ¿Cuál de estas películas dura más?
+   «Edge of Darkness» | «Blue Valentine» | «Easy A» | «Sex and the City 2»
+   -> 3
+[longest d3] ¿Cuál de estas películas dura más?
+   «Dhoom 2» | «Click» | «Alpha Dog» | «Krrish»
+   -> 3
+[longest d3] ¿Cuál de estas películas dura más?
+   «X-Men: primera generación» | «Harry Potter y las reliquias de la Muerte: parte 2» | «Transformers: el lado oscuro de la luna» | «One Day»
+   -> 2
+[map d2] 🗺️ Sitúa en el mapa un lugar donde se rodó «Una batalla tras otra» (2025)
+   
+   -> {'lat': 37.9575, 'lon': -121.2925, 'alts': [{'lat': 38.5753, 'lon': -121.4861}, {'lat': 40.8019, 'lon': -124.1636}, {'lat': 33.2472, 'lon': -116.3719}, {'lat': 34.6705, 'lon': -120.4206}, {'lat': 32.5844, 'lon': -116.934}]}
+[map d2] 🗺️ Sitúa en el mapa un lugar donde se rodó «La lista de Schindler» (1993)
+   
+   -> {'lat': 50.0614, 'lon': 19.9372, 'alts': []}
+[map d2] 🗺️ Sitúa en el mapa un lugar donde se rodó «Kill Bill: Volumen 1» (2003)
+   
+   -> {'lat': 34.0522, 'lon': -118.2437, 'alts': [{'lat': 39.904, 'lon': 116.4075}, {'lat': 22.2783, 'lon': 114.1586}]}
+[match_cast d3] Une cada actor con su personaje en «Las aventuras de Priscilla, reina del desierto» (1994)
+   Hugo Weaving | Guy Pearce | Terence Stamp | Bill Hunter
+   -> [0, 3, 1, 2]
+[match_cast d3] Une cada actor con su personaje en «La ladrona de libros» (2013)
+   Heike Makatsch | Emily Watson | Sophie Nélisse | Geoffrey Rush
+   -> [0, 2, 3, 1]
+[match_cast d3] Une cada actor con su personaje en «Quills» (2000)
+   Geoffrey Rush | Kate Winslet | Joaquin Phoenix | Michael Caine
+   -> [3, 1, 0, 2]
+[match_dir d3] Une cada película con su director o directora
+   «Dogville» (2003) | «Raiders of the Lost Ark» (1981) | «Ciudadano Kane» (1941) | «La gran ilusión» (1937)
+   -> [2, 0, 3, 1]
+[match_dir d3] Une cada película con su director o directora
+   «Everest» (2015) | «V for Vendetta» (2005) | «Ad Astra» (2019) | «Max Payne» (2008)
+   -> [0, 2, 1, 3]
+[match_dir d3] Une cada película con su director o directora
+   «Live Free or Die Hard» (2007) | «Tears of the Sun» (2003) | «Sleepers» (1996) | «Pain & Gain» (2013)
+   -> [0, 3, 2, 1]
+[music_film d2] 🎵 Escucha: ¿en qué película famosa suena esta pieza?
+   «El Bueno, el Malo y el Feo» | «The Rescuers» | «2001: A Space Odyssey» | «El libro de la selva»
+   -> 2
+[music_film d2] 🎵 Escucha: ¿en qué película famosa suena esta pieza?
+   «Los corceles de fuego» | «Days of Heaven» | «Sonata de otoño» | «El conformista»
+   -> 1
+[music_film d2] 🎵 Escucha: ¿en qué película famosa suena esta pieza?
+   «M» | «The 39 Steps» | «The Jazz Singer» | «La diligencia»
+   -> 0
+[music_piece d2] 🎵 Suena en «Shine». ¿Qué pieza es?
+   O mio babbino caro (Giacomo Puccini) | El vuelo del moscardón (Nikolái Rimski-Kórsakov) | Barcarola (Jacques Offenbach) | Réquiem (Lacrimosa) (Wolfgang Amadeus Mozart)
+   -> 1
+[music_piece d2] 🎵 Suena en «Fantasía». ¿Qué pieza es?
+   La danza de las horas (Amilcare Ponchielli) | Dúo de las flores (Lakmé) (Léo Delibes) | Obertura de Guillermo Tell (Gioachino Rossini) | Ave María de Schubert (Franz Schubert)
+   -> 3
+[music_piece d2] 🎵 Suena en «Muerte en Venecia». ¿Qué pieza es?
+   Gymnopédie n.º 1 (Erik Satie) | Así habló Zaratustra (Richard Strauss) | El Danubio azul (Johann Strauss II) | Adagietto de la Quinta sinfonía (Gustav Mahler)
+   -> 3
+[odd_images d3] 📍 Tres de estas fotos son lugares de rodaje de «John Wick: Capítulo 2 - Un nuevo día para matar» (2017). ¿Cuál NO?
+   Foto 1 | Foto 2 | Foto 3 | Foto 4
+   -> 1
+[odd_images d3] 📍 Tres de estas fotos son lugares de rodaje de «The World Is Not Enough» (1999). ¿Cuál NO?
+   Foto 1 | Foto 2 | Foto 3 | Foto 4
+   -> 2
+[odd_images d3] 📍 Tres de estas fotos son lugares de rodaje de «Contagio» (2011). ¿Cuál NO?
+   Foto 1 | Foto 2 | Foto 3 | Foto 4
+   -> 2
+[pick2_cast d2] Elige los DOS actores que salen en «Hellboy 2: El Ejército Dorado» (2008)
+   John Hurt | Seth MacFarlane | Macaulay Culkin | Eddie Redmayne | Sacha Baron Cohen
+   -> [0, 1]
+[pick2_cast d2] Elige los DOS actores que salen en «The Flash» (2023)
+   Taylor Lautner | Jeremy Irons | Denzel Washington | LeBron James | Ben Affleck
+   -> [1, 4]
+[pick2_cast d3] Elige los DOS actores que salen en «Seeking a Friend for the End of the World» (2012)
+   David Lynch | Nancy Reagan | Monica Bellucci | Keira Knightley | Martin Sheen
+   -> [3, 4]
+[pick2_director d2] Elige las DOS películas dirigidas por John Krasinski
+   «A Quiet Place Part II» (2020) | «Anna and the King» (1999) | «Star Trek: Némesis» (2002) | «A Quiet Place» (2018) | «Legally Blonde» (2001)
+   -> [0, 3]
+[pick2_director d2] Elige las DOS películas dirigidas por Tad Stones
+   «Aladdín y el rey de los ladrones» (1996) | «The Return of Jafar» (1994) | «Romancing the Stone» (1984) | «Cliffhanger» (1993) | «Last Action Hero» (1993)
+   -> [0, 1]
+[pick2_director d2] Elige las DOS películas dirigidas por Richard Fleischer
+   «Plan 9 del espacio exterior» (1959) | «Alicia ya no vive aquí» (1974) | «Duel» (1971) | «Red Sonja» (1985) | «Tora! Tora! Tora!» (1970)
+   -> [3, 4]
+[saga_next d2] En la saga «Harry Potter», ¿qué película llegó justo después de «Harry Potter y la piedra filosofal» (2001)?
+   «Harry Potter y el cáliz de fuego» | «Harry Potter y las reliquias de la Muerte: parte 1» | «Harry Potter y el misterio del príncipe» | «Harry Potter y la cámara secreta»
+   -> 3
+[saga_next d3] En la saga «Open Season», ¿qué película llegó justo después de «Open Season 3» (2010)?
+   «Open Season: Scared Silly» | «Open Season» | «Horrible Bosses 2» | «Open Season 2»
+   -> 0
+[saga_next d3] En la saga «Halloween», ¿qué película llegó justo después de «Halloween II» (1981)?
+   «Halloween III: Season of the Witch» | «Halloween» | «Halloween: la maldición de Michael Myers» | «Halloween II»
+   -> 0
+[saga_order d2] Saga «Indiana Jones»: ordena estas películas por fecha de estreno.
+   «Indiana Jones y la última cruzada» | «Raiders of the Lost Ark» | «Indiana Jones 5» | «Indiana Jones and the Temple of Doom»
+   -> [1, 3, 0, 2]
+[saga_order d3] Saga «Xavier trilogy»: ordena estas películas por fecha de estreno.
+   «L'auberge espagnole» | «Las muñecas rusas» | «Nueva vida en Nueva York»
+   -> [0, 1, 2]
+[saga_order d2] Saga «Kung Fu Panda»: ordena estas películas por fecha de estreno.
+   «Kung Fu Panda» | «Kung Fu Panda 2» | «Kung Fu Panda 3» | «Kung Fu Panda 4»
+   -> [0, 1, 2, 3]
+[still d2] 🎞️ ¿A qué película pertenece esta imagen? (la imagen se va aclarando)
+   «Alas» | «Sin novedad en el frente» | «Nosferatu, el vampiro» | «El acorazado Potemkin»
+   -> 2
+[still d3] 🎞️ ¿A qué película pertenece esta imagen? (la imagen se va aclarando)
+   «Quo vadis?» | «El estudiante de Praga (1913)» | «A Fool There Was» | «The Three Musketeers»
+   -> 0
+[still d2] 🎞️ ¿A qué película pertenece esta imagen?
+   «El mundo perdido» | «El último» | «Aelita» | «Los cuatro jinetes del Apocalipsis»
+   -> 3
+[typed_clues d3] 🎬 2006 · 🎥 Sylvester Stallone · ⭐ Sylvester Stallone
+Escribe el título de la película
+   
+   -> {'accept': ['Rocky Balboa']}
+[typed_clues d3] 🎬 1953 · 🎥 Fred Zinnemann · ⭐ Frank Sinatra
+Escribe el título de la película
+   
+   -> {'accept': ['De aquí a la eternidad', 'From Here to Eternity']}
+[typed_clues d3] 🎬 1995 · 🎥 Amy Heckerling · ⭐ Paul Rudd
+Escribe el título de la película
+   
+   -> {'accept': ['Clueless']}
+[versus_duration d2] ¿Cuál de estas dos películas dura más?
+   «Adiós, muchachos» (1987) | «Metrópolis» (1927)
+   -> 1
+[versus_duration d2] ¿Cuál de estas dos películas dura más?
+   «Las crónicas de Narnia: la travesía del Viajero del Alba» (2010) | «Wanderlust» (2012)
+   -> 0
+[versus_duration d2] ¿Cuál de estas dos películas dura más?
+   «El gran azul» (1988) | «Blade Runner 2049» (2017)
+   -> 1
+[versus_year d1] ¿Cuál de estas dos películas se estrenó antes?
+   «Fugitivos» | «Hulk»
+   -> 0
+[versus_year d2] ¿Cuál de estas dos películas se estrenó antes?
+   «Miss Congeniality 2: Armed and Fabulous» | «Tenemos que hablar de Kevin»
+   -> 0
+[versus_year d2] ¿Cuál de estas dos películas se estrenó antes?
+   «The Dark Tower» | «Joseph: King of Dreams»
+   -> 1
+[writer d2] ¿Quién escribió el guion de «RoboCop» (1987)?
+   Winston Hibler | Edward Neumeier | Aleksander Ścibor-Rylski | Piero De Bernardi
+   -> 1
+[writer d2] ¿Quién escribió el guion de «Licence to Kill» (1989)?
+   Alan Dean Foster | Michael G. Wilson | Peter S. Beagle | Suso Cecchi D'Amico
+   -> 1
+[writer d2] ¿Quién escribió el guion de «Captain Underpants: The First Epic Movie» (2017)?
+   Dav Pilkei | Billy Ray | Simon Beaufoy | Vishal Bhardwaj
+   -> 0
+[year d2] ¿En qué década se estrenó «Ronin»?
+   Años 70 (1970) | Años 80 (1980) | Años 90 (1990) | Años 10 (2010)
+   -> 2
+[year d2] «Bringing Up Baby» se estrenó en 1934.
+   Verdadero | Falso
+   -> 1
+[year d1] «Demolition Man» se estrenó en 1988.
+   Verdadero | Falso
+   -> 1
+[year_slider d3] ¿En qué año se estrenó «Spencer»?
+   
+   -> {'year': 2021}
+[year_slider d3] ¿En qué año se estrenó «Plane»?
+   
+   -> {'year': 2023}
+[year_slider d3] ¿En qué año se estrenó «Daniel el travieso»?
+   
+   -> {'year': 1993}
+
+== Motivos de descarte ==
+[('opción vacía (es)', 137), ('opción vacía (en)', 137), ('duplicada', 18), ('opciones repetidas (en)', 14), ('opciones repetidas (es)', 13), ('títulos aceptados incorrectos', 11), ('rango del slider incorrecto', 4), ('otra película comparte título', 1)]
+Calendario: 2027-01-01 → 2027-12-31 (365 retos)
+  2027-01-01  multimedia 5/10
+  2027-01-02  multimedia 4/10  ⚠ menos de 5
+  2027-01-03  multimedia 4/10  ⚠ menos de 5
+  2027-01-04  multimedia 5/10
+  2027-01-05  multimedia 5/10
+  2027-01-06  multimedia 5/10
+  2027-01-07  multimedia 5/10  ⚠ menos de 7
+  2027-01-08  multimedia 4/10  ⚠ menos de 5
+  2027-01-09  multimedia 4/10  ⚠ menos de 5
+  2027-01-10  multimedia 4/10  ⚠ menos de 5
+  2027-01-11  multimedia 4/10  ⚠ menos de 5
+  2027-01-12  multimedia 4/10  ⚠ menos de 5
+  2027-01-13  multimedia 4/10  ⚠ menos de 5
+  2027-01-14  multimedia 4/10  ⚠ menos de 7
+  2027-01-15  multimedia 4/10  ⚠ menos de 5
+  2027-01-16  multimedia 4/10  ⚠ menos de 5
+  2027-01-17  multimedia 4/10  ⚠ menos de 5
+  2027-01-18  multimedia 4/10  ⚠ menos de 5
+  2027-01-19  multimedia 4/10  ⚠ menos de 5
+  2027-01-20  multimedia 2/10  ⚠ menos de 5
+  2027-01-21  multimedia 4/10  ⚠ menos de 7
+  2027-01-22  multimedia 4/10  ⚠ menos de 5
+  2027-01-23  multimedia 4/10  ⚠ menos de 5
+  2027-01-24  multimedia 3/10  ⚠ menos de 5
+  2027-01-25  multimedia 4/10  ⚠ menos de 5
+  2027-01-26  multimedia 4/10  ⚠ menos de 5
+  2027-01-27  multimedia 2/10  ⚠ menos de 5
+  2027-01-28  multimedia 4/10  ⚠ menos de 7
+  2027-01-29  multimedia 4/10  ⚠ menos de 5
+  2027-01-30  multimedia 4/10  ⚠ menos de 5
+  2027-01-31  multimedia 4/10  ⚠ menos de 5
+  2027-02-01  multimedia 4/10  ⚠ menos de 5
+  2027-02-02  multimedia 4/10  ⚠ menos de 5
+  2027-02-03  multimedia 2/10  ⚠ menos de 5
+  2027-02-04  multimedia 4/10  ⚠ menos de 7
+  2027-02-05  multimedia 4/10  ⚠ menos de 5
+  2027-02-06  multimedia 4/10  ⚠ menos de 5
+  2027-02-07  multimedia 1/10  ⚠ menos de 5
+  2027-02-08  multimedia 4/10  ⚠ menos de 5
+  2027-02-09  multimedia 4/10  ⚠ menos de 5
+  2027-02-10  multimedia 2/10  ⚠ menos de 5
+  2027-02-11  multimedia 4/10  ⚠ menos de 7
+  2027-02-12  multimedia 4/10  ⚠ menos de 5
+  2027-02-13  multimedia 4/10  ⚠ menos de 5
+  2027-02-14  multimedia 3/10  ⚠ menos de 5
+  2027-02-15  multimedia 4/10  ⚠ menos de 5
+  2027-02-16  multimedia 4/10  ⚠ menos de 5
+  2027-02-17  multimedia 2/10  ⚠ menos de 5
+  2027-02-18  multimedia 3/10  ⚠ menos de 7
+  2027-02-19  multimedia 3/10  ⚠ menos de 5
+  2027-02-20  multimedia 3/10  ⚠ menos de 5
+  2027-02-21  multimedia 3/10  ⚠ menos de 5
+  2027-02-22  multimedia 3/10  ⚠ menos de 5
+  2027-02-23  multimedia 3/10  ⚠ menos de 5
+  2027-02-24  multimedia 1/10  ⚠ menos de 5
+  2027-02-25  multimedia 3/10  ⚠ menos de 7
+  2027-02-26  multimedia 3/10  ⚠ menos de 5
+  2027-02-27  multimedia 3/10  ⚠ menos de 5
+  2027-02-28  multimedia 3/10  ⚠ menos de 5
+  2027-03-01  multimedia 3/10  ⚠ menos de 5
+  2027-03-02  multimedia 3/10  ⚠ menos de 5
+  2027-03-03  multimedia 4/10  ⚠ menos de 5
+  2027-03-04  multimedia 4/10  ⚠ menos de 7
+  2027-03-05  multimedia 3/10  ⚠ menos de 5
+  2027-03-06  multimedia 5/10
+  2027-03-07  multimedia 3/10  ⚠ menos de 5
+  2027-03-08  multimedia 4/10  ⚠ menos de 5
+  2027-03-09  multimedia 4/10  ⚠ menos de 5
+  2027-03-10  multimedia 4/10  ⚠ menos de 5
+  2027-03-11  multimedia 4/10  ⚠ menos de 7
+  2027-03-12  multimedia 4/10  ⚠ menos de 5
+  2027-03-13  multimedia 4/10  ⚠ menos de 5
+  2027-03-14  multimedia 4/10  ⚠ menos de 5
+  2027-03-15  multimedia 4/10  ⚠ menos de 5
+  2027-03-16  multimedia 4/10  ⚠ menos de 5
+  2027-03-17  multimedia 3/10  ⚠ menos de 5
+  2027-03-18  multimedia 4/10  ⚠ menos de 7
+  2027-03-19  multimedia 4/10  ⚠ menos de 5
+  2027-03-20  multimedia 4/10  ⚠ menos de 5
+  2027-03-21  multimedia 4/10  ⚠ menos de 5
+  2027-03-22  multimedia 3/10  ⚠ menos de 5
+  2027-03-23  multimedia 4/10  ⚠ menos de 5
+  2027-03-24  multimedia 1/10  ⚠ menos de 5
+  2027-03-25  multimedia 4/10  ⚠ menos de 7
+  2027-03-26  multimedia 3/10  ⚠ menos de 5
+  2027-03-27  multimedia 4/10  ⚠ menos de 5
+  2027-03-28  multimedia 3/10  ⚠ menos de 5
+  2027-03-29  multimedia 4/10  ⚠ menos de 5
+  2027-03-30  multimedia 4/10  ⚠ menos de 5
+  2027-03-31  multimedia 1/10  ⚠ menos de 5
+  2027-04-01  multimedia 4/10  ⚠ menos de 7
+  2027-04-02  multimedia 3/10  ⚠ menos de 5
+  2027-04-03  multimedia 4/10  ⚠ menos de 5
+  2027-04-04  multimedia 3/10  ⚠ menos de 5
+  2027-04-05  multimedia 4/10  ⚠ menos de 5
+  2027-04-06  multimedia 4/10  ⚠ menos de 5
+  2027-04-07  multimedia 2/10  ⚠ menos de 5
+  2027-04-08  multimedia 3/10  ⚠ menos de 7
+  2027-04-09  multimedia 3/10  ⚠ menos de 5
+  2027-04-10  multimedia 4/10  ⚠ menos de 5
+  2027-04-11  multimedia 3/10  ⚠ menos de 5
+  2027-04-12  multimedia 4/10  ⚠ menos de 5
+  2027-04-13  multimedia 3/10  ⚠ menos de 5
+  2027-04-14  multimedia 1/10  ⚠ menos de 5
+  2027-04-15  multimedia 4/10  ⚠ menos de 7
+  2027-04-16  multimedia 4/10  ⚠ menos de 5
+  2027-04-17  multimedia 4/10  ⚠ menos de 5
+  2027-04-18  multimedia 2/10  ⚠ menos de 5
+  2027-04-19  multimedia 4/10  ⚠ menos de 5
+  2027-04-20  multimedia 4/10  ⚠ menos de 5
+  2027-04-21  multimedia 1/10  ⚠ menos de 5
+  2027-04-22  multimedia 3/10  ⚠ menos de 7
+  2027-04-23  multimedia 3/10  ⚠ menos de 5
+  2027-04-24  multimedia 3/10  ⚠ menos de 5
+  2027-04-25  multimedia 3/10  ⚠ menos de 5
+  2027-04-26  multimedia 4/10  ⚠ menos de 5
+  2027-04-27  multimedia 4/10  ⚠ menos de 5
+  2027-04-28  multimedia 2/10  ⚠ menos de 5
+  2027-04-29  multimedia 4/10  ⚠ menos de 7
+  2027-04-30  multimedia 3/10  ⚠ menos de 5
+  2027-05-01  multimedia 4/10  ⚠ menos de 5
+  2027-05-02  multimedia 3/10  ⚠ menos de 5
+  2027-05-03  multimedia 3/10  ⚠ menos de 5
+  2027-05-04  multimedia 3/10  ⚠ menos de 5
+  2027-05-05  multimedia 1/10  ⚠ menos de 5
+  2027-05-06  multimedia 3/10  ⚠ menos de 7
+  2027-05-07  multimedia 4/10  ⚠ menos de 5
+  2027-05-08  multimedia 4/10  ⚠ menos de 5
+  2027-05-09  multimedia 3/10  ⚠ menos de 5
+  2027-05-10  multimedia 4/10  ⚠ menos de 5
+  2027-05-11  multimedia 4/10  ⚠ menos de 5
+  2027-05-12  multimedia 1/10  ⚠ menos de 5
+  2027-05-13  multimedia 4/10  ⚠ menos de 7
+  2027-05-14  multimedia 3/10  ⚠ menos de 5
+  2027-05-15  multimedia 3/10  ⚠ menos de 5
+  2027-05-16  multimedia 3/10  ⚠ menos de 5
+  2027-05-17  multimedia 3/10  ⚠ menos de 5
+  2027-05-18  multimedia 3/10  ⚠ menos de 5
+  2027-05-19  multimedia 1/10  ⚠ menos de 5
+  2027-05-20  multimedia 3/10  ⚠ menos de 7
+  2027-05-21  multimedia 3/10  ⚠ menos de 5
+  2027-05-22  multimedia 4/10  ⚠ menos de 5
+  2027-05-23  multimedia 3/10  ⚠ menos de 5
+  2027-05-24  multimedia 4/10  ⚠ menos de 5
+  2027-05-25  multimedia 4/10  ⚠ menos de 5
+  2027-05-26  multimedia 2/10  ⚠ menos de 5
+  2027-05-27  multimedia 3/10  ⚠ menos de 7
+  2027-05-28  multimedia 3/10  ⚠ menos de 5
+  2027-05-29  multimedia 4/10  ⚠ menos de 5
+  2027-05-30  multimedia 3/10  ⚠ menos de 5
+  2027-05-31  multimedia 4/10  ⚠ menos de 5
+  2027-06-01  multimedia 4/10  ⚠ menos de 5
+  2027-06-02  multimedia 1/10  ⚠ menos de 5
+  2027-06-03  multimedia 3/10  ⚠ menos de 7
+  2027-06-04  multimedia 4/10  ⚠ menos de 5
+  2027-06-05  multimedia 3/10  ⚠ menos de 5
+  2027-06-06  multimedia 3/10  ⚠ menos de 5
+  2027-06-07  multimedia 3/10  ⚠ menos de 5
+  2027-06-08  multimedia 3/10  ⚠ menos de 5
+  2027-06-09  multimedia 1/10  ⚠ menos de 5
+  2027-06-10  multimedia 4/10  ⚠ menos de 7
+  2027-06-11  multimedia 3/10  ⚠ menos de 5
+  2027-06-12  multimedia 3/10  ⚠ menos de 5
+  2027-06-13  multimedia 3/10  ⚠ menos de 5
+  2027-06-14  multimedia 3/10  ⚠ menos de 5
+  2027-06-15  multimedia 3/10  ⚠ menos de 5
+  2027-06-16  multimedia 1/10  ⚠ menos de 5
+  2027-06-17  multimedia 3/10  ⚠ menos de 7
+  2027-06-18  multimedia 3/10  ⚠ menos de 5
+  2027-06-19  multimedia 4/10  ⚠ menos de 5
+  2027-06-20  multimedia 3/10  ⚠ menos de 5
+  2027-06-21  multimedia 4/10  ⚠ menos de 5
+  2027-06-22  multimedia 4/10  ⚠ menos de 5
+  2027-06-23  multimedia 1/10  ⚠ menos de 5
+  2027-06-24  multimedia 3/10  ⚠ menos de 7
+  2027-06-25  multimedia 3/10  ⚠ menos de 5
+  2027-06-26  multimedia 3/10  ⚠ menos de 5
+  2027-06-27  multimedia 3/10  ⚠ menos de 5
+  2027-06-28  multimedia 3/10  ⚠ menos de 5
+  2027-06-29  multimedia 4/10  ⚠ menos de 5
+  2027-06-30  multimedia 2/10  ⚠ menos de 5
+  2027-07-01  multimedia 3/10  ⚠ menos de 7
+  2027-07-02  multimedia 3/10  ⚠ menos de 5
+  2027-07-03  multimedia 3/10  ⚠ menos de 5
+  2027-07-04  multimedia 3/10  ⚠ menos de 5
+  2027-07-05  multimedia 3/10  ⚠ menos de 5
+  2027-07-06  multimedia 3/10  ⚠ menos de 5
+  2027-07-07  multimedia 1/10  ⚠ menos de 5
+  2027-07-08  multimedia 3/10  ⚠ menos de 7
+  2027-07-09  multimedia 3/10  ⚠ menos de 5
+  2027-07-10  multimedia 3/10  ⚠ menos de 5
+  2027-07-11  multimedia 0/10  ⚠ menos de 5
+  2027-07-12  multimedia 3/10  ⚠ menos de 5
+  2027-07-13  multimedia 3/10  ⚠ menos de 5
+  2027-07-14  multimedia 1/10  ⚠ menos de 5
+  2027-07-15  multimedia 3/10  ⚠ menos de 7
+  2027-07-16  multimedia 3/10  ⚠ menos de 5
+  2027-07-17  multimedia 3/10  ⚠ menos de 5
+  2027-07-18  multimedia 3/10  ⚠ menos de 5
+  2027-07-19  multimedia 3/10  ⚠ menos de 5
+  2027-07-20  multimedia 3/10  ⚠ menos de 5
+  2027-07-21  multimedia 1/10  ⚠ menos de 5
+  2027-07-22  multimedia 3/10  ⚠ menos de 7
+  2027-07-23  multimedia 3/10  ⚠ menos de 5
+  2027-07-24  multimedia 3/10  ⚠ menos de 5
+  2027-07-25  multimedia 1/10  ⚠ menos de 5
+  2027-07-26  multimedia 4/10  ⚠ menos de 5
+  2027-07-27  multimedia 4/10  ⚠ menos de 5
+  2027-07-28  multimedia 1/10  ⚠ menos de 5
+  2027-07-29  multimedia 3/10  ⚠ menos de 7
+  2027-07-30  multimedia 3/10  ⚠ menos de 5
+  2027-07-31  multimedia 4/10  ⚠ menos de 5
+  2027-08-01  multimedia 3/10  ⚠ menos de 5
+  2027-08-02  multimedia 4/10  ⚠ menos de 5
+  2027-08-03  multimedia 3/10  ⚠ menos de 5
+  2027-08-04  multimedia 1/10  ⚠ menos de 5
+  2027-08-05  multimedia 3/10  ⚠ menos de 7
+  2027-08-06  multimedia 3/10  ⚠ menos de 5
+  2027-08-07  multimedia 3/10  ⚠ menos de 5
+  2027-08-08  multimedia 3/10  ⚠ menos de 5
+  2027-08-09  multimedia 3/10  ⚠ menos de 5
+  2027-08-10  multimedia 3/10  ⚠ menos de 5
+  2027-08-11  multimedia 2/10  ⚠ menos de 5
+  2027-08-12  multimedia 3/10  ⚠ menos de 7
+  2027-08-13  multimedia 3/10  ⚠ menos de 5
+  2027-08-14  multimedia 4/10  ⚠ menos de 5
+  2027-08-15  multimedia 3/10  ⚠ menos de 5
+  2027-08-16  multimedia 3/10  ⚠ menos de 5
+  2027-08-17  multimedia 3/10  ⚠ menos de 5
+  2027-08-18  multimedia 1/10  ⚠ menos de 5
+  2027-08-19  multimedia 3/10  ⚠ menos de 7
+  2027-08-20  multimedia 3/10  ⚠ menos de 5
+  2027-08-21  multimedia 3/10  ⚠ menos de 5
+  2027-08-22  multimedia 3/10  ⚠ menos de 5
+  2027-08-23  multimedia 4/10  ⚠ menos de 5
+  2027-08-24  multimedia 3/10  ⚠ menos de 5
+  2027-08-25  multimedia 2/10  ⚠ menos de 5
+  2027-08-26  multimedia 3/10  ⚠ menos de 7
+  2027-08-27  multimedia 3/10  ⚠ menos de 5
+  2027-08-28  multimedia 3/10  ⚠ menos de 5
+  2027-08-29  multimedia 3/10  ⚠ menos de 5
+  2027-08-30  multimedia 3/10  ⚠ menos de 5
+  2027-08-31  multimedia 3/10  ⚠ menos de 5
+  2027-09-01  multimedia 1/10  ⚠ menos de 5
+  2027-09-02  multimedia 3/10  ⚠ menos de 7
+  2027-09-03  multimedia 3/10  ⚠ menos de 5
+  2027-09-04  multimedia 3/10  ⚠ menos de 5
+  2027-09-05  multimedia 3/10  ⚠ menos de 5
+  2027-09-06  multimedia 3/10  ⚠ menos de 5
+  2027-09-07  multimedia 3/10  ⚠ menos de 5
+  2027-09-08  multimedia 1/10  ⚠ menos de 5
+  2027-09-09  multimedia 3/10  ⚠ menos de 7
+  2027-09-10  multimedia 3/10  ⚠ menos de 5
+  2027-09-11  multimedia 4/10  ⚠ menos de 5
+  2027-09-12  multimedia 3/10  ⚠ menos de 5
+  2027-09-13  multimedia 3/10  ⚠ menos de 5
+  2027-09-14  multimedia 3/10  ⚠ menos de 5
+  2027-09-15  multimedia 1/10  ⚠ menos de 5
+  2027-09-16  multimedia 3/10  ⚠ menos de 7
+  2027-09-17  multimedia 3/10  ⚠ menos de 5
+  2027-09-18  multimedia 3/10  ⚠ menos de 5
+  2027-09-19  multimedia 3/10  ⚠ menos de 5
+  2027-09-20  multimedia 3/10  ⚠ menos de 5
+  2027-09-21  multimedia 4/10  ⚠ menos de 5
+  2027-09-22  multimedia 1/10  ⚠ menos de 5
+  2027-09-23  multimedia 3/10  ⚠ menos de 7
+  2027-09-24  multimedia 3/10  ⚠ menos de 5
+  2027-09-25  multimedia 3/10  ⚠ menos de 5
+  2027-09-26  multimedia 3/10  ⚠ menos de 5
+  2027-09-27  multimedia 4/10  ⚠ menos de 5
+  2027-09-28  multimedia 4/10  ⚠ menos de 5
+  2027-09-29  multimedia 2/10  ⚠ menos de 5
+  2027-09-30  multimedia 4/10  ⚠ menos de 7
+  2027-10-01  multimedia 3/10  ⚠ menos de 5
+  2027-10-02  multimedia 3/10  ⚠ menos de 5
+  2027-10-03  multimedia 1/10  ⚠ menos de 5
+  2027-10-04  multimedia 3/10  ⚠ menos de 5
+  2027-10-05  multimedia 3/10  ⚠ menos de 5
+  2027-10-06  multimedia 1/10  ⚠ menos de 5
+  2027-10-07  multimedia 3/10  ⚠ menos de 7
+  2027-10-08  multimedia 3/10  ⚠ menos de 5
+  2027-10-09  multimedia 3/10  ⚠ menos de 5
+  2027-10-10  multimedia 4/10  ⚠ menos de 5
+  2027-10-11  multimedia 3/10  ⚠ menos de 5
+  2027-10-12  multimedia 4/10  ⚠ menos de 5
+  2027-10-13  multimedia 1/10  ⚠ menos de 5
+  2027-10-14  multimedia 3/10  ⚠ menos de 7
+  2027-10-15  multimedia 3/10  ⚠ menos de 5
+  2027-10-16  multimedia 3/10  ⚠ menos de 5
+  2027-10-17  multimedia 1/10  ⚠ menos de 5
+  2027-10-18  multimedia 4/10  ⚠ menos de 5
+  2027-10-19  multimedia 3/10  ⚠ menos de 5
+  2027-10-20  multimedia 1/10  ⚠ menos de 5
+  2027-10-21  multimedia 3/10  ⚠ menos de 7
+  2027-10-22  multimedia 3/10  ⚠ menos de 5
+  2027-10-23  multimedia 3/10  ⚠ menos de 5
+  2027-10-24  multimedia 3/10  ⚠ menos de 5
+  2027-10-25  multimedia 3/10  ⚠ menos de 5
+  2027-10-26  multimedia 3/10  ⚠ menos de 5
+  2027-10-27  multimedia 1/10  ⚠ menos de 5
+  2027-10-28  multimedia 3/10  ⚠ menos de 7
+  2027-10-29  multimedia 4/10  ⚠ menos de 5
+  2027-10-30  multimedia 3/10  ⚠ menos de 5
+  2027-10-31  multimedia 3/10  ⚠ menos de 5
+  2027-11-01  multimedia 3/10  ⚠ menos de 5
+  2027-11-02  multimedia 3/10  ⚠ menos de 5
+  2027-11-03  multimedia 1/10  ⚠ menos de 5
+  2027-11-04  multimedia 3/10  ⚠ menos de 7
+  2027-11-05  multimedia 3/10  ⚠ menos de 5
+  2027-11-06  multimedia 3/10  ⚠ menos de 5
+  2027-11-07  multimedia 3/10  ⚠ menos de 5
+  2027-11-08  multimedia 3/10  ⚠ menos de 5
+  2027-11-09  multimedia 4/10  ⚠ menos de 5
+  2027-11-10  multimedia 1/10  ⚠ menos de 5
+  2027-11-11  multimedia 4/10  ⚠ menos de 7
+  2027-11-12  multimedia 3/10  ⚠ menos de 5
+  2027-11-13  multimedia 3/10  ⚠ menos de 5
+  2027-11-14  multimedia 3/10  ⚠ menos de 5
+  2027-11-15  multimedia 3/10  ⚠ menos de 5
+  2027-11-16  multimedia 3/10  ⚠ menos de 5
+  2027-11-17  multimedia 1/10  ⚠ menos de 5
+  2027-11-18  multimedia 3/10  ⚠ menos de 7
+  2027-11-19  multimedia 3/10  ⚠ menos de 5
+  2027-11-20  multimedia 3/10  ⚠ menos de 5
+  2027-11-21  multimedia 3/10  ⚠ menos de 5
+  2027-11-22  multimedia 3/10  ⚠ menos de 5
+  2027-11-23  multimedia 4/10  ⚠ menos de 5
+  2027-11-24  multimedia 1/10  ⚠ menos de 5
+  2027-11-25  multimedia 3/10  ⚠ menos de 7
+  2027-11-26  multimedia 3/10  ⚠ menos de 5
+  2027-11-27  multimedia 4/10  ⚠ menos de 5
+  2027-11-28  multimedia 3/10  ⚠ menos de 5
+  2027-11-29  multimedia 3/10  ⚠ menos de 5
+  2027-11-30  multimedia 3/10  ⚠ menos de 5
+  2027-12-01  multimedia 2/10  ⚠ menos de 5
+  2027-12-02  multimedia 4/10  ⚠ menos de 7
+  2027-12-03  multimedia 3/10  ⚠ menos de 5
+  2027-12-04  multimedia 4/10  ⚠ menos de 5
+  2027-12-05  multimedia 3/10  ⚠ menos de 5
+  2027-12-06  multimedia 3/10  ⚠ menos de 5
+  2027-12-07  multimedia 3/10  ⚠ menos de 5
+  2027-12-08  multimedia 1/10  ⚠ menos de 5
+  2027-12-09  multimedia 3/10  ⚠ menos de 7
+  2027-12-10  multimedia 3/10  ⚠ menos de 5
+  2027-12-11  multimedia 3/10  ⚠ menos de 5
+  2027-12-12  multimedia 3/10  ⚠ menos de 5
+  2027-12-13  multimedia 3/10  ⚠ menos de 5
+  2027-12-14  multimedia 3/10  ⚠ menos de 5
+  2027-12-15  multimedia 1/10  ⚠ menos de 5
+  2027-12-16  multimedia 3/10  ⚠ menos de 7
+  2027-12-17  multimedia 3/10  ⚠ menos de 5
+  2027-12-18  multimedia 3/10  ⚠ menos de 5
+  2027-12-19  multimedia 2/10  ⚠ menos de 5
+  2027-12-20  multimedia 3/10  ⚠ menos de 5
+  2027-12-21  multimedia 3/10  ⚠ menos de 5
+  2027-12-22  multimedia 1/10  ⚠ menos de 5
+  2027-12-23  multimedia 3/10  ⚠ menos de 7
+  2027-12-24  multimedia 4/10  ⚠ menos de 5
+  2027-12-25  multimedia 4/10  ⚠ menos de 5
+  2027-12-26  multimedia 0/10  ⚠ menos de 5
+  2027-12-27  multimedia 3/10  ⚠ menos de 5
+  2027-12-28  multimedia 3/10  ⚠ menos de 5
+  2027-12-29  multimedia 1/10  ⚠ menos de 5
+  2027-12-30  multimedia 3/10  ⚠ menos de 7
+  2027-12-31  multimedia 3/10  ⚠ menos de 5
