@@ -224,11 +224,18 @@ class MediaStore:
         ctype = r.headers.get("Content-Type", "image/jpeg").split(";")[0]
         return self.put(path, r.content, ctype)
 
-    def mirror_clip(self, url: str, start_s: float = 0, seconds: int = 20) -> str:
-        """Descarga, recorta con ffmpeg a `seconds` y sube como MP3."""
-        path = "audio/" + hashlib.sha1(f"{url}|{start_s}|{seconds}".encode()).hexdigest()[:20] + ".mp3"
+    def mirror_clip(self, url: str, start_s: float = 0, seconds: int = 20, key: str | None = None) -> str:
+        """Descarga, recorta con ffmpeg a `seconds` y sube como MP3.
+
+        `url` puede ser una función que devuelve el enlace (para enlaces que caducan);
+        `key` identifica el audio cuando el enlace cambia en cada consulta."""
+        path = "audio/" + hashlib.sha1(f"{key or url}|{start_s}|{seconds}".encode()).hexdigest()[:20] + ".mp3"
         if self.exists(path):
             return self.public_url(path)
+        if callable(url):
+            url = url()
+            if not url:
+                raise RuntimeError("el audio ya no está disponible")
         if not shutil.which("ffmpeg"):
             raise RuntimeError("Falta ffmpeg para recortar el audio")
         with tempfile.TemporaryDirectory() as tmp:

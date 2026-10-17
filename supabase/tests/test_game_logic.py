@@ -426,8 +426,15 @@ def test_media_questions(db):
     p.call("select submit_answer(1, '2')", today=day)
     q = p.call("select next_question()", today=day)["question"]
     assert q["image_attribution"].startswith("Foto")
+    # Vídeo: el tráiler viaja en extra; la respuesta, no
+    db.execute("""update questions set format = 'video', time_limit_ms = 45000,
+                  extra = '{"youtube": "abc123", "start": 20, "end": 45}' where id = %s""", (qids[3],))
+    p.call("select submit_answer(2, '2')", today=day)
+    q = p.call("select next_question()", today=day)["question"]
+    assert q["format"] == "video" and q["extra"]["youtube"] == "abc123" and q["time_limit_ms"] == 45000
+    assert "answer" not in q
     with pytest.raises(psycopg.errors.CheckViolation):
-        db.execute("update questions set format = 'video' where id = %s", (qids[3],))
+        db.execute("update questions set format = 'hologram' where id = %s", (qids[4],))
 
 
 # ---------------------------------------------------------------------------

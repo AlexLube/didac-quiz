@@ -13,3 +13,7 @@ app/ios/
 app/.metadata
 app/pubspec.lock
 .env
+app/.idea/
+app/*.iml
+app/README.md
+app/.gitignore

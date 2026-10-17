@@ -68,7 +68,12 @@ class Supabase:
                     q["options"] = [dict(o, image=store.mirror_image(o["image"]))
                                     if o.get("image") and "supabase" not in o["image"] else o
                                     for o in q["options"]]
-                if q.get("audio_url") and "supabase" not in q["audio_url"]:
+                if q.get("audio_url", "").startswith("deezer:"):
+                    from .tmdb import deezer_preview
+                    track = int(q["audio_url"].split(":")[1])
+                    q["audio_url"] = store.mirror_clip(lambda: deezer_preview(track), 0, key=q["audio_url"])
+                    q["media_start_ms"] = 0
+                elif q.get("audio_url") and "supabase" not in q["audio_url"]:
                     q["audio_url"] = store.mirror_clip(q["audio_url"], q.get("_audio_start_s", 0))
                     q["media_start_ms"] = 0
             except Exception as e:  # noqa: BLE001 - sin su medio, la pregunta no se usa

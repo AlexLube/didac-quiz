@@ -65,6 +65,8 @@ class Film:
     location_photos: list[dict] = field(default_factory=list)  # fotos libres de lugares de rodaje
     locations: list[dict] = field(default_factory=list)   # lugares de rodaje con coordenadas
     still: dict | None = None             # imagen de dominio público (solo cine antiguo)
+    tmdb: dict | None = None              # fotogramas, reparto y tráileres de TMDB (ver tmdb.py)
+    soundtrack: dict | None = None        # fragmento de la banda sonora (Deezer)
 
     @staticmethod
     def from_dict(d: dict) -> "Film":

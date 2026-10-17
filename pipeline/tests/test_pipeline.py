@@ -312,18 +312,20 @@ def test_upload_rows_fill_defaults(monkeypatch):
 
 
 def test_schedule_guarantees_media_each_day():
-    """Con pocas preguntas multimedia entre muchas, igual salen 2 al día."""
+    """Con pocas preguntas multimedia entre muchas, igual salen 5 al día (7 los jueves)."""
     from didacquiz_pipeline.schedule import is_media
     rng = random.Random(3)
     topics = ["year", "director", "cast", "composer", "writer", "character", "country", "longest"]
     qs = [{"external_id": f"t{i}", "difficulty": rng.choice([1, 1, 2, 2, 3, 3]), "format": "choice",
            "topic": rng.choice(topics), "entity_ids": [f"F{i}"]} for i in range(20000)]
-    # 1,5 % multimedia, como en el banco real
+    # ~3 % multimedia
     media = [{"external_id": f"m{i}", "difficulty": rng.choice([1, 2, 2, 3]),
-              "format": rng.choice(["emoji", "image_choice", "audio"]),
-              "topic": "emoji", "entity_ids": [f"M{i}"]} for i in range(300)]
+              "format": rng.choice(["image_choice", "audio", "video"]),
+              "topic": rng.choice(["still", "actor_photo", "soundtrack", "trailer_year"]),
+              "entity_ids": [f"M{i}"]} for i in range(1000)]
     cal = plan(qs + media, dt.date(2027, 1, 1), days=100, spacing=30)
     by_id = {q["external_id"]: q for q in qs + media}
     counts = [sum(is_media(by_id[x]) for x in c["external_ids"]) for c in cal]
-    assert min(counts) >= 2, counts[:10]
+    thursday = [dt.date.fromisoformat(c["date"]).weekday() == 3 for c in cal]
+    assert all(n >= (7 if th else 5) for n, th in zip(counts, thursday)), counts[:14]
     assert all(len(c["external_ids"]) == 10 for c in cal)

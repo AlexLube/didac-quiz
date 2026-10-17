@@ -3,12 +3,12 @@
 Reglas de cada reto de 10 preguntas:
 · 4 fáciles + 4 medias + 2 difíciles (la puntuación real puede variar por formato);
 · al menos 6 temas distintos (máximo 2 del mismo);
-· al menos 2 preguntas visuales o sonoras y al menos 2 interactivas;
+· al menos 5 preguntas con foto, sonido o vídeo y al menos 2 interactivas;
 · la misma película, actor o director no se repite en 60 días.
 
 Días especiales:
 · domingo: reto temático (cine español, clásico, una década, sagas...);
-· miércoles: «minijuegos» (≥5 interactivas); jueves: «imagen y sonido» (≥5 visuales).
+· miércoles: «minijuegos» (≥5 interactivas); jueves: «imagen y sonido» (≥7 multimedia).
 """
 from __future__ import annotations
 
@@ -16,10 +16,10 @@ import datetime as dt
 import random
 from collections import deque
 
-from .variety import INTERACTIVE_FORMATS, VISUAL_FORMATS
+from .variety import INTERACTIVE_FORMATS, MEDIA_FORMATS
 
 MIX = {1: 4, 2: 4, 3: 2}
-MEDIA_FORMATS = VISUAL_FORMATS   # compatibilidad
+SPOTLIGHT_MEDIA = 7
 
 SUNDAY_THEMES = [
     ("country:ES", {"es": "Domingo de cine español", "en": "Spanish cinema Sunday"}),
@@ -42,7 +42,7 @@ SPOTLIGHTS = {
 
 
 def is_media(q: dict) -> bool:
-    return q.get("format") in VISUAL_FORMATS
+    return q.get("format") in MEDIA_FORMATS
 
 
 def is_interactive(q: dict) -> bool:
@@ -50,7 +50,7 @@ def is_interactive(q: dict) -> bool:
 
 
 def plan(questions: list[dict], start: dt.date, days: int, spacing: int = 60,
-         min_formats: int = 6, min_media: int = 2, min_interactive: int = 2,
+         min_formats: int = 6, min_media: int = 5, min_interactive: int = 2,
          used_external_ids: set[str] | None = None, seed: int = 7, specials: bool = True,
          recent_entities: list[set[str]] | None = None) -> list[dict]:
     rng = random.Random(seed)
@@ -111,7 +111,8 @@ def plan(questions: list[dict], start: dt.date, days: int, spacing: int = 60,
                 if picked < count:
                     ok = False
                     break
-            if ok and (len(kinds) >= min_formats or relax or tag):
+            # Sin llegar al mínimo de multimedia se reintenta con menos restricciones
+            if ok and (len(kinds) >= min_formats or relax or tag) and (media >= want_media or relax):
                 return chosen, entities
         return None
 
@@ -131,7 +132,7 @@ def plan(questions: list[dict], start: dt.date, days: int, spacing: int = 60,
                     break
         elif specials and day.weekday() in SPOTLIGHTS:
             which, ttl = SPOTLIGHTS[day.weekday()]
-            result = pick_day(blocked, 5 if which == "visual" else min_media,
+            result = pick_day(blocked, SPOTLIGHT_MEDIA if which == "visual" else min_media,
                               5 if which == "interactive" else min_interactive, None)
             if result:
                 kind, title = "spotlight", ttl

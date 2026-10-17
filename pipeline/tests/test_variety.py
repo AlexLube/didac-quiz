@@ -29,6 +29,11 @@ def enriched_films():
             f.location_photos = [{"qid": f"QP{i}-{k}", "name_es": f"Foto {k}", "name_en": f"Photo {k}",
                                   "url": f"https://example.org/{i}-{k}.jpg", "license": "CC BY 4.0",
                                   "artist": "Autor", "mime": "image/jpeg", "file": f"{i}{k}.jpg"} for k in range(3)]
+        if i % 2 == 0:   # fotogramas, fotos del reparto y tráileres (TMDB)
+            f.tmdb = {"id": i, "backdrops": [f"/b{i}.jpg"], "videos": [{"key": f"yt{i}"}] if i % 4 else [],
+                      "cast": [{"name": p.name, "profile": f"/p{p.qid}.jpg"} for p in f.cast]}
+        if i % 5 == 0:
+            f.soundtrack = {"track_id": i, "artist": "Orquesta"}
     emojis = {f.qid: "🎬🔥" for f in films[::5]}
     return films, emojis
 
@@ -111,7 +116,7 @@ def test_schedule_daily_variety_and_sunday_theme(data):
         day = dt.date.fromisoformat(c["date"])
         chosen = [by_id[x] for x in c["external_ids"]]
         assert len(chosen) == 10
-        assert sum(map(is_media, chosen)) >= 2, c["date"]
+        assert sum(map(is_media, chosen)) >= 5, c["date"]
         assert sum(map(is_interactive, chosen)) >= 2, c["date"]
         assert [q["difficulty"] for q in chosen] == sorted(q["difficulty"] for q in chosen)
         kinds[day.weekday()] = c["kind"]
@@ -119,7 +124,7 @@ def test_schedule_daily_variety_and_sunday_theme(data):
             assert c["theme"] and c["title"]["es"]
             assert all(c["theme"] in q["_tags"] for q in chosen)
         if c["kind"] == "spotlight" and day.weekday() == 3:
-            assert sum(map(is_media, chosen)) >= 5
+            assert sum(map(is_media, chosen)) >= 7
         if c["kind"] == "spotlight" and day.weekday() == 2:
             assert sum(map(is_interactive, chosen)) >= 5
     assert kinds[6] == "special" and kinds[0] == "general"

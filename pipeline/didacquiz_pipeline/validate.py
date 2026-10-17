@@ -13,7 +13,7 @@ from .wikidata import Film
 
 FORMATS = {"choice", "true_false", "order", "intruder", "decade", "clues", "emoji", "image_choice",
            "image_reveal", "audio", "year_slider", "versus", "match", "map", "burst", "typed_title",
-           "odd_images", "pick_two"}
+           "odd_images", "pick_two", "video"}
 NO_OPTIONS = {"year_slider", "map", "typed_title"}
 
 
@@ -357,6 +357,34 @@ def _semantic_new_types(q, films, film, names, correct) -> list[str] | None:
                     errs.append("otra opción también se rodó allí")
         if topic == "music_film" and not q.get("audio_url"):
             errs.append("falta el audio")
+    elif topic == "soundtrack" and film:
+        if _norm(correct) != _norm(f"«{film.title_es}»"):
+            errs.append("la película correcta no coincide")
+        if not q.get("audio_url"):
+            errs.append("falta el audio")
+    elif topic == "actor_photo":
+        person, fq = ((q.get("entity_ids") or []) + [None, None])[:2]
+        film = films.get(fq)
+        cast = {p.qid: p.name for p in film.cast} if film else {}
+        if person not in cast:
+            errs.append("la persona no está en el reparto")
+        elif _norm(correct) != _norm(cast[person]):
+            errs.append("el nombre correcto no coincide")
+        elif any(_norm(n) in {_norm(x) for x in cast.values()} for n in wrong):
+            errs.append("una opción incorrecta también está en el reparto")
+        if not q.get("image_url"):
+            errs.append("falta la imagen")
+    elif topic == "trailer_director" and film:
+        real = {_norm(d.name) for d in film.directors}
+        if _norm(correct) not in real or any(_norm(n) in real for n in wrong):
+            errs.append("el director del tráiler no cuadra")
+        if not (q.get("extra") or {}).get("youtube"):
+            errs.append("falta el vídeo")
+    elif topic == "trailer_year" and film:
+        if correct != str(film.year) or str(film.year) in wrong:
+            errs.append("el año del tráiler no cuadra")
+        if not (q.get("extra") or {}).get("youtube"):
+            errs.append("falta el vídeo")
     elif topic == "music_piece":
         if not q.get("audio_url"):
             errs.append("falta el audio")

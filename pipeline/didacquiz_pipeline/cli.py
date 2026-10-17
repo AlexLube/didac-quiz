@@ -51,6 +51,8 @@ def cmd_fetch(args) -> None:
 
 def cmd_build(args) -> None:
     films = load_films(DATA / "films.json")
+    from .tmdb import enrich
+    enrich(films, DATA / "tmdb.json")
     music = json.loads((DATA / "music.json").read_text(encoding="utf-8")) if (DATA / "music.json").exists() else []
     cache_path = DATA / "emoji.json"
     cache = json.loads(cache_path.read_text(encoding="utf-8")) if cache_path.exists() else {}
@@ -147,7 +149,7 @@ def cmd_check(args) -> None:
         sys.exit(1)
 
 
-from .variety import VISUAL_FORMATS as MEDIA_FORMATS  # noqa: E402
+from .variety import MEDIA_FORMATS  # noqa: E402
 
 
 def cmd_report(args) -> None:
