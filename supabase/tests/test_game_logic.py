@@ -248,6 +248,15 @@ def test_guest_then_register_keeps_game(db):
     assert board["me"]["points"] == 18
 
 
+def test_register_with_email_link(db):
+    p = Player(db)
+    out = p.call("select register_profile(%s, %s, %s, %s, 'email')", ("correo.cine", "ES", 1, 1990))
+    assert out["recovery_code"] is None  # el correo ya sirve para recuperar la cuenta
+    assert out["profile"]["auth_method"] == "email"
+    with pytest.raises(psycopg.errors.RaiseException, match="invalid_auth_method"):
+        Player(db).call("select register_profile(%s, %s, %s, %s, 'fax')", ("otro.cine", "ES", 1, 1990))
+
+
 def test_alias_rules(db):
     p = Player(db)
     assert p.call("select is_alias_available('ab')") == "invalid"

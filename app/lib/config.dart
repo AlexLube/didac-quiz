@@ -15,7 +15,13 @@ class Config {
       bool.fromEnvironment('ENABLE_GOOGLE_LOGIN', defaultValue: false);
   static const enableAppleLogin =
       bool.fromEnvironment('ENABLE_APPLE_LOGIN', defaultValue: false);
-  static const oauthRedirect = 'com.didacquiz.app://login-callback/';
+  static const enableEmailLogin =
+      bool.fromEnvironment('ENABLE_EMAIL_LOGIN', defaultValue: false);
+
+  /// A dónde vuelve el usuario tras entrar con Google o con el enlace del correo:
+  /// en la web, a la misma página; en el móvil, a la app.
+  static String get authRedirect =>
+      kIsWeb ? '${Uri.base.origin}${Uri.base.path}' : 'com.didacquiz.app://login-callback/';
 
   static const privacyUrl = String.fromEnvironment('PRIVACY_URL',
       defaultValue: 'https://www.didaccine.com/didac-quiz-privacidad');
