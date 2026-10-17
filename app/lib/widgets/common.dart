@@ -40,16 +40,26 @@ class TimerBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = fraction > 0.5
-        ? AppColors.success
-        : (fraction > 0.25 ? AppColors.amber : AppColors.error);
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(8),
-      child: LinearProgressIndicator(
-        value: fraction.clamp(0, 1),
-        minHeight: 12,
-        backgroundColor: AppColors.surfaceHigh,
-        valueColor: AlwaysStoppedAnimation(color),
+    final f = fraction.clamp(0.0, 1.0);
+    final colors = f > 0.5
+        ? const [AppColors.goldDeep, AppColors.gold]
+        : (f > 0.25 ? const [Color(0xFFE07B1F), AppColors.accent] : const [AppColors.curtainDeep, AppColors.error]);
+    return Container(
+      height: 10,
+      decoration: BoxDecoration(
+        color: AppColors.surfaceHigh,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      alignment: Alignment.centerLeft,
+      child: FractionallySizedBox(
+        widthFactor: f,
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            gradient: LinearGradient(colors: colors),
+            boxShadow: [BoxShadow(color: colors.last.withValues(alpha: 0.6), blurRadius: 10)],
+          ),
+        ),
       ),
     );
   }
@@ -74,62 +84,80 @@ class OptionButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Color border = AppColors.border;
-    Color fill = AppColors.surface;
+    Color glow = Colors.transparent;
+    List<Color> fill = [AppColors.surfaceHigh, AppColors.surface];
+    IconData? mark;
     switch (state) {
       case OptionState.selected:
-        border = AppColors.amber;
+        border = AppColors.accent;
+        glow = AppColors.accent.withValues(alpha: 0.35);
       case OptionState.correct:
         border = AppColors.success;
-        fill = AppColors.success.withValues(alpha: 0.2);
+        glow = AppColors.success.withValues(alpha: 0.45);
+        fill = [AppColors.success.withValues(alpha: 0.32), AppColors.success.withValues(alpha: 0.12)];
+        mark = Icons.check_circle_rounded;
       case OptionState.wrong:
         border = AppColors.error;
-        fill = AppColors.error.withValues(alpha: 0.2);
+        glow = AppColors.error.withValues(alpha: 0.35);
+        fill = [AppColors.error.withValues(alpha: 0.3), AppColors.error.withValues(alpha: 0.1)];
+        mark = Icons.cancel_rounded;
       default:
         break;
     }
     final removed = state == OptionState.removed;
+    final active = state == OptionState.selected || state == OptionState.correct;
     return AnimatedOpacity(
       duration: const Duration(milliseconds: 250),
-      opacity: removed ? 0.25 : 1,
-      child: AnimatedContainer(
+      opacity: removed ? 0.25 : (state == OptionState.disabled ? 0.7 : 1),
+      child: AnimatedScale(
         duration: const Duration(milliseconds: 200),
-        margin: const EdgeInsets.only(bottom: 12),
-        decoration: BoxDecoration(
-          color: fill,
-          borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: border, width: 2),
-        ),
-        child: Material(
-          type: MaterialType.transparency,
-          child: InkWell(
-            borderRadius: BorderRadius.circular(22),
-            onTap: state == OptionState.idle ? onTap : null,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-              child: Row(
-                children: [
-                  Container(
-                    width: 32,
-                    height: 32,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: AppColors.surfaceHigh,
-                      borderRadius: BorderRadius.circular(10),
+        scale: state == OptionState.correct ? 1.03 : 1,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 220),
+          margin: const EdgeInsets.only(bottom: 12),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: fill),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: border, width: 1.6),
+            boxShadow: [BoxShadow(color: glow, blurRadius: 18)],
+          ),
+          child: Material(
+            type: MaterialType.transparency,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(18),
+              onTap: state == OptionState.idle ? onTap : null,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 15),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 34,
+                      height: 34,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        gradient: active ? AppColors.goldGradient : null,
+                        color: active ? null : AppColors.background.withValues(alpha: 0.6),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: AppColors.accent.withValues(alpha: active ? 0 : 0.4)),
+                      ),
+                      child: Text(letter,
+                          style: AppFonts.marquee(20,
+                              color: active ? const Color(0xFF241705) : AppColors.accent, spacing: 0)),
                     ),
-                    child: Text(letter, style: const TextStyle(fontWeight: FontWeight.w800)),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Text(
-                      label,
-                      style: TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w600,
-                        decoration: removed ? TextDecoration.lineThrough : null,
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Text(
+                        label,
+                        style: TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w600,
+                          decoration: removed ? TextDecoration.lineThrough : null,
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                    if (mark != null) Icon(mark, color: border, size: 24),
+                  ],
+                ),
               ),
             ),
           ),

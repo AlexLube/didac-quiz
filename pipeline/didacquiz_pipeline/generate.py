@@ -737,13 +737,8 @@ class Generator:
         return out
 
     def q_still(self, film: Film) -> Question | None:
-        from . import media
-        # Soporta tanto imágenes de dominio público en Wikidata como carteles/fotogramas de TMDB si está configurado
+        # Imagen de dominio público de Wikidata (los fotogramas de TMDB van en multimedia.py)
         img_info = film.still
-        if not img_info:
-            tmdb_img = media.search_tmdb_image(film.title_en, film.year)
-            if tmdb_img:
-                img_info = tmdb_img
         if not img_info:
             return None
 
@@ -849,8 +844,9 @@ class Generator:
             q = self.q_longest(self._pick(timed[i : i + 8], 4))
             if q:
                 out.append(q)
-        from . import variety
+        from . import multimedia, variety
         out += variety.generate(self)
+        out += multimedia.generate(self)
         by_qid = {f.qid: f for f in self.films}
         for q in out:
             q.setdefault("extra", {})

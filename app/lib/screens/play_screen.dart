@@ -12,6 +12,7 @@ import '../widgets/audio_clip.dart';
 import '../widgets/cinema.dart';
 import '../widgets/common.dart';
 import '../widgets/formats.dart';
+import '../widgets/trailer.dart';
 import 'result_screen.dart';
 
 class PlayScreen extends StatefulWidget {
@@ -289,6 +290,14 @@ class _PlayScreenState extends State<PlayScreen> {
             ),
             const SizedBox(height: 14),
             if (q.imageUrl != null) _QuestionImage(q: q, fraction: fraction),
+            if (q.format == 'video' && q.extra['youtube'] is String)
+              TrailerClip(
+                key: ValueKey('video-${q.id}'),
+                videoId: q.extra['youtube'] as String,
+                startS: asInt(q.extra['start']),
+                endS: asInt(q.extra['end']),
+                stop: _feedback != _Feedback.none,
+              ),
             if (q.clues.isNotEmpty) ProgressiveClues(q: q, remainingMs: _remainingMs),
             if (q.audioUrl != null)
               AudioClip(
@@ -536,7 +545,9 @@ class _FeedbackOverlay extends StatelessWidget {
       _ => (tr('wrong'), AppColors.error, Icons.cancel_rounded),
     };
     return IgnorePointer(
-      child: Align(
+      child: Stack(children: [
+        if (feedback == _Feedback.correct) const Positioned.fill(child: ConfettiBurst()),
+        Align(
         alignment: Alignment.center,
         child: TweenAnimationBuilder<double>(
           tween: Tween(begin: 0.85, end: 1),
@@ -546,10 +557,11 @@ class _FeedbackOverlay extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
             decoration: BoxDecoration(
-              color: AppColors.surface.withValues(alpha: 0.96),
-              borderRadius: BorderRadius.circular(18),
+              color: AppColors.background.withValues(alpha: 0.94),
+              borderRadius: BorderRadius.circular(20),
               border: Border.all(color: color, width: 2),
               boxShadow: [
+                BoxShadow(color: color.withValues(alpha: 0.45), blurRadius: 30),
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.5),
                   blurRadius: 24,
@@ -560,16 +572,15 @@ class _FeedbackOverlay extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(icon, color: color, size: 30),
-                const SizedBox(width: 10),
-                Text(text,
-                    style: TextStyle(
-                        color: color, fontSize: 22, fontWeight: FontWeight.w800, letterSpacing: -0.3)),
+                Icon(icon, color: color, size: 34),
+                const SizedBox(width: 12),
+                Text(text.toUpperCase(), style: AppFonts.marquee(34, color: color, spacing: 1.5)),
               ],
             ),
           ),
         ),
       ),
+      ]),
     );
   }
 }

@@ -16,7 +16,9 @@ from .wikidata import Film
 Question = dict
 
 # Formatos que cuentan como "visuales o sonoros" y como "interactivos" en el calendario.
-VISUAL_FORMATS = {"emoji", "image_choice", "image_reveal", "audio", "odd_images", "map"}
+VISUAL_FORMATS = {"emoji", "image_choice", "image_reveal", "audio", "odd_images", "map", "video"}
+# Multimedia de verdad (foto, sonido o vídeo): lo que cuenta para el mínimo diario.
+MEDIA_FORMATS = {"image_choice", "image_reveal", "audio", "odd_images", "video"}
 INTERACTIVE_FORMATS = {"year_slider", "match", "map", "burst", "typed_title", "pick_two", "order", "versus"}
 
 REVEAL_MODES = ("pixel", "blur", "zoom")

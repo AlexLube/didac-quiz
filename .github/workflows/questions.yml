@@ -49,6 +49,7 @@ jobs:
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
       SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      TMDB_TOKEN: ${{ secrets.TMDB_TOKEN }}
       DAYS: ${{ github.event.inputs.days || '30' }}
       USE_AI: ${{ github.event.inputs.ai || 'true' }}
       REPLACE: ${{ github.event.inputs.replace || 'true' }}
