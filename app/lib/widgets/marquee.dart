@@ -4,6 +4,7 @@ import 'dart:ui' show ImageFilter;
 import 'package:flutter/material.dart';
 
 import '../theme.dart';
+import 'season.dart';
 
 /// Texto con degradado dorado (rótulos de cartelera).
 class GoldText extends StatelessWidget {
@@ -24,12 +25,14 @@ class GoldText extends StatelessWidget {
   }
 }
 
-/// Marco de marquesina: bombillas alrededor que se encienden en cadena.
+/// Marco de marquesina discreto: un filo fino y bombillas pequeñas que se
+/// encienden en una ola lenta. Los colores cambian con la época del año.
 class MarqueeFrame extends StatefulWidget {
   final Widget child;
   final double radius;
   final double spacing;
-  const MarqueeFrame({super.key, required this.child, this.radius = 26, this.spacing = 22});
+  final SeasonTheme? theme;
+  const MarqueeFrame({super.key, required this.child, this.radius = 24, this.spacing = 15, this.theme});
 
   @override
   State<MarqueeFrame> createState() => _MarqueeFrameState();
@@ -37,7 +40,7 @@ class MarqueeFrame extends StatefulWidget {
 
 class _MarqueeFrameState extends State<MarqueeFrame> with SingleTickerProviderStateMixin {
   late final AnimationController _c =
-      AnimationController(vsync: this, duration: const Duration(milliseconds: 1600))..repeat();
+      AnimationController(vsync: this, duration: const Duration(seconds: 7))..repeat();
 
   @override
   void dispose() {
@@ -47,13 +50,15 @@ class _MarqueeFrameState extends State<MarqueeFrame> with SingleTickerProviderSt
 
   @override
   Widget build(BuildContext context) {
+    final theme = widget.theme ?? SeasonTheme.current;
+    final still = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(widget.radius),
-        gradient: AppColors.curtainGradient,
+        color: const Color(0xFF110E17),
         boxShadow: [
-          BoxShadow(color: AppColors.curtain.withValues(alpha: 0.35), blurRadius: 32, spreadRadius: -6),
-          BoxShadow(color: Colors.black.withValues(alpha: 0.6), blurRadius: 24, offset: const Offset(0, 14)),
+          BoxShadow(color: theme.glow.withValues(alpha: 0.16), blurRadius: 30, spreadRadius: -8),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.55), blurRadius: 22, offset: const Offset(0, 12)),
         ],
       ),
       child: Stack(
@@ -63,12 +68,12 @@ class _MarqueeFrameState extends State<MarqueeFrame> with SingleTickerProviderSt
               child: AnimatedBuilder(
                 animation: _c,
                 builder: (context, _) => CustomPaint(
-                  painter: _BulbsPainter(_c.value, widget.radius, widget.spacing),
+                  painter: _BulbsPainter(still ? 0 : _c.value, widget.radius, widget.spacing, theme),
                 ),
               ),
             ),
           ),
-          Padding(padding: const EdgeInsets.all(14), child: widget.child),
+          Padding(padding: const EdgeInsets.all(11), child: widget.child),
         ],
       ),
     );
@@ -79,30 +84,47 @@ class _BulbsPainter extends CustomPainter {
   final double t;
   final double radius;
   final double spacing;
-  _BulbsPainter(this.t, this.radius, this.spacing);
+  final SeasonTheme theme;
+  _BulbsPainter(this.t, this.radius, this.spacing, this.theme);
 
   @override
   void paint(Canvas canvas, Size size) {
-    const inset = 7.0;
+    final outer = RRect.fromRectAndRadius(Offset.zero & size, Radius.circular(radius)).deflate(0.6);
+    canvas.drawRRect(
+        outer,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.2
+          ..shader = LinearGradient(colors: [
+            for (final c in theme.bulbs) c.withValues(alpha: 0.55),
+            theme.bulbs.first.withValues(alpha: 0.55),
+          ]).createShader(Offset.zero & size));
+
+    const inset = 5.5;
     final rect = Rect.fromLTWH(inset, inset, size.width - 2 * inset, size.height - 2 * inset);
     final path = Path()..addRRect(RRect.fromRectAndRadius(rect, Radius.circular(radius - inset)));
     final metric = path.computeMetrics().first;
     final n = (metric.length / spacing).floor();
-    final phase = (t * 3).floor() % 3;
     for (var i = 0; i < n; i++) {
       final pos = metric.getTangentForOffset(i * metric.length / n)!.position;
-      final on = i % 3 == phase;
-      final glow = Paint()
-        ..color = AppColors.gold.withValues(alpha: on ? 0.55 : 0.12)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5);
-      canvas.drawCircle(pos, on ? 6 : 4, glow);
-      canvas.drawCircle(pos, 2.6,
-          Paint()..color = on ? const Color(0xFFFFF4D2) : const Color(0xFF8A6A2A));
+      // Ola suave que recorre el marco dos veces por vuelta.
+      final w = 0.5 + 0.5 * math.cos(2 * math.pi * (2 * i / n - t));
+      final level = 0.18 + 0.62 * w * w * w;
+      final color = theme.bulbs[i % theme.bulbs.length];
+      if (level > 0.4) {
+        canvas.drawCircle(
+            pos,
+            4,
+            Paint()
+              ..color = color.withValues(alpha: (level - 0.4) * 0.6)
+              ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3.5));
+      }
+      canvas.drawCircle(pos, 1.7, Paint()..color = color.withValues(alpha: level));
     }
   }
 
   @override
-  bool shouldRepaint(covariant _BulbsPainter old) => old.t != t;
+  bool shouldRepaint(covariant _BulbsPainter old) => old.t != t || old.theme != theme;
 }
 
 /// Encoge un poco al pulsar (sensación táctil).

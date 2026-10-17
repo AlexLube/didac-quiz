@@ -11,6 +11,7 @@ import '../theme.dart';
 import '../widgets/common.dart';
 import '../services/achievements.dart';
 import '../widgets/marquee.dart';
+import '../widgets/season.dart';
 import '../widgets/unlock_dialog.dart';
 import 'achievements_screen.dart';
 import 'auth_screens.dart';
@@ -340,9 +341,9 @@ class _ChallengeCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.fromLTRB(20, 18, 20, 20),
         decoration: BoxDecoration(
-          color: const Color(0xFF0D0A12),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.gold.withValues(alpha: 0.35)),
+          color: const Color(0xFF0B0910),
+          borderRadius: BorderRadius.circular(15),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -352,7 +353,7 @@ class _ChallengeCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: AppColors.curtain,
+                    color: SeasonTheme.current.tag,
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(tag.toUpperCase(),
