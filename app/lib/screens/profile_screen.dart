@@ -6,11 +6,13 @@ import '../app_state.dart';
 import '../config.dart';
 import '../models.dart';
 import '../services/ads.dart';
+import '../services/achievements.dart';
 import '../services/api.dart';
 import '../strings.dart';
 import '../theme.dart';
 import '../widgets/cinema.dart';
 import '../widgets/common.dart';
+import '../widgets/follow_card.dart';
 import 'admin_screen.dart';
 import 'auth_screens.dart';
 
@@ -38,6 +40,9 @@ class ProfileScreen extends StatelessWidget {
                           .push(MaterialPageRoute(builder: (_) => const AccountScreen())),
                       child: Text(tr('create_account')),
                     ),
+                    const SizedBox(height: 18),
+                    const FollowCard(),
+                    const SizedBox(height: 18),
                   ] else ...[
                     Row(
                       children: [
@@ -50,6 +55,8 @@ class ProfileScreen extends StatelessWidget {
                     Text(tr('badges'), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
                     const SizedBox(height: 10),
                     BadgeRow(bestStreak: p.streakBest),
+                    const SizedBox(height: 18),
+                    const FollowCard(),
                     const SizedBox(height: 18),
                     Card(
                       child: ListTile(
@@ -225,20 +232,46 @@ class _Header extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final name = p?.alias ?? tr('guest');
-    return Row(
-      children: [
-        CircleAvatar(
+    return ListenableBuilder(
+      listenable: Achievements.instance,
+      builder: (context, _) {
+        // Marco dorado de fan: tiene las dos medallas «Síguenos».
+        final fan = p != null && Achievements.instance.isFan;
+        final avatar = CircleAvatar(
           radius: 34,
           backgroundColor: AppColors.amber,
           foregroundColor: Colors.black,
           child: Text(name.characters.first.toUpperCase(),
               style: const TextStyle(fontSize: 30, fontWeight: FontWeight.w900)),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Text(name, style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w900)),
-        ),
-      ],
+        );
+        return Row(
+          children: [
+            fan
+                ? Container(
+                    padding: const EdgeInsets.all(3.5),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: const SweepGradient(colors: [
+                        Color(0xFFFFE9A8), Color(0xFFC8902E), Color(0xFFFFF4D1), Color(0xFFC8902E), Color(0xFFFFE9A8)
+                      ]),
+                      boxShadow: [BoxShadow(color: AppColors.gold.withValues(alpha: 0.45), blurRadius: 16)],
+                    ),
+                    child: avatar,
+                  )
+                : avatar,
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(name, style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w900)),
+                if (fan)
+                  Text(tr('fan_badge').toUpperCase(),
+                      style: const TextStyle(
+                          color: AppColors.gold, fontSize: 11.5, fontWeight: FontWeight.w800, letterSpacing: 1.4)),
+              ]),
+            ),
+          ],
+        );
+      },
     );
   }
 }

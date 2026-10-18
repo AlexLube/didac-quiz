@@ -36,7 +36,7 @@ class _UnlockCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tier = tierForPoints(a.points);
+    final tier = tierOf(a);
     final c = tierColors(tier);
     return Stack(
       children: [
@@ -77,7 +77,7 @@ class _UnlockCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(99),
                       gradient: LinearGradient(colors: c),
                     ),
-                    child: Text('+${a.points} ${tr('pts')}',
+                    child: Text(rewardLabel(a),
                         style: AppFonts.marquee(26, color: const Color(0xFF241705))),
                   ),
                   const SizedBox(height: 22),

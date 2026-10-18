@@ -236,6 +236,27 @@ class Strings {
     'ach_family_master': {'es': 'Críticas', 'en': 'Reviews'},
     'ach_family_points': {'es': 'Taquilla', 'en': 'Box office'},
     'ach_family_clean': {'es': 'Velocidad', 'en': 'Speed'},
+    'ach_family_social': {'es': 'Comunidad', 'en': 'Community'},
+    'ach_special': {'es': 'Medalla especial', 'en': 'Special medal'},
+    'ach_special_got': {'es': 'Conseguida · ¡gracias por unirte!', 'en': 'Unlocked · thanks for joining!'},
+    'ach_special_hint': {
+      'es': 'Medalla especial: no suma puntos al ranking.',
+      'en': 'Special medal: it adds no ranking points.'
+    },
+    'follow_title': {'es': 'Únete a la comunidad DidacCine', 'en': 'Join the DidacCine community'},
+    'follow_text': {
+      'es': 'Estrenos, retos y curiosidades de cine cada día. Visítanos y llévate dos medallas especiales y el marco dorado de fan.',
+      'en': 'Premieres, challenges and movie trivia every day. Visit us and get two special medals and the golden fan frame.'
+    },
+    'follow_guest': {
+      'es': 'Crea una cuenta para guardar tus medallas.',
+      'en': 'Create an account to keep your medals.'
+    },
+    'follow_done': {
+      'es': '¡Ya eres fan! Gracias por acompañarnos.',
+      'en': 'You are a fan! Thanks for joining us.'
+    },
+    'fan_badge': {'es': 'Fan de DidacCine', 'en': 'DidacCine fan'},
     'hall_title': {'es': 'Hall of Fame', 'en': 'Hall of Fame'},
     'hall_empty': {
       'es': 'Aún no hay campeones. El primer podio llega al cerrar este mes.',
