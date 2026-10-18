@@ -16,6 +16,7 @@ import '../strings.dart';
 import '../theme.dart';
 import '../widgets/cinema.dart';
 import '../widgets/common.dart';
+import '../widgets/follow_card.dart';
 import '../widgets/unlock_dialog.dart';
 import 'auth_screens.dart';
 
@@ -156,6 +157,8 @@ class _ResultScreenState extends State<ResultScreen> {
             icon: const Icon(Icons.emoji_events_rounded),
             label: Text(tr('see_rankings')),
           ),
+        const SizedBox(height: 16),
+        const FollowCard(hideWhenDone: true),
         if (profile != null && profile.canRestoreStreak && profile.streakLost != null) ...[
           const SizedBox(height: 16),
           Card(

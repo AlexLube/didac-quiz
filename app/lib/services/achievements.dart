@@ -22,6 +22,9 @@ class Achievement {
         category = (j['category'] ?? 'general') as String,
         target = asInt(j['target_value'], 1);
 
+  /// Medallas «Síguenos»: decorativas, no suman puntos.
+  bool get isSocial => family == 'social';
+
   /// Familia del logro (rachas, partidas, críticas, taquilla, velocidad).
   String get family => id.split('_').first;
 
@@ -31,6 +34,7 @@ class Achievement {
         'master' => Icons.star_rounded,
         'points' => Icons.confirmation_number_rounded,
         'clean' => Icons.bolt_rounded,
+        'social' => Icons.favorite_rounded,
         _ => Icons.emoji_events_rounded,
       };
 }
@@ -67,11 +71,12 @@ class AchievementProgress {
         unlocked = ((j['unlocked'] ?? []) as List).map((e) => '$e').toList(),
         bonusPoints = asInt(j['bonus_points']);
 
-  double ratio(Achievement a) => a.target == 0 ? 0 : (values[a.family] ?? 0) / a.target;
-  int current(Achievement a) => values[a.family] ?? 0;
+  double ratio(Achievement a) => a.target == 0 ? 0 : current(a) / a.target;
+  int current(Achievement a) =>
+      a.isSocial ? (unlocked.contains(a.id) ? 1 : 0) : values[a.family] ?? 0;
 }
 
-const achievementFamilies = ['streak', 'games', 'master', 'points', 'clean'];
+const achievementFamilies = ['streak', 'games', 'master', 'points', 'clean', 'social'];
 
 String familyLabel(String f) => tr('ach_family_$f');
 
@@ -87,6 +92,22 @@ class Achievements extends ChangeNotifier {
   bool loaded = false;
 
   Set<String> get unlocked => progress.unlocked.toSet();
+
+  /// Tiene las dos medallas «Síguenos»: marco dorado en el perfil.
+  bool get isFan => unlocked.containsAll(const ['social_instagram', 'social_facebook']);
+
+  /// Da la medalla de la red que acaba de visitar (solo con cuenta).
+  /// Devuelve los logros nuevos para celebrarlos.
+  Future<List<Achievement>> claimSocial(String network) async {
+    if (_c.auth.currentUser == null) return [];
+    try {
+      await _c.rpc('claim_social', params: {'p_network': network});
+    } catch (e) {
+      debugPrint('[didacquiz] medalla social no disponible: $e');
+      return [];
+    }
+    return takeNew();
+  }
 
   Future<void> load() async {
     try {

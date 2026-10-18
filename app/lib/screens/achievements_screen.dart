@@ -4,6 +4,7 @@ import '../app_state.dart';
 import '../services/achievements.dart';
 import '../strings.dart';
 import '../theme.dart';
+import '../widgets/follow_card.dart';
 import '../widgets/marquee.dart';
 import 'auth_screens.dart';
 
@@ -275,7 +276,7 @@ class _AchievementTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tier = tierForPoints(a.points);
+    final tier = tierOf(a);
     final c = tierColors(tier);
     return GestureDetector(
       onTap: () => showAchievementDetail(context, a, unlocked, progress),
@@ -301,7 +302,7 @@ class _AchievementTile extends StatelessWidget {
                     color: unlocked ? AppColors.text : AppColors.textMuted)),
             const Spacer(),
             Text(
-              unlocked ? '+${a.points} ${tr('pts')}' : '${progress.current(a).clamp(0, a.target)}/${a.target}',
+              unlocked ? rewardLabel(a) : '${progress.current(a).clamp(0, a.target)}/${a.target}',
               style: TextStyle(
                   fontSize: 11.5, fontWeight: FontWeight.w800, color: unlocked ? c[0] : AppColors.textMuted),
             ),
@@ -313,7 +314,7 @@ class _AchievementTile extends StatelessWidget {
 }
 
 void showAchievementDetail(BuildContext context, Achievement a, bool unlocked, AchievementProgress p) {
-  final tier = tierForPoints(a.points);
+  final tier = tierOf(a);
   showModalBottomSheet<void>(
     context: context,
     builder: (ctx) => Padding(
@@ -329,7 +330,10 @@ void showAchievementDetail(BuildContext context, Achievement a, bool unlocked, A
         Text(Strings.pick(a.description),
             textAlign: TextAlign.center, style: const TextStyle(color: AppColors.textMuted, height: 1.4)),
         const SizedBox(height: 16),
-        if (!unlocked) ...[
+        if (!unlocked && a.isSocial) ...[
+          FollowButtons(only: a.id.substring('social_'.length), onDone: () => Navigator.of(ctx).maybePop()),
+          const SizedBox(height: 10),
+        ] else if (!unlocked) ...[
           ClipRRect(
             borderRadius: BorderRadius.circular(99),
             child: LinearProgressIndicator(
@@ -345,7 +349,11 @@ void showAchievementDetail(BuildContext context, Achievement a, bool unlocked, A
           const SizedBox(height: 10),
         ],
         Text(
-          unlocked ? tr('ach_got', {'p': a.points}) : tr('ach_reward', {'p': a.points}),
+          a.isSocial
+              ? tr(unlocked ? 'ach_special_got' : 'ach_special_hint')
+              : unlocked
+                  ? tr('ach_got', {'p': a.points})
+                  : tr('ach_reward', {'p': a.points}),
           style: const TextStyle(color: AppColors.accent, fontWeight: FontWeight.w800),
         ),
       ]),

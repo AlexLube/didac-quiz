@@ -640,7 +640,24 @@ def test_achievement_progress_rpc(db):
     prog = p.call("select my_achievement_progress()", today="2026-11-09")
     assert prog["games"] == 1 and prog["points"] == 18 and prog["master"] == 1 and prog["streak_best"] == 1
     assert "games_1" in prog["unlocked"] and prog["bonus_points"] >= 20
-    rows = p.call("select count(*) from achievements")
+    rows = p.call("select count(*) from achievements where category <> 'social'")
     assert rows == 100
     with pytest.raises(psycopg.errors.InsufficientPrivilege):
         p.call("select evaluate_player_progress(%s)", (p.id,))
+
+
+def test_social_medals_give_no_points(db):
+    p = Player(db)
+    p.register("seguidor", today="2026-11-10")
+    before = db.execute("select bonus_points from profiles where id = %s", (p.id,)).fetchone()[0]
+    assert p.call("select claim_social('instagram')") is True
+    assert p.call("select claim_social('instagram')") is False
+    assert p.call("select claim_social('facebook')") is True
+    prog = p.call("select my_achievement_progress()")
+    assert {"social_instagram", "social_facebook"} <= set(prog["unlocked"])
+    after = db.execute("select bonus_points from profiles where id = %s", (p.id,)).fetchone()[0]
+    assert after == before
+    with pytest.raises(psycopg.errors.RaiseException, match="bad_network"):
+        p.call("select claim_social('tiktok')")
+    guest = Player(db, anonymous=True)
+    assert guest.call("select claim_social('instagram')") is False

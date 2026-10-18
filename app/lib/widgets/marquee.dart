@@ -3,6 +3,8 @@ import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
 
+import '../services/achievements.dart';
+import '../strings.dart';
 import '../theme.dart';
 import 'season.dart';
 
@@ -301,6 +303,12 @@ MedalTier tierForPoints(int points) => points >= 80
             : points >= 15
                 ? MedalTier.silver
                 : MedalTier.bronze;
+
+/// Nivel con el que se pinta un logro: las medallas «Síguenos» son de oro.
+MedalTier tierOf(Achievement a) => a.isSocial ? MedalTier.gold : tierForPoints(a.points);
+
+/// Recompensa de un logro: puntos, o «Medalla especial» si no suma.
+String rewardLabel(Achievement a) => a.isSocial ? tr('ach_special') : '+${a.points} ${tr('pts')}';
 
 List<Color> tierColors(MedalTier t) => switch (t) {
       MedalTier.bronze => const [Color(0xFFF0B27A), Color(0xFF9C5A2C)],

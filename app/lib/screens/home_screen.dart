@@ -502,7 +502,7 @@ class _AchievementsStrip extends StatelessWidget {
         final recent = unlocked.reversed.map((id) => byId[id]).whereType<Achievement>().take(4).toList();
         // Siguiente logro: el pendiente más cercano a conseguirse.
         double r(Achievement a) => ach.progress.ratio(a).clamp(0, 0.999).toDouble();
-        final next = ach.catalog.where((a) => !unlocked.contains(a.id)).toList()
+        final next = ach.catalog.where((a) => !unlocked.contains(a.id) && !a.isSocial).toList()
           ..sort((a, b) => r(b).compareTo(r(a)));
         final total = ach.catalog.isEmpty ? 100 : ach.catalog.length;
         return GlassCard(
@@ -532,7 +532,7 @@ class _AchievementsStrip extends StatelessWidget {
                   for (final a in recent)
                     Padding(
                       padding: const EdgeInsets.only(right: 10),
-                      child: Medal(icon: a.icon, tier: tierForPoints(a.points), unlocked: true, size: 48),
+                      child: Medal(icon: a.icon, tier: tierOf(a), unlocked: true, size: 48),
                     ),
                 ]),
               ],
@@ -547,7 +547,7 @@ class _AchievementsStrip extends StatelessWidget {
                   child: Row(children: [
                     Medal(
                         icon: next.first.icon,
-                        tier: tierForPoints(next.first.points),
+                        tier: tierOf(next.first),
                         unlocked: false,
                         size: 44,
                         progress: ach.progress.ratio(next.first)),

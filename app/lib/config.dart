@@ -26,6 +26,10 @@ class Config {
   static const privacyUrl = String.fromEnvironment('PRIVACY_URL',
       defaultValue: 'https://www.didaccine.com/didac-quiz-privacidad');
 
+  // Redes de DidacCine (botones «Síguenos»).
+  static const instagramUrl = 'https://www.instagram.com/didaccine/?utm_source=didacquiz';
+  static const facebookUrl = 'https://www.facebook.com/profile.php?id=61584574135461&utm_source=didacquiz';
+
   // Anuncios: por defecto, los identificadores de PRUEBA de Google.
   static const _testBanner = 'ca-app-pub-3940256099942544/6300978111';
   static const _testInterstitial = 'ca-app-pub-3940256099942544/1033173712';
