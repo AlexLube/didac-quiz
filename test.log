@@ -1,0 +1,10 @@
+
+::group::✅ Passing tests
+✅ el texto para compartir no revela respuestas
+✅ cuenta atrás hasta la medianoche UTC
+✅ pregunta: comodín solo con 4 opciones de elección
+✅ textos en dos idiomas
+✅ puntos por rapidez: bajan cada tercio del tiempo y nunca bajan de 1
+::endgroup::
+
+🎉 5 tests passed.
