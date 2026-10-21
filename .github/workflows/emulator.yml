@@ -53,6 +53,8 @@ jobs:
           arch: x86_64
           target: google_apis
           disable-animations: true
+          # Con 2 GB el emulador se quedaba sin memoria y se caía a mitad de prueba
+          ram-size: 4096M
           script: |
             adb logcat -c
             adb install -r app/build/app/outputs/flutter-apk/app-release.apk
