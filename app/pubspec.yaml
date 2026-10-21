@@ -18,6 +18,13 @@ dependencies:
   audioplayers: ">=6.0.0 <100.0.0"
   youtube_player_iframe: ^6.0.2
 
+# shared_preferences_android 2.5.x (17 oct 2026) pasó a JNI y en la APK de
+# release falla al arrancar (NoSuchMethodError en SharedPreferencesApiRegistrar.getAll):
+# la app se quedaba en «Algo ha fallado. Revisa tu conexión.». Se fija la última
+# versión buena hasta que la prueba en emulador diga «arranque: OK» con una nueva.
+dependency_overrides:
+  shared_preferences_android: 2.4.28
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
