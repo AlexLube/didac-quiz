@@ -56,6 +56,7 @@ jobs:
           script: |
             adb logcat -c
             adb install -r app/build/app/outputs/flutter-apk/app-release.apk
+            nohup adb logcat -v time > ci-logs/logcat-live.txt 2>&1 &
             adb shell monkey -p app.didaccine.quiz -c android.intent.category.LAUNCHER 1
             sleep 40
             adb shell pidof app.didaccine.quiz > ci-logs/pid.txt || echo "PROCESO MUERTO" > ci-logs/pid.txt
@@ -74,6 +75,8 @@ jobs:
         if: always()
         run: |
           echo "commit: ${{ github.sha }} outcome: ${{ steps.run.outcome }}" > ci-logs/SUMMARY.txt
+          # Registro continuo: sirve aunque el emulador se caiga a mitad de prueba
+          [ -s ci-logs/logcat-full.txt ] || cp ci-logs/logcat-live.txt ci-logs/logcat-full.txt 2>/dev/null || true
           if grep -q "error al arrancar" ci-logs/logcat-full.txt 2>/dev/null; then
             echo "arranque: FALLO (ver errors.txt)" >> ci-logs/SUMMARY.txt
           elif grep -q "\[didacquiz\] sesión lista" ci-logs/logcat-full.txt 2>/dev/null; then
