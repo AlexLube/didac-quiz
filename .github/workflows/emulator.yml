@@ -74,6 +74,11 @@ jobs:
         if: always()
         run: |
           echo "commit: ${{ github.sha }} outcome: ${{ steps.run.outcome }}" > ci-logs/SUMMARY.txt
+          if grep -q "error al arrancar" ci-logs/logcat-full.txt 2>/dev/null; then
+            echo "arranque: FALLO (ver errors.txt)" >> ci-logs/SUMMARY.txt
+          else
+            echo "arranque: OK" >> ci-logs/SUMMARY.txt
+          fi
           grep -E "FATAL|E AndroidRuntime|flutter|didacquiz" ci-logs/logcat-full.txt | head -200 > ci-logs/errors.txt || true
           tmp=$(mktemp -d); cp -r ci-logs/. "$tmp"/; cd "$tmp"
           git init -q && git checkout -q -b ci-emulator

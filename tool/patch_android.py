@@ -7,6 +7,9 @@
 - minSdk 23 (requisito de los anuncios)
 - Reglas de R8 para que no elimine la base de datos interna de WorkManager
   (la usa la librería de anuncios; sin esto la app se cierra al abrir)
+- Reglas de R8 para shared_preferences: su parte Android se llama desde Dart
+  por JNI y R8 borraba esos métodos (NoSuchMethodError al arrancar y la app
+  se quedaba en «Algo ha fallado. Revisa tu conexión.»)
 """
 from __future__ import annotations
 
@@ -56,6 +59,10 @@ PROGUARD = """# DidacCine Quiz: evitar que R8 elimine clases generadas por Room/
 -keep class androidx.room.** { *; }
 -keep class androidx.startup.** { *; }
 -dontwarn androidx.work.**
+
+# Plugins que Dart llama por JNI: R8 no ve esas llamadas y borra los métodos
+-keep class io.flutter.plugins.sharedpreferences.** { *; }
+-keep class com.github.dart_lang.jni.** { *; }
 """
 (APP / "android/app/proguard-rules.pro").write_text(PROGUARD, encoding="utf-8")
 
