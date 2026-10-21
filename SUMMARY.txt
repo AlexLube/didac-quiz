@@ -1,0 +1,2 @@
+commit: 997bf670c62a7f8ba717098ce8284cdb55a60beb outcome: failure
+arranque: OK
