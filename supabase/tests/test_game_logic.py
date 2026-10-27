@@ -661,3 +661,26 @@ def test_social_medals_give_no_points(db):
         p.call("select claim_social('tiktok')")
     guest = Player(db, anonymous=True)
     assert guest.call("select claim_social('instagram')") is False
+
+
+def test_solutions_link_didacine_guide(db):
+    day = "2027-02-10"
+    qids = make_questions(db, start=9000)
+    db.execute("update questions set entity_ids = '{Q_KLAUS}' where id = %s", (qids[0],))
+    db.execute("update questions set entity_ids = '{Q_OTRA}' where id = %s", (qids[1],))
+    db.execute("insert into film_titles (qid, title, norm, year) values ('Q_KLAUS', 'Klaus', 'klaus', 2019), ('Q_OTRA', 'Klaus', 'klaus', 1950)")
+    db.execute("insert into didacine_guides (wp_id, title, year, release, url) values "
+               "(990001, 'Klaus', 2019, '2027-02-01', 'https://didacine.com/klaus/'), "
+               "(990002, 'Del Revés (Inside Out)', 2015, '2027-03-01', 'https://didacine.com/del-reves-inside-out/')")
+    db.execute("update didacine_guides set norms = _guide_norms(title) where wp_id >= 990000")
+    norms = db.execute("select norms from didacine_guides where wp_id = 990002").fetchone()[0]
+    assert set(norms) == {"del reves", "del reves inside out", "inside out"}
+    make_challenge(db, day, qids)
+    p = Player(db)
+    p.register("profe")
+    p.play(day, PERFECT)
+    sol = p.call("select get_solutions(%s)", (day,), today="2027-02-11")
+    g = sol["questions"][0]["guide"]
+    assert g["url"] == "https://didacine.com/klaus/?utm_source=quiz&utm_medium=soluciones"
+    assert sol["questions"][1]["guide"] is None   # mismo título, otro año: no es la misma película
+    assert sol["questions"][2]["guide"] is None   # sin película

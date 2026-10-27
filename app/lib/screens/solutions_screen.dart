@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../app_state.dart';
 import '../models.dart';
@@ -76,6 +77,7 @@ class _SolutionCard extends StatelessWidget {
     final answerText = _answerText(q, options, answer);
     final maxPts = asInt(q['max_points'], asInt(q['difficulty'], 1));
     final myPoints = q['my_points'];
+    final guide = asMap(q['guide']);
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -133,6 +135,15 @@ class _SolutionCard extends StatelessWidget {
                 padding: const EdgeInsets.only(top: 8),
                 child: Text('${((accuracy as num) * 100).round()}% ✔',
                     style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
+              ),
+            if (guide['url'] != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 10),
+                child: OutlinedButton.icon(
+                  onPressed: () => launchUrl(Uri.parse('${guide['url']}'), mode: LaunchMode.externalApplication),
+                  icon: const Icon(Icons.school_rounded, size: 18),
+                  label: Text(tr('guide_button')),
+                ),
               ),
           ],
         ),
