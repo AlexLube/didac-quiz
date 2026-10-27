@@ -1,10 +1,14 @@
 import 'models.dart';
 
+/// Enlace al juego que acompaña al resultado compartido (con UTM para medirlo).
+const shareUrl = 'https://quiz.didacine.com/?utm_source=compartir';
+
 /// Texto para compartir el resultado sin revelar respuestas.
 /// Ejemplo:
 ///   DidacCine Quiz 25/09/2026 · 14/18
 ///   🟩🟩🟥🟩 🟩🟩🟩⬛ 🟩🟥
 ///   ⏱ 1:32 · 🔥 5
+///   ¿Me ganas? https://quiz.didacine.com/?utm_source=compartir
 String buildShareText(GameSummary g, {int streak = 0, String lang = 'es'}) {
   String cell(AnswerSummary? a) {
     if (a == null || a.correct == null) return '⬛';
@@ -25,6 +29,7 @@ String buildShareText(GameSummary g, {int streak = 0, String lang = 'es'}) {
     'DidacCine Quiz $date · ${g.totalPoints}/${g.maxPoints}',
     groups,
     '⏱ ${formatDuration(g.totalMs)}${streak > 1 ? ' · 🔥 $streak' : ''}',
+    '${lang == 'en' ? 'Can you beat me?' : '¿Me ganas?'} $shareUrl',
   ];
   return lines.join('\n');
 }
