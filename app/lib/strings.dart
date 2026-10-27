@@ -30,6 +30,7 @@ class Strings {
     'days': {'es': 'días', 'en': 'days'},
     'jokers_left': {'es': 'Comodines 50/50 esta semana', 'en': '50/50 jokers this week'},
     'yesterday_solutions': {'es': 'Soluciones de ayer', 'en': "Yesterday's answers"},
+    'guide_button': {'es': 'Llévala a clase: guía didáctica gratis', 'en': 'Take it to class: free teaching guide'},
     'new_challenge_in': {'es': 'Nuevo reto en {t}', 'en': 'New challenge in {t}'},
     'guest_banner': {
       'es': 'Estás jugando como invitado. Crea una cuenta para entrar en los rankings.',
