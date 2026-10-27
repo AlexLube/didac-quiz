@@ -31,6 +31,7 @@ void main() {
     expect(text, contains('DidacCine Quiz 25/09/2026 · 14/18'));
     expect(text, contains('🟩🟩🟥🟩 🟩🟩🟩🟩 🟩🟥'));
     expect(text, contains('⏱ 1:32 · 🔥 5'));
+    expect(text, endsWith('¿Me ganas? https://quiz.didacine.com/?utm_source=compartir'));
   });
 
   test('cuenta atrás hasta la medianoche UTC', () {
